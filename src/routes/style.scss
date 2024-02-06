@@ -306,7 +306,7 @@ $yellow-300: #DEB31F;
 
 $red-300: #EE3134;
 
-$seashell: #FDF3ED;
+$seashell: #F5F5EE;
 $seafoam: #79A48A;
 $seafoam-dark: #5B866C;
 $wisteria: #BF9ACA;
@@ -330,6 +330,14 @@ $link-color: $seafoam-dark;
 $body-background-color: $neutral;
 $search-background-color: $neutral;
 $table-background-color: $neutral;
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');
+
+:root {
+    // --md-ref-typeface-brand: 'Open Sans';
+    --md-ref-typeface-plain: 'Roboto';
+    font-family: var(--md-ref-typeface-plain);
+}
 
 body {
     background-color: $neutral !important;

@@ -2,27 +2,30 @@
   import Header from "./Header.svelte";
   import "./styles.css";
   import "./style.scss";
+  import "$lib/css/material/light.css";
+  import NavigationRail from "../lib/navigation/NavigationRail.svelte";
 </script>
 
 <div class="app">
-  <Header />
+  <NavigationRail></NavigationRail>
 
   <main>
     <slot />
   </main>
 
-  <footer>
+  <!-- <footer>
     <p>
       visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit
     </p>
-  </footer>
+  </footer> -->
 </div>
 
 <style>
   .app {
     display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    flex-direction: row;
+    width: 100vw;
+    height: 100vh;
   }
 
   main {
