@@ -23,6 +23,11 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@material/web": "^1.2.0"
+		"@material/web": "^1.2.0",
+		"@types/geojson": "^7946.0.14",
+		"@types/leaflet": "^1.9.8",
+		"@types/leaflet-draw": "^1.0.11",
+		"leaflet": "^1.9.4",
+		"leaflet-draw": "^1.0.4"
 	}
 }

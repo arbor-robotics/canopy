@@ -2,6 +2,7 @@
   import Counter from "./Counter.svelte";
   import welcome from "$lib/images/svelte-welcome.webp";
   import welcome_fallback from "$lib/images/svelte-welcome.png";
+  import Map from "$lib/misc/Map.svelte";
 </script>
 
 <svelte:head>
@@ -10,22 +11,7 @@
 </svelte:head>
 
 <section>
-  <!-- <h1>
-    <span class="welcome">
-      <picture>
-        <source srcset={welcome} type="image/webp" />
-        <img src={welcome_fallback} alt="Welcome" />
-      </picture>
-    </span>
-
-    to Canopy.
-  </h1>
-
-  <h2>
-    try editing <strong>src/routes/+page.svelte</strong>
-  </h2>
-
-  <Counter /> -->
+  <Map></Map>
 </section>
 
 <style>
@@ -35,6 +21,7 @@
     justify-content: center;
     align-items: center;
     flex: 0.6;
+    height: 100%;
   }
 
   h1 {

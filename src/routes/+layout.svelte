@@ -3,6 +3,8 @@
   import "./styles.css";
   import "./style.scss";
   import "$lib/css/material/light.css";
+  import "leaflet/dist/leaflet.css";
+  import "leaflet-draw/dist/leaflet.draw.css";
   import NavigationRail from "../lib/navigation/NavigationRail.svelte";
 </script>
 
