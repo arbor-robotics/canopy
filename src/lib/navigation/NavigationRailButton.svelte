@@ -1,29 +1,38 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import Icon from "../misc/Icon.svelte";
-  export let isActive: boolean = false;
   export let icon: string;
   export let label: string;
+  export let url: string;
+
+  let isActive =
+    $page.url.pathname.replace(/[^a-zA-Z ]/g, "") ==
+    url.replace(/[^a-zA-Z ]/g, "");
+  console.log(
+    $page.url.pathname.replace(/[^a-zA-Z ]/g, "") +
+      "AND" +
+      url.replace(/[^a-zA-Z ]/g, "")
+  );
 </script>
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
-<div class="rail-button">
+<a class="rail-button" href={url}>
   <div
     class="active-indicator"
-    style="--active-color: {isActive
+    style="--active-color: {$page.url.pathname == url
       ? 'var(--md-sys-color-secondary-container)'
       : 'none'}"
   >
     <Icon
       id={icon}
-      color={isActive
+      color={$page.url.pathname == url
         ? "var(--md-sys-color-on-secondary-container)"
         : "var(--md-sys-color-on-surface-variant)"}
     ></Icon>
   </div>
   <div id="label">{label}</div>
-</div>
+</a>
 
 <style>
   #label {

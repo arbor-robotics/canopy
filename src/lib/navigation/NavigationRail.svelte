@@ -10,13 +10,15 @@
 <div id="rail">
   <div id="logo">C</div>
   <div class="link-container">
-    <NavigationRailButton icon="nature" isActive={true} label="Your Land"
+    <NavigationRailButton icon="kid_star" label="Wizard" url="/wizard"
     ></NavigationRailButton>
-    <NavigationRailButton icon="smart_toy" isActive={false} label="Steward"
+    <NavigationRailButton icon="nature" label="Your Land" url="/land"
     ></NavigationRailButton>
-    <NavigationRailButton icon="monitoring" isActive={false} label="Stats"
+    <NavigationRailButton icon="smart_toy" label="Steward" url="/robot"
     ></NavigationRailButton>
-    <NavigationRailButton icon="settings" isActive={false} label="Settings"
+    <NavigationRailButton icon="monitoring" label="Stats" url="/"
+    ></NavigationRailButton>
+    <NavigationRailButton icon="settings" label="Settings" url="/"
     ></NavigationRailButton>
   </div>
 </div>
