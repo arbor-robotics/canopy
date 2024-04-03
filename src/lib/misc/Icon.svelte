@@ -2,10 +2,15 @@
   // import { page } from "$app/stores";
   export let id: string;
   export let color: string;
+  export let size: string = "1rem";
+  export let fill: string = "1";
 </script>
 
 <div class="icon-container">
-  <span class="material-symbols-outlined" style="--icon-color: {color}">
+  <span
+    class="material-symbols-outlined"
+    style="--icon-color: {color}; --size: {size}; --fill: {fill}"
+  >
     {id}
   </span>
 </div>
@@ -13,11 +18,12 @@
 <style>
   .material-symbols-outlined {
     font-variation-settings:
-      "FILL" 1,
+      "FILL" var(--fill),
       "wght" 400,
       "GRAD" 0,
       "opsz" 24;
     color: var(--icon-color);
+    font-size: var(--size);
   }
   .icon-container {
     user-select: none;

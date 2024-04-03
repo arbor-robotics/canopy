@@ -4,15 +4,6 @@
   export let icon: string;
   export let label: string;
   export let url: string;
-
-  let isActive =
-    $page.url.pathname.replace(/[^a-zA-Z ]/g, "") ==
-    url.replace(/[^a-zA-Z ]/g, "");
-  console.log(
-    $page.url.pathname.replace(/[^a-zA-Z ]/g, "") +
-      "AND" +
-      url.replace(/[^a-zA-Z ]/g, "")
-  );
 </script>
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->

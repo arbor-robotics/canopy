@@ -1,9 +1,49 @@
+<script lang="ts">
+  import { page } from "$app/stores";
+  import Icon from "$lib/misc/Icon.svelte";
+  import "@material/web/progress/circular-progress";
+  import "@material/web/button/text-button";
+
+  let progressIsIndeterminate: boolean = false;
+  let progressValue: number = 0;
+
+  function buttonClicked() {
+    console.log("Clicked!");
+    progressIsIndeterminate = !progressIsIndeterminate;
+  }
+</script>
+
 <svelte:head>
-	<title>About</title>
-	<meta name="description" content="About this app" />
+  <title>About</title>
+  <meta name="description" content="About this app" />
 </svelte:head>
 
-<div class="text-column">
+<h1>Wizard</h1>
+<div id="wizard-container">
+  <md-circular-progress
+    id="wizard-progress"
+    value={progressValue}
+    indeterminate={progressIsIndeterminate}
+  ></md-circular-progress>
+  <md-text-button
+    id="wizard-button"
+    trailing-icon
+    on:click={buttonClicked}
+    on:keydown={buttonClicked}
+    role="button"
+    tabindex="0"
+  >
+    <Icon
+      id="play_arrow"
+      color="var(--md-sys-color-on-surface-variant)"
+      size="8rem"
+      fill="0"
+    ></Icon>
+  </md-text-button>
+  <p id="wizard-label">Steward is ready</p>
+</div>
+
+<!-- <div class="text-column">
 	<h1>About this app</h1>
 
 	<p>
@@ -23,4 +63,27 @@
 		The <a href="/sverdle">Sverdle</a> page illustrates SvelteKit's data loading and form handling. Try
 		using it with JavaScript disabled!
 	</p>
-</div>
+</div> -->
+
+<style>
+  #wizard-container {
+    width: 40vh;
+    height: 40vh;
+  }
+  #wizard-progress {
+    width: 100%;
+    height: 100%;
+    position: relative;
+  }
+  #wizard-button {
+    width: 100%;
+    height: 100%;
+    top: -40vh;
+    position: relative;
+  }
+
+  #wizard-label {
+    top: -40vh;
+    position: relative;
+  }
+</style>
