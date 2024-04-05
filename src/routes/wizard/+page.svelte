@@ -1,16 +1,62 @@
 <script lang="ts">
   import { page } from "$app/stores";
+  import { onMount } from "svelte";
+
   import Icon from "$lib/misc/Icon.svelte";
   import "@material/web/progress/circular-progress";
   import "@material/web/button/text-button";
+  import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
+  import World from "$lib/3d/World.svelte";
+  import { connectionStatus, ConnectionStatus } from "$lib/stores";
 
   let progressIsIndeterminate: boolean = false;
   let progressValue: number = 0;
+  var startWaypointClient: any;
+
 
   function buttonClicked() {
     console.log("Clicked!");
     progressIsIndeterminate = !progressIsIndeterminate;
+
+    console.log("Calling service!");
+
+    let request = {}; // request is empty for Trigger
+    startWaypointClient.callService(request, function (result: any) {
+      console.log(
+        "Result for service call on " +
+          startWaypointClient.name +
+          ": " +
+          result.success
+      );
+    });
   }
+  onMount(async () => {
+    console.log("Hello!");
+    const module = await import("$lib/ros/roslib");
+
+    var ros = new ROSLIB.Ros({
+      url: "ws://localhost:9090",
+    });
+
+    // CONNECTION EVENTS
+    ros.on("connection", function () {
+      console.log("Connected to websocket server.");
+    });
+    ros.on("error", function (error) {
+      console.log("Error connecting to websocket server: ", error);
+    });
+    ros.on("close", function () {
+      console.log("Connection to websocket server closed.");
+
+      // setTimeout(ros.connect("ws://localhost:9090"));
+    });
+
+    startWaypointClient = new ROSLIB.Service({
+      ros: ros,
+      name: "start_waypoint_manager",
+      serviceType: "std_srvs/Trigger",
+    });
+  });
 </script>
 
 <svelte:head>
@@ -18,6 +64,11 @@
   <meta name="description" content="About this app" />
 </svelte:head>
 
+{#if connectionStatus == ConnectionStatus.DISCONNECTED}
+  <ConnectionIndicator />
+{:else}
+  <!-- <World /> -->
+{/if}
 <h1>Wizard</h1>
 <div id="wizard-container">
   <md-circular-progress

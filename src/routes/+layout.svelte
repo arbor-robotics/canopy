@@ -6,6 +6,7 @@
   import "leaflet/dist/leaflet.css";
   import "leaflet-draw/dist/leaflet.draw.css";
   import NavigationRail from "../lib/navigation/NavigationRail.svelte";
+  import RosListener from "$lib/ros/RosListener.svelte";
 </script>
 
 <div class="app">

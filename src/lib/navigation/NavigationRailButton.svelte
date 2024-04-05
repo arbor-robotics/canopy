@@ -4,11 +4,12 @@
   export let icon: string;
   export let label: string;
   export let url: string;
+  export let enabled: boolean = true;
 </script>
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
-<a class="rail-button" href={url}>
+<a class={enabled ? "rail-button" : "rail-button disabled-button"} href={url}>
   <div
     class="active-indicator"
     style="--active-color: {$page.url.pathname == url
@@ -26,6 +27,10 @@
 </a>
 
 <style>
+  .disabled-button {
+    opacity: 0.38;
+    pointer-events: none;
+  }
   #label {
     font-size: 0.75rem;
     font-weight: 500;
