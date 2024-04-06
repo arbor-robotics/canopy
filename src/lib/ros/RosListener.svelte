@@ -48,7 +48,7 @@
       console.log("Connection to websocket server closed.");
       connection_status.set(ConnectionStatus.DISCONNECTED);
 
-      // setTimeout(ros.connect("ws://localhost:9090"));
+      setTimeout(node.connect("ws://localhost:9090"));
     });
   });
 
