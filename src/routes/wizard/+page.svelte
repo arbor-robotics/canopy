@@ -38,12 +38,7 @@
   <meta name="description" content="About this app" />
 </svelte:head>
 
-{#if $connection_status == ConnectionStatus.DISCONNECTED}
-  <ConnectionIndicator />
-{:else}
-  <h1>Wizard</h1>
-  <!-- <World /> -->
-{/if}
+<h1>Wizard</h1>
 
 <!-- 
 <div id="wizard-container">

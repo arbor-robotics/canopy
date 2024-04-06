@@ -4,11 +4,15 @@
   export let color: string = "var(--md-sys-color-on-secondary-container)";
   export let size: string = "1rem";
   export let fill: string = "1";
+  export let pulse: boolean = false;
+  export let spin: boolean = false;
 </script>
 
-<div class="icon-container">
+<div class="icon-container flex justify-center">
   <span
-    class="material-symbols-outlined"
+    class="material-symbols-outlined my-auto"
+    class:animate-pulse={pulse}
+    class:animate-spin={spin}
     style="--icon-color: {color}; --size: {size}; --fill: {fill}"
   >
     {id}
@@ -28,5 +32,6 @@
   .icon-container {
     user-select: none;
     background-color: var(--icon-color);
+    margin: 0;
   }
 </style>
