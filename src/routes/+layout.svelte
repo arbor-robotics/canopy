@@ -6,15 +6,22 @@
   import "leaflet/dist/leaflet.css";
   import "leaflet-draw/dist/leaflet.draw.css";
   import NavigationRail from "../lib/navigation/NavigationRail.svelte";
+  import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
+  import { connection_status, ConnectionStatus } from "$lib/stores";
   import RosListener from "$lib/ros/RosListener.svelte";
 </script>
 
 <div class="app">
-  <NavigationRail></NavigationRail>
+  <RosListener />
 
-  <main>
-    <slot />
-  </main>
+  {#if $connection_status == ConnectionStatus.CONNECTED}
+    <NavigationRail></NavigationRail>
+    <main>
+      <slot />
+    </main>
+  {:else}
+    <ConnectionIndicator />
+  {/if}
 
   <!-- <footer>
     <p>

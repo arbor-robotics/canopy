@@ -1,7 +1,7 @@
 <script lang="ts">
   // import { page } from "$app/stores";
   export let id: string;
-  export let color: string;
+  export let color: string = "var(--md-sys-color-on-secondary-container)";
   export let size: string = "1rem";
   export let fill: string = "1";
 </script>

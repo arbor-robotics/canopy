@@ -1,4 +1,4 @@
-import { writable } from "svelte/store";
+import { writable, type Writable } from "svelte/store";
 
 export enum Level {
   OK,
@@ -18,7 +18,8 @@ export enum ConnectionStatus {
   ERROR,
 }
 
-export const connectionStatus = writable(ConnectionStatus.DISCONNECTED);
+export const node: Writable<any> = writable(undefined);
+export const connection_status = writable(ConnectionStatus.DISCONNECTED);
 export const warning_count = writable(undefined);
 export const error_count = writable(undefined);
 export const current_mode = writable(Mode.DISABLED);

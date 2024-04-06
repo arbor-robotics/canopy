@@ -40,7 +40,7 @@
       enabled={false}
     ></NavigationRailButton>
   </div>
-  <div id="status"><RosListener /></div>
+  <div id="status"></div>
 </div>
 
 <style>
