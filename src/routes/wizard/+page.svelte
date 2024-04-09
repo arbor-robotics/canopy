@@ -6,9 +6,8 @@
   import "@material/web/progress/circular-progress";
   import "@material/web/button/text-button";
   import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
-  import World from "$lib/3d/World.svelte";
   import { connection_status, ConnectionStatus } from "$lib/stores";
-  import Map from "$lib/3d/Map.svelte";
+  import World from "$lib/3d/World.svelte";
 
   // onMount(async () => {
   //   console.log("Hello!");
@@ -56,7 +55,7 @@
   </div>
   <div class="opacity-35">Start</div>
 </div>
-<Map />
+<World />
 
 <!-- 
 <div id="wizard-container">

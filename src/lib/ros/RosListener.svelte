@@ -60,7 +60,6 @@
     });
 
     current_behavior_state_topic.subscribe(function (msg) {
-      console.log("Current state is: " + msg.value);
       current_behavior_state.set(msg.value);
     });
   });
