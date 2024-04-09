@@ -7,6 +7,8 @@
     connection_status,
     ConnectionStatus,
     node as nodeWritable,
+    BehaviorState,
+    current_behavior_state,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -50,9 +52,18 @@
 
       setTimeout(node.connect("ws://localhost:9090"));
     });
-  });
 
-  connection_status.subscribe((value: ConnectionStatus) => {});
+    let current_behavior_state_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/behavior/current_state",
+      messageType: "steward_msgs/State",
+    });
+
+    current_behavior_state_topic.subscribe(function (msg) {
+      console.log("Current state is: " + msg.value);
+      current_behavior_state.set(msg.value);
+    });
+  });
 </script>
 
 <!-- 

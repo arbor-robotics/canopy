@@ -5,6 +5,7 @@
   import NavigationRailButton from "./NavigationRailButton.svelte";
   import RosListener from "$lib/ros/RosListener.svelte";
   import logo from "$lib/images/logo.svg";
+  import BehaviorStateIndicator from "$lib/ros/BehaviorStateIndicator.svelte";
 </script>
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
@@ -40,6 +41,8 @@
       enabled={false}
     ></NavigationRailButton>
   </div>
+
+  <BehaviorStateIndicator />
   <div id="status"></div>
 </div>
 

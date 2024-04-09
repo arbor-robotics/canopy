@@ -18,8 +18,15 @@ export enum ConnectionStatus {
   ERROR,
 }
 
+export enum BehaviorState {
+  PAUSED = 0,
+  DRIVING = 1,
+  PLANTING = 2,
+}
+
 export const node: Writable<any> = writable(undefined);
 export const connection_status = writable(ConnectionStatus.DISCONNECTED);
+export const current_behavior_state = writable(BehaviorState.PAUSED);
 export const warning_count = writable(undefined);
 export const error_count = writable(undefined);
 export const current_mode = writable(Mode.DISABLED);
