@@ -6,10 +6,10 @@
 
 <div class="flex flex-col justify-center mx-auto">
   <Icon id="link_off" size="10rem"></Icon>
-  <p>Disconnected from Steward</p>
+  <p class="flex flex-row justify-center">Disconnected from Steward</p>
   <div class="flex flex-row justify-center italic">
     <Icon id="autorenew" spin></Icon>
-    <p>Trying to reconnect</p>
+    <p>Trying to reconnect to localhost:9090</p>
   </div>
 </div>
 

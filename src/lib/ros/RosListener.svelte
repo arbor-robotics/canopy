@@ -1,7 +1,7 @@
 <script lang="ts">
   // import  from "../roslib";
   import Icon from "$lib/misc/Icon.svelte";
-  import Map from "$lib/misc/Map.svelte";
+  import Map from "$lib/misc/OsmMap.svelte";
   import { onMount } from "svelte";
   import {
     connection_status,

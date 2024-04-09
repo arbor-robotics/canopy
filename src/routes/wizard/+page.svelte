@@ -8,6 +8,7 @@
   import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
   import World from "$lib/3d/World.svelte";
   import { connection_status, ConnectionStatus } from "$lib/stores";
+  import Map from "$lib/3d/Map.svelte";
 
   // onMount(async () => {
   //   console.log("Hello!");
@@ -38,7 +39,24 @@
   <meta name="description" content="About this app" />
 </svelte:head>
 
-<h1>Wizard</h1>
+<div
+  class="wizard-steps shadow-xl py-2 rounded-lg flex-row flex justify-around align-middle"
+>
+  <div class="font-medium">Planting Bounds</div>
+  <div class="my-auto">
+    <Icon id="chevron_right"></Icon>
+  </div>
+  <div class="opacity-35">Forest Plan</div>
+  <div class="my-auto">
+    <Icon id="chevron_right"></Icon>
+  </div>
+  <div class="opacity-35">Route</div>
+  <div class="my-auto">
+    <Icon id="chevron_right"></Icon>
+  </div>
+  <div class="opacity-35">Start</div>
+</div>
+<Map />
 
 <!-- 
 <div id="wizard-container">
@@ -88,24 +106,7 @@
 </div> -->
 
 <style>
-  #wizard-container {
-    width: 40vh;
-    height: 40vh;
-  }
-  #wizard-progress {
-    width: 100%;
-    height: 100%;
-    position: relative;
-  }
-  #wizard-button {
-    width: 100%;
-    height: 100%;
-    top: -40vh;
-    position: relative;
-  }
-
-  #wizard-label {
-    top: -40vh;
-    position: relative;
+  .wizard-steps {
+    /* background-color: var(--md-sys-color-primary-container); */
   }
 </style>

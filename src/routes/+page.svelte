@@ -2,7 +2,7 @@
   import Counter from "./Counter.svelte";
   import welcome from "$lib/images/svelte-welcome.webp";
   import welcome_fallback from "$lib/images/svelte-welcome.png";
-  import Map from "$lib/misc/Map.svelte";
+  import Map from "$lib/misc/OsmMap.svelte";
 </script>
 
 <svelte:head>
