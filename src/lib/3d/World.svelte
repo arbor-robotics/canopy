@@ -73,6 +73,9 @@
     scene: THREE.Scene,
     renderer: THREE.WebGLRenderer;
 
+  const raycaster = new THREE.Raycaster();
+  const pointer = new THREE.Vector2();
+
   function resizeCanvasToDisplaySize() {
     const canvas = renderer.domElement;
     // look up the size the canvas is being displayed
@@ -88,6 +91,19 @@
 
       // update any render target sizes here
     }
+  }
+
+  function onPointerMove(event) {
+    // calculate pointer position in normalized device coordinates
+    // (-1 to +1) for both components
+    const canvas = renderer.domElement;
+
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+
+    pointer.x = (event.offsetX / width) * 2 - 1;
+    pointer.y = -(event.offsetY / height) * 2 + 1;
+    console.log(pointer);
   }
 
   function init() {
@@ -195,6 +211,10 @@
 
     window.addEventListener("resize", onWindowResize);
 
+    const canvas = renderer.domElement;
+
+    canvas.addEventListener("pointermove", onPointerMove);
+
     // const gui = new GUI();
     // gui.add(controls, "zoomToCursor");
     // gui.add(controls, "screenSpacePanning");
@@ -218,6 +238,13 @@
   }
 
   function render() {
+    raycaster.setFromCamera(pointer, camera);
+    // calculate objects intersecting the picking ray
+    const intersects = raycaster.intersectObjects(scene.children, false);
+
+    for (let i = 0; i < intersects.length; i++) {
+      intersects[i].object.material.color.set(0xff0000);
+    }
     renderer.render(scene, camera);
   }
 
