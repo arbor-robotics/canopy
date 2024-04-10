@@ -6,6 +6,68 @@
 
   import { MapControls } from "three/addons/controls/MapControls.js";
 
+  import { node } from "$lib/stores";
+
+  let forest_plan_msg = undefined;
+  let steering_cost_msg = undefined;
+  let tree_geometries = [];
+  let forest_plan_texture = new THREE.DataTexture(
+    new Uint8Array(3235968),
+    1272,
+    1272
+  );
+  forest_plan_texture.needsUpdate = true;
+
+  node.subscribe((node) => {
+    let forest_plan_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/vis/forest_plan",
+      messageType: "visualization_msgs/Marker",
+    });
+
+    forest_plan_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      // Simple check to see if a UNIQUE forest plan has been received
+      // Do the current plan and incoming plan have the same number of trees?
+      if (
+        forest_plan_msg != undefined &&
+        forest_plan_msg.points.length === msg.points.length
+      )
+        return;
+
+      forest_plan_msg = msg;
+
+      const geometry = new THREE.CapsuleGeometry(1, 1, 4, 16);
+      geometry.translate(0, 0.5, 0);
+
+      const material = new THREE.MeshPhongMaterial({
+        color: osmPalette.forest,
+        flatShading: true,
+      });
+
+      for (var point of msg.points) {
+        console.log(point.x);
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.x = point.x;
+        mesh.position.y = 0;
+        mesh.position.z = point.y;
+        mesh.scale.x = 1;
+        mesh.scale.y = Math.random() + 1;
+        mesh.scale.z = 1;
+        mesh.updateMatrix();
+        mesh.matrixAutoUpdate = false;
+        scene.add(mesh);
+      }
+    });
+  });
+
+  let osmPalette = {
+    grass: 0xcdebb0,
+    forest: 0xadd19e,
+    water: 0xaad3df,
+  };
+
   let camera: THREE.PerspectiveCamera,
     controls: MapControls,
     scene: THREE.Scene,
@@ -30,8 +92,7 @@
 
   function init() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0xcccccc);
-    scene.fog = new THREE.FogExp2(0xcccccc, 0.002);
+    scene.background = new THREE.Color(osmPalette.water);
 
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -45,7 +106,7 @@
       1,
       1000
     );
-    camera.position.set(0, 200, -400);
+    camera.position.set(0, 0, 0);
 
     // controls
 
@@ -58,46 +119,77 @@
 
     controls.screenSpacePanning = false;
 
-    controls.minDistance = 100;
-    controls.maxDistance = 500;
+    controls.minDistance = 10;
+    controls.maxDistance = 100;
 
-    controls.minPolarAngle = -Math.PI;
-    controls.maxPolarAngle = -Math.PI;
+    controls.minPolarAngle = 0;
+    controls.maxPolarAngle = Math.PI;
+
+    // Helpers
+    const axesHelper = new THREE.AxesHelper(100);
+    scene.add(axesHelper);
 
     // world
 
-    const geometry = new THREE.BoxGeometry();
-    geometry.translate(0, 0.5, 0);
-    const material = new THREE.MeshPhongMaterial({
-      color: 0xeeeeee,
-      flatShading: true,
+    const geometry = new THREE.PlaneGeometry(1000, 1000);
+    const material = new THREE.MeshBasicMaterial({
+      color: osmPalette.grass,
+      side: THREE.DoubleSide,
     });
+    const plane = new THREE.Mesh(geometry, material);
+    plane.rotateX(Math.PI / 2);
+    scene.add(plane);
 
-    for (let i = 0; i < 500; i++) {
-      const mesh = new THREE.Mesh(geometry, material);
-      mesh.position.x = Math.random() * 1600 - 800;
-      mesh.position.y = 0;
-      mesh.position.z = Math.random() * 1600 - 800;
-      mesh.scale.x = 20;
-      mesh.scale.y = Math.random() * 80 + 10;
-      mesh.scale.z = 20;
-      mesh.updateMatrix();
-      mesh.matrixAutoUpdate = false;
-      scene.add(mesh);
-    }
+    // const forest_plan_plane = new THREE.Mesh(
+    //   new THREE.PlaneGeometry(254.4, 254.4),
+    //   new THREE.MeshBasicMaterial({
+    //     map: forest_plan_texture,
+    //     side: THREE.DoubleSide,
+    //   })
+    // );
+    // forest_plan_plane.rotation.x = -Math.PI / 2;
+    // forest_plan_plane.position.x = 10.0;
+    // forest_plan_plane.position.y = 0.0;
+    // scene.add(forest_plan_plane);
 
     // lights
 
-    const dirLight1 = new THREE.DirectionalLight(0xffffff, 3);
-    dirLight1.position.set(1, 1, 1);
-    scene.add(dirLight1);
+    // FROM https://github.com/mrdoob/three.js/blob/master/examples/webgl_lights_hemisphere.html
 
-    const dirLight2 = new THREE.DirectionalLight(0x002288, 3);
-    dirLight2.position.set(-1, -1, -1);
-    scene.add(dirLight2);
+    const hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 2);
+    hemiLight.color.setHSL(0.6, 1, 0.6);
+    hemiLight.groundColor.setHSL(0.095, 1, 0.75);
+    hemiLight.position.set(0, 50, 0);
+    scene.add(hemiLight);
 
-    const ambientLight = new THREE.AmbientLight(0x555555);
-    scene.add(ambientLight);
+    const hemiLightHelper = new THREE.HemisphereLightHelper(hemiLight, 10);
+    scene.add(hemiLightHelper);
+
+    //
+
+    const dirLight = new THREE.DirectionalLight(0xffffff, 3);
+    dirLight.color.setHSL(0.1, 1, 0.95);
+    dirLight.position.set(-100, 175, 100);
+    // dirLight.position.multiplyScalar(30);
+    scene.add(dirLight);
+
+    dirLight.castShadow = true;
+
+    dirLight.shadow.mapSize.width = 2048;
+    dirLight.shadow.mapSize.height = 2048;
+
+    const d = 50;
+
+    dirLight.shadow.camera.left = -d;
+    dirLight.shadow.camera.right = d;
+    dirLight.shadow.camera.top = d;
+    dirLight.shadow.camera.bottom = -d;
+
+    dirLight.shadow.camera.far = 3500;
+    dirLight.shadow.bias = -0.0001;
+
+    const dirLightHelper = new THREE.DirectionalLightHelper(dirLight, 10);
+    scene.add(dirLightHelper);
 
     //
 

@@ -5,6 +5,9 @@
   import Icon from "$lib/misc/Icon.svelte";
   import "@material/web/progress/circular-progress";
   import "@material/web/button/text-button";
+  import "@material/web/fab/fab";
+  import "@material/web/icon/icon";
+
   import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
   import { connection_status, ConnectionStatus } from "$lib/stores";
   import World from "$lib/3d/World.svelte";
@@ -34,7 +37,7 @@
 </script>
 
 <svelte:head>
-  <title>About</title>
+  <title>Canopy</title>
   <meta name="description" content="About this app" />
 </svelte:head>
 
@@ -56,6 +59,12 @@
   <div class="opacity-35">Start</div>
 </div>
 <World />
+
+<div class="absolute bottom-0 right-0 pb-4 pr-4">
+  <md-fab>
+    <md-icon slot="icon">play_arrow</md-icon>
+  </md-fab>
+</div>
 
 <!-- 
 <div id="wizard-container">
