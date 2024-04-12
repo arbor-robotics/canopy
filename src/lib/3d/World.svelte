@@ -49,7 +49,7 @@
       });
 
       for (var point of msg.points) {
-        console.log(point.x);
+        // console.log(point.x);
         const mesh = new THREE.Mesh(geometry, material);
         mesh.position.x = point.x;
         mesh.position.y = 0;
@@ -77,6 +77,8 @@
 
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
+  let coneHelper: THREE.Mesh;
+  let plane: THREE.Mesh;
 
   function resizeCanvasToDisplaySize() {
     const canvas = renderer.domElement;
@@ -105,7 +107,20 @@
 
     pointer.x = (event.offsetX / width) * 2 - 1;
     pointer.y = -(event.offsetY / height) * 2 + 1;
-    console.log(pointer);
+    // console.log(pointer);
+
+    raycaster.setFromCamera(pointer, camera);
+
+    // See if the ray from the camera into the world hits one of our meshes
+    const intersects = raycaster.intersectObject(plane);
+
+    // Toggle rotation bool for meshes that we clicked
+    if (intersects.length > 0) {
+      coneHelper.position.set(0, 0, 0);
+      coneHelper.lookAt(intersects[0].face.normal);
+
+      coneHelper.position.copy(intersects[0].point);
+    }
   }
 
   function init() {
@@ -156,7 +171,7 @@
       color: osmPalette.grass,
       side: THREE.DoubleSide,
     });
-    const plane = new THREE.Mesh(geometry, material);
+    plane = new THREE.Mesh(geometry, material);
     plane.position.x = 127.2;
     plane.position.z = 127.2;
     plane.rotateX(Math.PI / 2);
@@ -212,6 +227,12 @@
 
     const dirLightHelper = new THREE.DirectionalLightHelper(dirLight, 10);
     scene.add(dirLightHelper);
+
+    const geometryHelper = new THREE.CylinderGeometry(2, 2, 10, 20);
+    geometryHelper.translate(0, 5, 0);
+    // geometryHelper.rotateX(Math.PI / 2);
+    coneHelper = new THREE.Mesh(geometryHelper, new THREE.MeshNormalMaterial());
+    scene.add(coneHelper);
 
     //
 
