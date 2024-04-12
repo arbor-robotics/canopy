@@ -8,6 +8,8 @@
 
   import { node } from "$lib/stores";
 
+  import { TexturePainter } from "$lib/3d/TexturePainter";
+
   let forest_plan_msg = undefined;
   let steering_cost_msg = undefined;
   let tree_geometries = [];
@@ -122,7 +124,7 @@
       1,
       1000
     );
-    camera.position.set(0, 0, 0);
+    camera.position.set(127.2, 254.4, 127.2);
 
     // controls
 
@@ -136,10 +138,12 @@
     controls.screenSpacePanning = false;
 
     controls.minDistance = 10;
-    controls.maxDistance = 100;
+    controls.maxDistance = 200;
 
     controls.minPolarAngle = 0;
     controls.maxPolarAngle = Math.PI;
+
+    controls.target = new THREE.Vector3(127.2, 0, 127.2);
 
     // Helpers
     const axesHelper = new THREE.AxesHelper(100);
@@ -147,12 +151,14 @@
 
     // world
 
-    const geometry = new THREE.PlaneGeometry(1000, 1000);
+    const geometry = new THREE.PlaneGeometry(254.4, 254.4);
     const material = new THREE.MeshBasicMaterial({
       color: osmPalette.grass,
       side: THREE.DoubleSide,
     });
     const plane = new THREE.Mesh(geometry, material);
+    plane.position.x = 127.2;
+    plane.position.z = 127.2;
     plane.rotateX(Math.PI / 2);
     scene.add(plane);
 
@@ -238,13 +244,13 @@
   }
 
   function render() {
-    raycaster.setFromCamera(pointer, camera);
-    // calculate objects intersecting the picking ray
-    const intersects = raycaster.intersectObjects(scene.children, false);
+    // raycaster.setFromCamera(pointer, camera);
+    // // calculate objects intersecting the picking ray
+    // const intersects = raycaster.intersectObjects(scene.children, false);
 
-    for (let i = 0; i < intersects.length; i++) {
-      intersects[i].object.material.color.set(0xff0000);
-    }
+    // for (let i = 0; i < intersects.length; i++) {
+    //   intersects[i].object.material.color.set(0xff0000);
+    // }
     renderer.render(scene, camera);
   }
 
