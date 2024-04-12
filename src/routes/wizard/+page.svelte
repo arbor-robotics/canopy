@@ -9,31 +9,40 @@
   import "@material/web/icon/icon";
 
   import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
-  import { connection_status, ConnectionStatus } from "$lib/stores";
+  import { connection_status, ConnectionStatus, node } from "$lib/stores";
   import World from "$lib/3d/World.svelte";
+  import OsmMap from "$lib/misc/OsmMap.svelte";
+  import MessageBox from "$lib/misc/MessageBox.svelte";
 
-  // onMount(async () => {
-  //   console.log("Hello!");
-  //   const module = await import("$lib/ros/roslib");
+  let geojson = undefined;
+  let forest_plan_geojson_topic = undefined;
 
-  //   var ros = new ROSLIB.Ros({
-  //     url: "ws://localhost:9090",
-  //   });
+  node.subscribe((node) => {
+    forest_plan_geojson_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/bounds_geojson",
+      messageType: "std_msgs/String",
+    });
 
-  //   // CONNECTION EVENTS
-  //   ros.on("connection", function () {
-  //     console.log("Connected to websocket server.");
-  //     connection_status.set(ConnectionStatus.CONNECTED);
-  //   });
-  //   ros.on("error", function (error) {
-  //     console.log("Error connecting to websocket server: ", error);
-  //   });
-  //   ros.on("close", function () {
-  //     console.log("Connection to websocket server closed.");
+    var json_msg = {
+      data: "YEET",
+    };
 
-  //     // setTimeout(ros.connect("ws://localhost:9090"));
-  //   });
-  // });
+    // forest_plan_geojson_topic.publish(json_msg);
+  });
+
+  let count = 0;
+  let osmMap;
+  function publishPlantingPlan() {
+    //incremtent
+    count++;
+    console.log(JSON.stringify(osmMap.getGeoJSON().geometry));
+    geojson = JSON.stringify(osmMap.getGeoJSON().geometry);
+    var json_msg = {
+      data: geojson,
+    };
+    forest_plan_geojson_topic.publish(json_msg);
+  }
 </script>
 
 <svelte:head>
@@ -58,12 +67,16 @@
   </div>
   <div class="opacity-35">Start</div>
 </div>
-<World />
+<!-- <World /> -->
+<OsmMap bind:this={osmMap} />
+<!-- <MessageBox /> -->
 
 <div class="absolute bottom-0 right-0 pb-4 pr-4">
-  <md-fab>
-    <md-icon slot="icon">play_arrow</md-icon>
-  </md-fab>
+  <button on:click={publishPlantingPlan}
+    ><md-fab aria-label="Edit">
+      <md-icon slot="icon">play_arrow</md-icon>
+    </md-fab></button
+  >
 </div>
 
 <!-- 
