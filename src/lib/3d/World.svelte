@@ -9,10 +9,11 @@
   import { node } from "$lib/stores";
 
   import { TexturePainter } from "$lib/3d/TexturePainter";
+  import type { ThreeMFLoader } from "three/examples/jsm/Addons.js";
 
   let forest_plan_msg = undefined;
   let steering_cost_msg = undefined;
-  let tree_geometries = [];
+  let tree_meshes: THREE.Mesh[] = [];
   let forest_plan_texture = new THREE.DataTexture(
     new Uint8Array(3235968),
     1272,
@@ -48,19 +49,41 @@
         flatShading: true,
       });
 
+      // This tracks the centroid of all forest plan points.
+      let centroid_x = 0;
+      let centroid_y = 0;
+
+      // Clear any existing tree meshes before adding the new ones
+      for (var mesh of tree_meshes) {
+        scene.remove(mesh);
+      }
+      tree_meshes = [];
+
       for (var point of msg.points) {
         // console.log(point.x);
         const mesh = new THREE.Mesh(geometry, material);
         mesh.position.x = point.x;
         mesh.position.y = 0;
-        mesh.position.z = point.y;
+        mesh.position.z = -point.y;
         mesh.scale.x = 1;
         mesh.scale.y = Math.random() + 1;
         mesh.scale.z = 1;
         mesh.updateMatrix();
         mesh.matrixAutoUpdate = false;
+        tree_meshes.push(mesh);
         scene.add(mesh);
+
+        centroid_x += point.x;
+        centroid_y += point.y;
       }
+
+      centroid_x /= msg.points.length;
+      centroid_y /= msg.points.length;
+
+      plane.position.x = centroid_x;
+      plane.position.z = -centroid_y;
+
+      console.log(`Centroid: (${centroid_x}, ${centroid_y})`);
     });
   });
 

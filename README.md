@@ -24,3 +24,11 @@ npm run build
 You can preview the production build with `npm run preview`.
 
 > To deploy your app, you may need to install an [adapter](https://kit.svelte.dev/docs/adapters) for your target environment.
+
+## ROS considerations
+
+### Coordinate conversions
+ROS's map frame uses the ENU convention. That is, **x is east, y is north, z is up**.
+THREE.js's convention is: **x is east, y is up, z is south**.
+
+
