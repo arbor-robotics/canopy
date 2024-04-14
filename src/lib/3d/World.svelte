@@ -8,18 +8,24 @@
 
   import { node } from "$lib/stores";
 
+  import TWEEN from "@tweenjs/tween.js";
+
   import { TexturePainter } from "$lib/3d/TexturePainter";
   import type { ThreeMFLoader } from "three/examples/jsm/Addons.js";
 
   let forest_plan_msg = undefined;
+  let bounds_grid_msg = undefined;
+  let bounds_plane: THREE.Mesh;
+  let ground_plane: THREE.Mesh;
+
   let steering_cost_msg = undefined;
   let tree_meshes: THREE.Mesh[] = [];
-  let forest_plan_texture = new THREE.DataTexture(
-    new Uint8Array(3235968),
-    1272,
-    1272
-  );
-  forest_plan_texture.needsUpdate = true;
+  let bounds_texture: THREE.DataTexture | undefined = undefined;
+  let plan_centroid_x = 0,
+    plan_centroid_y = 0;
+  let forestRadius = 0;
+
+  export let mode = "plan";
 
   node.subscribe((node) => {
     let forest_plan_topic = new ROSLIB.Topic({
@@ -45,13 +51,11 @@
       geometry.translate(0, 0.5, 0);
 
       const material = new THREE.MeshPhongMaterial({
-        color: osmPalette.forest,
+        color: osmPalette.tree,
         flatShading: true,
       });
 
       // This tracks the centroid of all forest plan points.
-      let centroid_x = 0;
-      let centroid_y = 0;
 
       // Clear any existing tree meshes before adding the new ones
       for (var mesh of tree_meshes) {
@@ -73,23 +77,142 @@
         tree_meshes.push(mesh);
         scene.add(mesh);
 
-        centroid_x += point.x;
-        centroid_y += point.y;
+        plan_centroid_x += point.x;
+        plan_centroid_y += point.y;
       }
 
-      centroid_x /= msg.points.length;
-      centroid_y /= msg.points.length;
+      plan_centroid_x /= msg.points.length;
+      plan_centroid_y /= msg.points.length;
 
-      plane.position.x = centroid_x;
-      plane.position.z = -centroid_y;
+      if (mode == "plan") {
+        camera.position.x = plan_centroid_x;
+        camera.position.z = -plan_centroid_y;
+        controls.target.x = plan_centroid_x;
+        controls.target.z = -plan_centroid_y;
+      }
 
-      console.log(`Centroid: (${centroid_x}, ${centroid_y})`);
+      // if (bounds_plane != undefined) {
+      //   bounds_plane.position.x = plan_centroid_x;
+      //   bounds_plane.position.z = -plan_centroid_y;
+      // }
+
+      console.log(`Centroid: (${plan_centroid_x}, ${plan_centroid_y})`);
+    });
+
+    let bounds_grid_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/map/bounds",
+      messageType: "nav_msgs/OccupancyGrid",
+    });
+
+    bounds_grid_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      // if (bounds_grid_msg != undefined || msg == undefined) return;
+
+      console.log(
+        `Received bounds grid with dims ${msg.info.width}, ${msg.info.height}`
+      );
+
+      if (bounds_texture == undefined) {
+        bounds_texture = new THREE.DataTexture(
+          new Uint8Array(91204),
+          msg.info.width,
+          msg.info.height
+        );
+      }
+
+      bounds_grid_msg = msg;
+
+      let gridWidth = msg.info.width,
+        gridHeight = msg.info.height,
+        res = msg.info.resolution;
+
+      forestRadius = Math.max(gridWidth, gridHeight) * res * 0.75;
+
+      // 4 channels, RGBA
+      let data = new Uint8Array(gridWidth * gridHeight * 4);
+
+      let forestColor = new THREE.Color(osmPalette.forest);
+      let grassColor = new THREE.Color(osmPalette.grass);
+      for (let i = 0; i < gridWidth * gridHeight; i++) {
+        let cellColor = msg.data[i] == 100 ? grassColor : forestColor;
+        const stride = i * 4; // 4 channels, RGBA
+
+        data[stride] = cellColor.r * 255;
+        data[stride + 1] = cellColor.g * 255;
+        data[stride + 2] = cellColor.b * 255;
+        data[stride + 3] = 255;
+      }
+
+      scene.remove(bounds_plane);
+      bounds_plane = new THREE.Mesh(
+        new THREE.PlaneGeometry(gridWidth * res, gridHeight * res),
+        new THREE.MeshBasicMaterial({
+          map: bounds_texture,
+          side: THREE.DoubleSide,
+        })
+      );
+      bounds_plane.rotateX(-Math.PI / 2);
+      bounds_plane.position.x =
+        msg.info.origin.position.x + (gridWidth * res) / 2;
+      bounds_plane.position.z =
+        -msg.info.origin.position.y - (gridHeight * res) / 2;
+      scene.add(bounds_plane);
+
+      scene.remove(ground_plane);
+
+      ground_plane = new THREE.Mesh(
+        new THREE.CircleGeometry(forestRadius),
+        new THREE.MeshBasicMaterial({
+          color: osmPalette.grass,
+        })
+      );
+      ground_plane.rotateX(-Math.PI / 2);
+      ground_plane.position.x =
+        msg.info.origin.position.x + (gridWidth * res) / 2;
+      ground_plane.position.z =
+        -msg.info.origin.position.y - (gridHeight * res) / 2;
+
+      // This is just to prevent clipping
+      ground_plane.position.y = bounds_plane.position.y - 0.01;
+      scene.add(ground_plane);
+
+      bounds_texture.image.data = data;
+      bounds_texture.needsUpdate = true;
+    });
+
+    let odom_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/odom",
+      messageType: "nav_msgs/Odometry",
+    });
+
+    odom_topic.subscribe(function (msg) {
+      // console.log(msg.pose.pose.position);
+      if (mode == "plant") {
+        let ego_x = msg.pose.pose.position.x;
+        let ego_y = msg.pose.pose.position.y;
+        egoMesh.position.x = ego_x;
+        egoMesh.position.z = -ego_y;
+        egoRing.position.x = ego_x;
+        egoRing.position.z = -ego_y;
+        camera.position.x = ego_x;
+        camera.position.z = -plan_centroid_y;
+        controls.target.x = ego_x;
+        controls.target.z = -ego_y;
+      }
+
+      // console.log(`Mesh now at ${egoMesh.position.x}, ${egoMesh.position.z}`);
     });
   });
 
   let osmPalette = {
-    grass: 0xcdebb0,
+    blue: 0x0092da,
     forest: 0xadd19e,
+    grass: 0xcdebb0,
+    gray: 0xd9d0c9,
+    tree: 0x95b887,
     water: 0xaad3df,
   };
 
@@ -101,7 +224,9 @@
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
   let coneHelper: THREE.Mesh;
-  let plane: THREE.Mesh;
+
+  let egoMesh: THREE.Mesh;
+  let egoRing: THREE.Mesh;
 
   function resizeCanvasToDisplaySize() {
     const canvas = renderer.domElement;
@@ -135,15 +260,33 @@
     raycaster.setFromCamera(pointer, camera);
 
     // See if the ray from the camera into the world hits one of our meshes
-    const intersects = raycaster.intersectObject(plane);
+    const intersects = raycaster.intersectObject(ground_plane);
 
     // Toggle rotation bool for meshes that we clicked
     if (intersects.length > 0) {
       coneHelper.position.set(0, 0, 0);
       coneHelper.lookAt(intersects[0].face.normal);
+      coneHelper.rotateX(-Math.PI / 2);
 
       coneHelper.position.copy(intersects[0].point);
+      coneHelper.position.y = 0.5;
     }
+  }
+
+  function createPulsatingEffect() {
+    // This changes the scale of the ring and creates the expanding pulse.
+    new TWEEN.Tween(egoRing.scale)
+      .to(new THREE.Vector3(2, 2, 2))
+      .easing(TWEEN.Easing.Quadratic.Out)
+      .repeat(Infinity)
+      .start();
+
+    // This changes the opacity which makes it show and fade away.
+    new TWEEN.Tween(egoRing.material)
+      .to({ opacity: 0 })
+      .easing(TWEEN.Easing.Quadratic.Out)
+      .repeat(Infinity)
+      .start();
   }
 
   function init() {
@@ -188,17 +331,24 @@
     scene.add(axesHelper);
 
     // world
-
-    const geometry = new THREE.PlaneGeometry(254.4, 254.4);
-    const material = new THREE.MeshBasicMaterial({
-      color: osmPalette.grass,
-      side: THREE.DoubleSide,
-    });
-    plane = new THREE.Mesh(geometry, material);
-    plane.position.x = 127.2;
-    plane.position.z = 127.2;
-    plane.rotateX(Math.PI / 2);
-    scene.add(plane);
+    bounds_plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(60, 60),
+      new THREE.MeshBasicMaterial({
+        map: bounds_texture,
+        side: THREE.DoubleSide,
+      })
+    );
+    scene.add(bounds_plane);
+    // const geometry = new THREE.PlaneGeometry(254.4, 254.4);
+    // const material = new THREE.MeshBasicMaterial({
+    //   color: osmPalette.grass,
+    //   side: THREE.DoubleSide,
+    // });
+    // plane = new THREE.Mesh(geometry, material);
+    // plane.position.x = 127.2;
+    // plane.position.z = 127.2;
+    // plane.rotateX(Math.PI / 2);
+    // scene.add(plane);
 
     // const forest_plan_plane = new THREE.Mesh(
     //   new THREE.PlaneGeometry(254.4, 254.4),
@@ -251,11 +401,41 @@
     const dirLightHelper = new THREE.DirectionalLightHelper(dirLight, 10);
     scene.add(dirLightHelper);
 
-    const geometryHelper = new THREE.CylinderGeometry(2, 2, 10, 20);
-    geometryHelper.translate(0, 5, 0);
-    // geometryHelper.rotateX(Math.PI / 2);
-    coneHelper = new THREE.Mesh(geometryHelper, new THREE.MeshNormalMaterial());
+    coneHelper = new THREE.Mesh(
+      new THREE.CircleGeometry(1, 32),
+      new THREE.MeshBasicMaterial({
+        color: osmPalette.gray,
+        transparent: true,
+        opacity: 0.8,
+      })
+    );
+    coneHelper.rotateX(-Math.PI / 2);
+    coneHelper.position.y = 1.2;
     scene.add(coneHelper);
+
+    if (mode == "plant") {
+      console.log("ADDING EGO MESHES");
+      scene.remove(egoMesh);
+      egoMesh = new THREE.Mesh(
+        new THREE.CylinderGeometry(1, 1, 3, 20),
+        new THREE.MeshBasicMaterial({
+          color: osmPalette.blue,
+        })
+      );
+      scene.add(egoMesh);
+
+      scene.remove(egoRing);
+      egoRing = new THREE.Mesh(
+        new THREE.CircleGeometry(1, 32),
+        new THREE.MeshBasicMaterial({
+          color: osmPalette.blue,
+          transparent: true,
+        })
+      );
+      egoRing.rotateX(-Math.PI / 2);
+      egoRing.position.y = 1.2;
+      scene.add(egoRing);
+    }
 
     //
 
@@ -279,6 +459,7 @@
 
   function animate() {
     resizeCanvasToDisplaySize();
+    TWEEN.update();
 
     requestAnimationFrame(animate);
 
@@ -303,6 +484,7 @@
   // No SSR!
   onMount(async () => {
     init();
+    if (mode == "plant") createPulsatingEffect();
     animate();
   });
 </script>

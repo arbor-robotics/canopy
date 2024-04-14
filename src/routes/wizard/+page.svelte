@@ -3,6 +3,8 @@
   import { onMount } from "svelte";
 
   import Icon from "$lib/misc/Icon.svelte";
+  import logo from "$lib/images/logo.svg";
+
   import "@material/web/progress/circular-progress";
   import "@material/web/button/text-button";
   import "@material/web/button/elevated-button";
@@ -17,17 +19,24 @@
   } from "@sveltestrap/sveltestrap";
 
   import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
-  import { connection_status, ConnectionStatus, node } from "$lib/stores";
+  import {
+    connection_status,
+    ConnectionStatus,
+    node,
+    BehaviorState,
+    current_behavior_state,
+  } from "$lib/stores";
   import World from "$lib/3d/World.svelte";
   import OsmMap from "$lib/misc/OsmMap.svelte";
   import MessageBox from "$lib/misc/MessageBox.svelte";
+  import WizardButton from "$lib/navigation/WizardButton.svelte";
+  import BehaviorStateIndicator from "$lib/ros/BehaviorStateIndicator.svelte";
+
+  let current_step: number = 1;
 
   let geojson = undefined;
   let forest_plan_geojson_topic = undefined;
-
-  onMount(async () => {
-    const bootstrap = await import("bootstrap");
-  });
+  let reqest_transition_client = undefined;
 
   node.subscribe((node) => {
     forest_plan_geojson_topic = new ROSLIB.Topic({
@@ -35,18 +44,32 @@
       name: "/planning/bounds_geojson",
       messageType: "std_msgs/String",
     });
+
+    reqest_transition_client = new ROSLIB.Service({
+      ros: node,
+      name: "/behavior/request_transition",
+      serviceType: "steward_msgs/RequestTransition",
+    });
   });
 
   let count = 0;
   let osmMap;
-  let toast_header_text;
-  let toast_body_text;
+  let toast_header_text: string;
+  let toast_body_text: string;
+  let toast_color: string;
   let boundsOK = false;
+
+  enum StewardBehaviorTransition {
+    PLAY = 0,
+    PAUSE = 1,
+  }
+
   function publishPlantingPlan() {
     if (osmMap.getGeoJSON() == undefined) {
-      showErrorToast(
+      showToast(
         "No bounds",
-        "Trying drawing your planting area using the brush button in the top right."
+        "Trying drawing your planting area using the brush button in the top right.",
+        "danger"
       );
       return;
     }
@@ -54,9 +77,10 @@
     let geometry = osmMap.getGeoJSON().geometry;
 
     if (geometry.coordinates.length > 1) {
-      showErrorToast(
+      showToast(
         "Bounds should be contiguous",
-        "Make sure that your bounds are a single, connected shape"
+        "Make sure that your bounds are a single, connected shape",
+        "danger"
       );
       return;
     }
@@ -68,6 +92,7 @@
     };
     forest_plan_geojson_topic.publish(json_msg);
     boundsOK = true;
+    current_step++;
   }
 
   let isToastOpen = false;
@@ -84,10 +109,55 @@
     isToastOpen = false;
   }
 
-  function showErrorToast(title: string, description: string) {
+  function showToast(
+    title: string,
+    description: string,
+    color: string = "primary"
+  ) {
+    toast_color = color;
     toast_header_text = title;
     toast_body_text = description;
     openToast();
+  }
+
+  function goToStep1() {
+    console.log("Moving to Step 1.");
+    current_step = 1;
+  }
+
+  function goToStep2() {
+    console.log("Moving to Step 2.");
+    current_step = 2;
+  }
+
+  function confirmPlan() {
+    current_step++;
+    showToast(
+      "Steward is ready to plant",
+      "Click the ▶ button to start the mission",
+      "success"
+    );
+  }
+
+  function toggleStewardState() {
+    let transition_request;
+    if ($current_behavior_state == BehaviorState.PAUSED) {
+      transition_request = {
+        transition: StewardBehaviorTransition.PLAY,
+      };
+    } else {
+      transition_request = {
+        transition: StewardBehaviorTransition.PAUSE,
+      };
+    }
+    reqest_transition_client.callService(
+      transition_request,
+      function (response) {
+        console.log(
+          `Transition response was ${response.success}: ${response.description}`
+        );
+      }
+    );
   }
 </script>
 
@@ -98,41 +168,77 @@
 
 <Styles />
 
-<div
-  class="wizard-steps shadow-xl py-2 rounded-lg flex-row flex justify-around align-middle"
->
-  <div class="font-medium">Planting Bounds</div>
-  <div class="my-auto">
-    <Icon id="chevron_right"></Icon>
+<div class="flex flex-row">
+  <div id="rail" class="flex flex-column">
+    <a id="logo" href="/"><img id="logo-img" src={logo} alt="Canopy logo" /></a>
+
+    <div class="link-container">
+      <WizardButton
+        icon="lasso_select"
+        label="Draw Bounds"
+        selected={current_step == 1}
+        on:click={goToStep1}
+      ></WizardButton>
+      <i class="bi bi-chevron-down opacity-30"></i>
+      <WizardButton
+        icon="map"
+        label="Generate Plan"
+        enabled={current_step > 1}
+        selected={current_step == 2}
+        on:click={goToStep2}
+      ></WizardButton>
+      <i class="bi bi-chevron-down opacity-30"></i>
+      <WizardButton
+        icon="rocket_launch"
+        label="Launch Steward"
+        enabled={current_step > 2}
+        selected={current_step == 3}
+      ></WizardButton>
+    </div>
+
+    <BehaviorStateIndicator />
+    <div id="status"></div>
   </div>
-  <div class="opacity-35">Forest Plan</div>
-  <div class="my-auto">
-    <Icon id="chevron_right"></Icon>
-  </div>
-  <div class="opacity-35">Route</div>
-  <div class="my-auto">
-    <Icon id="chevron_right"></Icon>
-  </div>
-  <div class="opacity-35">Start</div>
+  {#if current_step == 1}
+    <OsmMap bind:this={osmMap} />
+  {:else if current_step == 2}
+    <World />
+  {:else if current_step == 3}
+    <World mode={"plant"} />
+  {/if}
 </div>
 
-{#if boundsOK}
-  <World />
-{:else}
-  <OsmMap bind:this={osmMap} />
-{/if}
-
 <div class="absolute bottom-0 right-0 pb-4 pr-4">
-  <button on:click={publishPlantingPlan}>
-    <md-elevated-button class="flex flex-row"> Done</md-elevated-button>
-  </button>
+  {#if current_step == 1}
+    <button on:click={publishPlantingPlan}>
+      <md-elevated-button class="flex flex-row">
+        Confirm Bounds</md-elevated-button
+      >
+    </button>
+  {:else if current_step == 2}
+    <button on:click={confirmPlan}>
+      <md-elevated-button class="flex flex-row">
+        Confirm Plan</md-elevated-button
+      >
+    </button>
+  {:else if current_step == 3}
+    <button on:click={toggleStewardState}>
+      <md-elevated-button class="flex flex-row">
+        {#if $current_behavior_state == BehaviorState.PAUSED}
+          <Icon id="play_arrow" />
+        {:else}
+          <Icon id="pause" />
+        {/if}
+      </md-elevated-button>
+    </button>
+  {/if}
 </div>
 
 <div
   class="absolute bottom-0 right-auto left-0 flex flex-row w-full justify-center pb-1"
 >
   <Toast isOpen={isToastOpen} autohide duration={100} on:close={onToastClose}>
-    <ToastHeader toggle={toggleToast} icon={"danger"}
+    <ToastHeader toggle={toggleToast} icon={toast_color}
       >{toast_header_text}</ToastHeader
     >
     <ToastBody>
@@ -142,7 +248,32 @@
 </div>
 
 <style>
-  .wizard-steps {
-    /* background-color: var(--md-sys-color-primary-container); */
+  #logo {
+    font-size: 2rem;
+    font-family: "Bitter", serif;
+    font-style: italic;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 1rem;
+  }
+  #logo-img {
+    width: 2.5rem;
+  }
+  #status {
+    font-size: 2rem;
+    font-family: "Bitter", serif;
+    font-style: italic;
+    margin-left: auto;
+    margin-right: auto;
+    padding-top: 1rem;
+  }
+  .link-container {
+    height: 100%;
+    width: 5rem;
+    background-color: #f5f5ee;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
   }
 </style>

@@ -16,7 +16,7 @@
   <RosListener />
 
   {#if $connection_status == ConnectionStatus.CONNECTED}
-    <NavigationRail></NavigationRail>
+    <!-- <NavigationRail></NavigationRail> -->
     <main class="p-0">
       <slot />
     </main>
