@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import * as THREE from "three";
+  import { MeshLine, MeshLineMaterial, MeshLineRaycast } from "three.meshline";
 
   import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 
@@ -205,6 +206,47 @@
 
       // console.log(`Mesh now at ${egoMesh.position.x}, ${egoMesh.position.z}`);
     });
+
+    let goal_pose_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/goal_pose",
+      messageType: "geometry_msgs/PoseStamped",
+    });
+
+    goal_pose_topic.subscribe(function (msg) {
+      if (mode == "plant") {
+        waypointRing.position.x = msg.pose.position.x;
+        waypointRing.position.z = -msg.pose.position.y;
+      }
+    });
+
+    let global_plan_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/received_global_plan",
+      messageType: "nav_msgs/Path",
+    });
+
+    global_plan_topic.subscribe(function (msg) {
+      let points = [];
+      const height_above_ground = 1.0; // meters
+      const line_width = 1.0; // meters
+      for (let pose of msg.poses) {
+        let pos = pose.pose.position;
+        points.push(pos.x, height_above_ground, -pos.y);
+      }
+      const line = new MeshLine();
+      line.setPoints(points);
+
+      const material = new MeshLineMaterial({
+        color: new THREE.Color(osmPalette.green_highlight),
+      });
+
+      scene.remove(global_plan);
+      global_plan = new THREE.Mesh(line, material);
+      scene.add(global_plan);
+
+      console.log(`Adding global plan with ${points.length} points`);
+    });
   });
 
   let osmPalette = {
@@ -212,6 +254,7 @@
     forest: 0xadd19e,
     grass: 0xcdebb0,
     gray: 0xd9d0c9,
+    green_highlight: 0x88e0be,
     tree: 0x95b887,
     water: 0xaad3df,
   };
@@ -227,6 +270,8 @@
 
   let egoMesh: THREE.Mesh;
   let egoRing: THREE.Mesh;
+  let waypointRing: THREE.Mesh;
+  let global_plan: THREE.Mesh;
 
   function resizeCanvasToDisplaySize() {
     const canvas = renderer.domElement;
@@ -283,6 +328,20 @@
 
     // This changes the opacity which makes it show and fade away.
     new TWEEN.Tween(egoRing.material)
+      .to({ opacity: 0 })
+      .easing(TWEEN.Easing.Quadratic.Out)
+      .repeat(Infinity)
+      .start();
+
+    // This changes the scale of the ring and creates the expanding pulse.
+    new TWEEN.Tween(waypointRing.scale)
+      .to(new THREE.Vector3(2, 2, 2))
+      .easing(TWEEN.Easing.Quadratic.Out)
+      .repeat(Infinity)
+      .start();
+
+    // This changes the opacity which makes it show and fade away.
+    new TWEEN.Tween(waypointRing.material)
       .to({ opacity: 0 })
       .easing(TWEEN.Easing.Quadratic.Out)
       .repeat(Infinity)
@@ -435,6 +494,18 @@
       egoRing.rotateX(-Math.PI / 2);
       egoRing.position.y = 1.2;
       scene.add(egoRing);
+
+      scene.remove(waypointRing);
+      waypointRing = new THREE.Mesh(
+        new THREE.CircleGeometry(1, 32),
+        new THREE.MeshBasicMaterial({
+          color: osmPalette.green_highlight,
+          transparent: true,
+        })
+      );
+      waypointRing.rotateX(-Math.PI / 2);
+      waypointRing.position.y = 1.2;
+      scene.add(waypointRing);
     }
 
     //
