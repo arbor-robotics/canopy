@@ -27,12 +27,26 @@
     BehaviorState,
     current_behavior_state,
     plan_progress,
+    planting_eta,
+    num_planted_seedlings,
+    num_seedlings_in_plan,
   } from "$lib/stores";
   import World from "$lib/3d/World.svelte";
   import OsmMap from "$lib/misc/OsmMap.svelte";
   import MessageBox from "$lib/misc/MessageBox.svelte";
   import WizardButton from "$lib/navigation/WizardButton.svelte";
   import BehaviorStateIndicator from "$lib/ros/BehaviorStateIndicator.svelte";
+
+  import { spring } from "svelte/motion";
+
+  const displayed_seedling_count = spring();
+  $: displayed_seedling_count.set($num_planted_seedlings);
+  $: offset = modulo($displayed_seedling_count, 1);
+
+  function modulo(n: number, m: number) {
+    // handle negative numbers
+    return ((n % m) + m) % m;
+  }
 
   let current_step: number = 1;
 
@@ -236,11 +250,51 @@
   {/if}
 </div>
 
-{#if current_step > 1}
-  <div class="absolute top-0 left-20 right-0 p-12 pointer-events-none">
-    <Progress value={$plan_progress * 100} class="mb-2"
-      >{Math.round($plan_progress * 100)}%</Progress
-    >
+{#if current_step == 2 && $num_seedlings_in_plan < 1}
+  <div
+    class="absolute top-0 left-20 right-0 m-12 px-2 pointer-events-none flex flex-row items-center justify-center bg-white rounded-xl"
+  >
+    <div class="flex flex-row justify-center italic items-center">
+      <Icon id="autorenew" spin></Icon>
+      <p class="m-0">Generating Forest Plan</p>
+    </div>
+  </div>
+{/if}
+
+{#if current_step == 2 && $num_seedlings_in_plan > 0}
+  <div
+    class="absolute top-0 left-20 right-0 m-12 px-2 pointer-events-none flex flex-row items-center justify-center bg-white rounded-xl"
+  >
+    <p class="m-0 pr-4"><i class="bi bi-info-circle"></i></p>
+    <p class="font-bold m-0 pr-4">
+      {Math.floor($num_seedlings_in_plan)} seedlings.
+    </p>
+    <p class="italic m-0 pr-4">
+      {Math.floor($num_seedlings_in_plan * 0.006 * 2000)} lbs CO2/year (temperate
+      oak forest)
+    </p>
+  </div>
+{/if}
+
+{#if current_step == 3}
+  <div
+    class="absolute top-0 left-20 right-0 m-12 px-2 pointer-events-none flex flex-row items-center bg-white rounded-xl"
+  >
+    <p class="grow m-0 pl-4">
+      <i class="bi bi-tree"></i>
+      {Math.floor($displayed_seedling_count)}
+    </p>
+    {#if Math.ceil($plan_progress * 100) > 99}
+      <Progress color="success" value={100} class="grow-[8]"
+        >Planting complete</Progress
+      >
+    {:else}
+      <Progress value={$plan_progress * 100} class="grow-[8]"
+        >{Math.ceil($plan_progress * 100)}%</Progress
+      >
+    {/if}
+
+    <p class="font-bold grow m-0 pl-4">{Math.round($planting_eta / 60)} min</p>
   </div>
 {/if}
 
@@ -285,5 +339,13 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
+  }
+
+  .counter-digits {
+  }
+
+  .hidden {
+    top: -100%;
+    user-select: none;
   }
 </style>

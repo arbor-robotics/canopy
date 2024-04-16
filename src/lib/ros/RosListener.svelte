@@ -10,6 +10,9 @@
     BehaviorState,
     current_behavior_state,
     plan_progress,
+    planting_eta,
+    num_planted_seedlings,
+    num_seedlings_in_plan,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -72,7 +75,40 @@
 
     plan_progress_topic.subscribe(function (msg) {
       plan_progress.set(msg.data);
-      console.log(`Progress is now: ${msg.data}`);
+    });
+
+    let planting_eta_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/eta",
+      messageType: "std_msgs/Float32",
+    });
+
+    planting_eta_topic.subscribe(function (msg) {
+      planting_eta.set(msg.data);
+    });
+
+    let num_planted_seedlings_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/num_planted_seedlings",
+      messageType: "std_msgs/Float32",
+    });
+
+    num_planted_seedlings_topic.subscribe(function (msg) {
+      console.log(`Planted ${msg.data} seedlings`);
+
+      num_planted_seedlings.set(msg.data);
+    });
+
+    let forest_plan_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/vis/forest_plan",
+      messageType: "visualization_msgs/Marker",
+    });
+
+    forest_plan_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      num_seedlings_in_plan.set(msg.points.length);
     });
   });
 </script>

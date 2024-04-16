@@ -66,7 +66,8 @@
       }
       tree_meshes = [];
 
-      for (var point of msg.points) {
+      // Ignore the first forest plan point, which is the robot's start position
+      for (var point of msg.points.slice(1)) {
         // console.log(point.x);
         const mesh = new THREE.Mesh(geometry, material);
         mesh.position.x = point.x;
@@ -161,7 +162,7 @@
         msg.info.origin.position.x + (gridWidth * res) / 2;
       bounds_plane.position.z =
         -msg.info.origin.position.y - (gridHeight * res) / 2;
-        
+
       scene.add(bounds_plane);
 
       scene.remove(ground_plane);
@@ -460,8 +461,8 @@
     dirLight.shadow.camera.far = 3500;
     dirLight.shadow.bias = -0.0001;
 
-    const dirLightHelper = new THREE.DirectionalLightHelper(dirLight, 10);
-    scene.add(dirLightHelper);
+    // const dirLightHelper = new THREE.DirectionalLightHelper(dirLight, 10);
+    // scene.add(dirLightHelper);
 
     coneHelper = new THREE.Mesh(
       new THREE.CircleGeometry(1, 32),
@@ -473,7 +474,7 @@
     );
     coneHelper.rotateX(-Math.PI / 2);
     coneHelper.position.y = 1.2;
-    scene.add(coneHelper);
+    // scene.add(coneHelper);
 
     if (mode == "plant") {
       console.log("ADDING EGO MESHES");
@@ -517,7 +518,7 @@
 
     const canvas = renderer.domElement;
 
-    canvas.addEventListener("pointermove", onPointerMove);
+    // canvas.addEventListener("pointermove", onPointerMove);
 
     // const gui = new GUI();
     // gui.add(controls, "zoomToCursor");

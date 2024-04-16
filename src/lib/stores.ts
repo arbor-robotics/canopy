@@ -33,3 +33,6 @@ export const current_mode = writable(Mode.DISABLED);
 export const global_status_level = writable(Level.WARN);
 export const global_status_message = writable("");
 export const plan_progress = writable(0);
+export const planting_eta = writable(0);
+export const num_planted_seedlings = writable(0);
+export const num_seedlings_in_plan = writable(0);
