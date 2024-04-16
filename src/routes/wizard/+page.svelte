@@ -12,6 +12,7 @@
   import "@material/web/icon/icon";
   import {
     Button,
+    Progress,
     Styles,
     Toast,
     ToastBody,
@@ -25,6 +26,7 @@
     node,
     BehaviorState,
     current_behavior_state,
+    plan_progress,
   } from "$lib/stores";
   import World from "$lib/3d/World.svelte";
   import OsmMap from "$lib/misc/OsmMap.svelte";
@@ -233,6 +235,14 @@
     </button>
   {/if}
 </div>
+
+{#if current_step > 1}
+  <div class="absolute top-0 left-20 right-0 p-12 pointer-events-none">
+    <Progress value={$plan_progress * 100} class="mb-2"
+      >{Math.round($plan_progress * 100)}%</Progress
+    >
+  </div>
+{/if}
 
 <div
   class="absolute bottom-0 right-auto left-0 flex flex-row w-full justify-center pb-1"

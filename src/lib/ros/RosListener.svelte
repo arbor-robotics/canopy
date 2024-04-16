@@ -9,6 +9,7 @@
     node as nodeWritable,
     BehaviorState,
     current_behavior_state,
+    plan_progress,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -61,6 +62,17 @@
 
     current_behavior_state_topic.subscribe(function (msg) {
       current_behavior_state.set(msg.value);
+    });
+
+    let plan_progress_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/progress",
+      messageType: "std_msgs/Float32",
+    });
+
+    plan_progress_topic.subscribe(function (msg) {
+      plan_progress.set(msg.data);
+      console.log(`Progress is now: ${msg.data}`);
     });
   });
 </script>

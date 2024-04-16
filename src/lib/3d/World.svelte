@@ -53,6 +53,8 @@
 
       const material = new THREE.MeshPhongMaterial({
         color: osmPalette.tree,
+        transparent: true,
+        opacity: 0.3,
         flatShading: true,
       });
 
@@ -159,6 +161,7 @@
         msg.info.origin.position.x + (gridWidth * res) / 2;
       bounds_plane.position.z =
         -msg.info.origin.position.y - (gridHeight * res) / 2;
+        
       scene.add(bounds_plane);
 
       scene.remove(ground_plane);
@@ -386,8 +389,8 @@
     controls.target = new THREE.Vector3(127.2, 0, 127.2);
 
     // Helpers
-    const axesHelper = new THREE.AxesHelper(100);
-    scene.add(axesHelper);
+    // const axesHelper = new THREE.AxesHelper(100);
+    // scene.add(axesHelper);
 
     // world
     bounds_plane = new THREE.Mesh(
@@ -431,8 +434,8 @@
     hemiLight.position.set(0, 50, 0);
     scene.add(hemiLight);
 
-    const hemiLightHelper = new THREE.HemisphereLightHelper(hemiLight, 10);
-    scene.add(hemiLightHelper);
+    // const hemiLightHelper = new THREE.HemisphereLightHelper(hemiLight, 10);
+    // scene.add(hemiLightHelper);
 
     //
 

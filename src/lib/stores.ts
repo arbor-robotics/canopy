@@ -32,3 +32,4 @@ export const error_count = writable(undefined);
 export const current_mode = writable(Mode.DISABLED);
 export const global_status_level = writable(Level.WARN);
 export const global_status_message = writable("");
+export const plan_progress = writable(0);
