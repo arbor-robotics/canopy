@@ -280,7 +280,7 @@
   <div
     class="absolute top-0 left-20 right-0 m-12 px-2 pointer-events-none flex flex-row items-center bg-white rounded-xl"
   >
-    <p class="grow m-0 pl-4">
+    <p class="grow m-0 pl-4 text-center">
       <i class="bi bi-tree"></i>
       {Math.floor($displayed_seedling_count)}
     </p>
@@ -294,7 +294,10 @@
       >
     {/if}
 
-    <p class="font-bold grow m-0 pl-4">{Math.round($planting_eta / 60)} min</p>
+    <p class="font-bold grow m-0 pl-4 text-center">
+      <i class="bi bi-clock"></i>
+      {Math.round($planting_eta / 60)} min
+    </p>
   </div>
 {/if}
 
