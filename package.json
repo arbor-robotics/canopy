@@ -38,6 +38,7 @@
 		"@types/leaflet-draw": "^1.0.11",
 		"@types/roslib": "^1.3.4",
 		"@types/three": "^0.163.0",
+		"bits-ui": "^0.21.13",
 		"bootstrap": "^5.3.3",
 		"camera-controls": "^2.8.3",
 		"leaflet": "^1.9.4",

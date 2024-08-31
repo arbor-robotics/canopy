@@ -87,6 +87,17 @@
       planting_eta.set(msg.data);
     });
 
+    let test_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/test",
+      messageType: "std_msgs/Empty",
+    });
+
+    test_topic.subscribe(function (msg) {
+      // planting_eta.set(msg.data);
+      console.log(msg);
+    });
+
     let num_planted_seedlings_topic = new ROSLIB.Topic({
       ros: node,
       name: "/planning/num_planted_seedlings",

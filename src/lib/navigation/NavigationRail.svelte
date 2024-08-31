@@ -14,32 +14,22 @@
   <a id="logo" href="/"><img id="logo-img" src={logo} alt="Canopy logo" /></a>
 
   <div class="link-container">
-    <NavigationRailButton icon="kid_star" label="Wizard" url="/wizard"
-    ></NavigationRailButton>
-    <NavigationRailButton
-      icon="nature"
-      label="Your Land"
-      url="/land"
-      enabled={false}
+    <NavigationRailButton icon="map" label="Land" url="/wizard" enabled={true}
     ></NavigationRailButton>
     <NavigationRailButton
       icon="smart_toy"
       label="Steward"
-      url="/robot"
-      enabled={false}
+      url="/steward"
+      enabled={true}
     ></NavigationRailButton>
-    <NavigationRailButton
-      icon="monitoring"
-      label="Stats"
-      url="/"
-      enabled={false}
+    <!-- <NavigationRailButton icon="monitoring" label="Stats" url="/" enabled={true}
     ></NavigationRailButton>
     <NavigationRailButton
       icon="settings"
       label="Settings"
       url="/"
-      enabled={false}
-    ></NavigationRailButton>
+      enabled={true}
+    ></NavigationRailButton> -->
   </div>
 
   <BehaviorStateIndicator />
