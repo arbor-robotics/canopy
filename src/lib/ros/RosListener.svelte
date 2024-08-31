@@ -13,6 +13,8 @@
     planting_eta,
     num_planted_seedlings,
     num_seedlings_in_plan,
+    teleop_value,
+    type TeleopCommand,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -24,6 +26,19 @@
   // } from "../guadian_store";
 
   // let connectionStatus: ConnectionStatus = ConnectionStatus.DISCONNECTED;
+
+  type TwistMsg = {
+    linear: {
+      x?: number;
+      y?: number;
+      z?: number;
+    };
+    angular: {
+      x?: number;
+      y?: number;
+      z?: number;
+    };
+  };
 
   let ConnectionStatusToColor: any = {};
   ConnectionStatusToColor[ConnectionStatus.CONNECTED] = "#16a34a";
@@ -120,6 +135,28 @@
       if (msg == undefined) return;
 
       num_seedlings_in_plan.set(msg.points.length);
+    });
+
+    let teleop_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/cmd_vel",
+      messageType: "geometry_msgs/Twist",
+    });
+
+    teleop_topic.advertise();
+
+    teleop_value.subscribe((value: TeleopCommand) => {
+      if (!value) return;
+      let msg: TwistMsg = {
+        linear: {
+          x: -value.y,
+        },
+        angular: {
+          z: value.x,
+        },
+      };
+      teleop_topic.publish(msg);
+      console.log(`Publishing: ${msg}`);
     });
   });
 </script>

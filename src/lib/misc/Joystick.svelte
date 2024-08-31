@@ -2,15 +2,18 @@
     import { page } from "$app/stores";
     import { onMount } from "svelte";
     import Icon from "../misc/Icon.svelte";
+    import type { TeleopCommand } from "$lib/stores";
+    import { writable } from "svelte/store";
 
     // CREDIT: https://github.com/stemkoski/HTML-Joysticks/blob/master/index.html
 
     let stick = document.getElementById("stick");
     let dragStart, touchId: number | null;
     let active = false;
-    let value = { x: 0, y: 0 };
     export let maxDistance = 64;
     export let deadzone = 8;
+
+    export let value = writable<TeleopCommand>({ x: 0, y: 0 });
 
     function handleDown(event: TouchEvent | MouseEvent) {
         if (stick == null) return;
@@ -74,8 +77,7 @@
         const xPercent = parseFloat((xPosition2 / maxDistance).toFixed(4));
         const yPercent = parseFloat((yPosition2 / maxDistance).toFixed(4));
 
-        value = { x: xPercent, y: yPercent };
-        console.log(value);
+        value.set({ x: xPercent, y: yPercent });
     }
 
     function handleUp(event: TouchEvent | MouseEvent) {
@@ -93,7 +95,8 @@
         stick.style.transform = `translate3d(0px, 0px, 0px)`;
 
         // reset everything
-        value = { x: 0, y: 0 };
+        value.set({ x: 0, y: 0 });
+
         touchId = null;
         active = false;
     }
@@ -110,14 +113,14 @@
     });
 </script>
 
-<div
-    style="border: 1px solid blue; width: 128px; position: absolute; left:210px; top:150px;"
->
+<div class="w-32 h-32">
     <!-- svelte-ignore a11y-missing-attribute -->
     <img src="res/joystick-base.png" />
-    <div id="stick" style="position: absolute; left:32px; top:32px;">
+    <div id="stick" class="relative top-[-6rem] left-[2rem]">
         <!-- svelte-ignore a11y-missing-attribute -->
-        <img src="res/joystick-green.png" />
+        <div
+            class="w-16 h-16 rounded-[2rem] border-forest-700 border-4 bg-meadow-500"
+        ></div>
     </div>
 </div>
 

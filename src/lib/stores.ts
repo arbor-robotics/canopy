@@ -24,6 +24,11 @@ export enum BehaviorState {
   PLANTING = 2,
 }
 
+export type TeleopCommand = {
+  x: number,
+  y: number
+}
+
 export const node: Writable<any> = writable(undefined);
 export const connection_status = writable(ConnectionStatus.DISCONNECTED);
 export const current_behavior_state = writable(BehaviorState.PAUSED);
@@ -36,3 +41,5 @@ export const plan_progress = writable(0);
 export const planting_eta = writable(0);
 export const num_planted_seedlings = writable(0);
 export const num_seedlings_in_plan = writable(0);
+
+export const teleop_value = writable<TeleopCommand>();

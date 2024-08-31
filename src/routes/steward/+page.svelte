@@ -1,6 +1,16 @@
 <script lang="ts">
 	import Joystick from "$lib/misc/Joystick.svelte";
+	import type { TeleopCommand } from "$lib/stores";
+	import { teleop_value } from "$lib/stores";
 	import { Button } from "bits-ui";
+	import type { Writable } from "svelte/store";
+	import { writable } from "svelte/store";
+
+	let joystick_value: Writable<TeleopCommand> = writable<TeleopCommand>();
+
+	joystick_value.subscribe((value: TeleopCommand) => {
+		teleop_value.set(value);
+	});
 </script>
 
 <svelte:head>
@@ -16,4 +26,4 @@
 	<span class="material-symbols-outlined"> arrow_upward </span>
 </Button.Root>
 
-<Joystick />
+<Joystick bind:value={joystick_value} />
