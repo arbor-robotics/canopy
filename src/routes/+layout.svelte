@@ -12,12 +12,12 @@
   import RosListener from "$lib/ros/RosListener.svelte";
 </script>
 
-<div class="app">
+<div class="app overflow-hidden">
   <RosListener />
 
   {#if $connection_status == ConnectionStatus.CONNECTED}
     <NavigationRail></NavigationRail>
-    <main class="p-0">
+    <main class="p-0 overflow-hidden">
       <slot />
     </main>
   {:else}

@@ -113,13 +113,13 @@
     });
 </script>
 
-<div class="w-32 h-32">
+<div class="w-48 h-48 overflow-hidden">
     <!-- svelte-ignore a11y-missing-attribute -->
-    <img src="res/joystick-base.png" />
-    <div id="stick" class="relative top-[-6rem] left-[2rem]">
+    <img src="res/joystick-base.png" class="mx-auto pt-8" />
+    <div id="stick" class="relative overflow-hidden left-[4rem] top-[-6rem]">
         <!-- svelte-ignore a11y-missing-attribute -->
         <div
-            class="w-16 h-16 rounded-[2rem] border-forest-700 border-4 bg-meadow-500"
+            class="w-16 h-16 rounded-[2rem] bg-neutral-700 shadow-2xl overflow-hidden"
         ></div>
     </div>
 </div>

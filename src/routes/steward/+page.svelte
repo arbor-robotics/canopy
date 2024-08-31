@@ -2,15 +2,17 @@
 	import Joystick from "$lib/misc/Joystick.svelte";
 	import type { TeleopCommand } from "$lib/stores";
 	import { teleop_value } from "$lib/stores";
-	import { Button } from "bits-ui";
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
+	import { Button, ToggleGroup } from "bits-ui";
 
 	let joystick_value: Writable<TeleopCommand> = writable<TeleopCommand>();
 
 	joystick_value.subscribe((value: TeleopCommand) => {
 		teleop_value.set(value);
 	});
+
+	let value: string[] | undefined = ["bold"];
 </script>
 
 <svelte:head>
@@ -18,12 +20,56 @@
 	<meta name="description" content="Control and observe the robot" />
 </svelte:head>
 
-<Button.Root
-	class="inline-flex h-12 items-center justify-center rounded-input bg-lime-300  rounded-xl
-	px-[21px] text-[15px] font-semibold text-background shadow-mini
-	hover:bg-dark/95 active:scale-98 active:transition-all"
->
-	<span class="material-symbols-outlined"> arrow_upward </span>
-</Button.Root>
-
-<Joystick bind:value={joystick_value} />
+<div class="flex flex-row h-full w-full overflow-hidden">
+	<div class="w-[48rem]"></div>
+	<div class="grow overflow-hidden">
+		<div id="joystick-div" class="absolute bottom-0 right-0 flex flex-col">
+			<div id="joystick-container" class="m-4 mb-0 mx-auto">
+				<Joystick bind:value={joystick_value} />
+			</div>
+			<div class="inline-flex mx-6 justify-between">
+				<div class="inline-flex" id="battery">
+					<span class="material-symbols-outlined">
+						battery_horiz_050
+					</span>
+					75%
+				</div>
+				<div class="inline-flex" id="health">
+					<span class="material-symbols-outlined symbol-filled">
+						favorite
+					</span>
+					<span class="material-symbols-outlined symbol-filled">
+						favorite
+					</span>
+					<span class="material-symbols-outlined symbol-filled">
+						favorite
+					</span>
+					<span class="material-symbols-outlined symbol-filled">
+						favorite
+					</span>
+					<span class="material-symbols-outlined"> favorite </span>
+				</div>
+			</div>
+			<div class="inline-flex rounded-lg shadow-sm m-4">
+				<Button.Root
+					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				>
+					Manual
+				</Button.Root>
+				<Button.Root
+					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				>
+					Auto
+				</Button.Root>
+				<Button.Root
+					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-red-600 text-white shadow-sm hover:bg-red-700 focus:outline-none focus:bg-red-700 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				>
+					<!-- <span class="material-symbols-outlined text-base">
+						pan_tool
+					</span> -->
+					Stop
+				</Button.Root>
+			</div>
+		</div>
+	</div>
+</div>
