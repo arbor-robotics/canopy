@@ -8,9 +8,16 @@
 
 	let joystick_value: Writable<TeleopCommand> = writable<TeleopCommand>();
 
+	let cached_teleop = undefined;
+
 	joystick_value.subscribe((value: TeleopCommand) => {
 		teleop_value.set(value);
+		cached_teleop = value;
 	});
+
+	setInterval(() => {
+		if (cached_teleop != undefined) teleop_value.set(cached_teleop);
+	}, 0.1);
 
 	let value: string[] | undefined = ["bold"];
 
