@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Joystick from "$lib/misc/Joystick.svelte";
-	import type { TeleopCommand } from "$lib/stores";
+	import { camera_image, type TeleopCommand } from "$lib/stores";
 	import { teleop_value } from "$lib/stores";
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
@@ -13,6 +13,12 @@
 	});
 
 	let value: string[] | undefined = ["bold"];
+
+	let camera_data: string = "";
+
+	camera_image.subscribe((new_value) => {
+		camera_data = `data:image/jpg;base64,${new_value}`;
+	});
 </script>
 
 <svelte:head>
@@ -72,4 +78,10 @@
 			</div>
 		</div>
 	</div>
+
+	<img
+		src={camera_data}
+		alt="Camera stream"
+		class="w-[32rem] h-[20rem] absolute bottom-0 m-4 rounded-lg"
+	/>
 </div>

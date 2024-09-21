@@ -1,4 +1,5 @@
 import { writable, type Writable } from "svelte/store";
+import Cookies from "js-cookie";
 
 export enum Level {
   OK,
@@ -43,3 +44,17 @@ export const num_planted_seedlings = writable(0);
 export const num_seedlings_in_plan = writable(0);
 
 export const teleop_value = writable<TeleopCommand>();
+export const camera_image = writable(undefined);
+
+
+
+let cookie_port = Cookies.get("rosbridge/port")
+let cookie_ip = Cookies.get("rosbridge/ip")
+
+if (cookie_ip == undefined)
+  cookie_ip = "localhost"
+
+if (cookie_port == undefined)
+  cookie_port = "9090"
+export const rosbridge_ip = writable<string>(Cookies.get("rosbridge/ip"));
+export const rosbridge_port = writable<string>(Cookies.get("rosbridge/port"));

@@ -15,6 +15,9 @@
     num_seedlings_in_plan,
     teleop_value,
     type TeleopCommand,
+    rosbridge_ip,
+    rosbridge_port,
+    camera_image,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -48,11 +51,12 @@
     ConnectionStatusToColor[ConnectionStatus.DISCONNECTED];
 
   onMount(async () => {
-    console.log("Hello!");
+    let url = `ws://${$rosbridge_ip}:${$rosbridge_port}`;
+    console.log(`Trying to connect to ${url}`);
     const module = await import("./roslib");
 
     let node = new ROSLIB.Ros({
-      url: "ws://localhost:9090",
+      url: url,
     });
 
     nodeWritable.set(node);
@@ -135,6 +139,19 @@
       if (msg == undefined) return;
 
       num_seedlings_in_plan.set(msg.points.length);
+    });
+
+    let camera_image_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/zed/left/image_rect_color/compressed",
+      messageType: "sensor_msgs/CompressedImage",
+    });
+
+    camera_image_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      camera_image.set(msg.data);
+      console.log(msg);
     });
 
     let teleop_topic = new ROSLIB.Topic({
