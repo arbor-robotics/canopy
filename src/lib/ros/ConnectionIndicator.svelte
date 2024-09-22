@@ -26,6 +26,8 @@
     Cookies.set("rosbridge/ip", ip_input.value);
 
     console.log(`Set the cookie to value of ${Cookies.get("rosbridge/ip")}`);
+
+    location.reload(); // Reload the page
   }
 </script>
 

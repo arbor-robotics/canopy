@@ -48,8 +48,11 @@ export const camera_image = writable(undefined);
 
 
 
+console.log(Cookies.get())
 let cookie_port = Cookies.get("rosbridge/port")
 let cookie_ip = Cookies.get("rosbridge/ip")
+console.log(`Cookie port is ${cookie_port}`)
+
 
 if (cookie_ip == undefined)
   cookie_ip = "localhost"
