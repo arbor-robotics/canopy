@@ -5,11 +5,11 @@
   import Icon from "$lib/misc/Icon.svelte";
   import logo from "$lib/images/logo.svg";
 
-  import "@material/web/progress/circular-progress";
-  import "@material/web/button/text-button";
-  import "@material/web/button/elevated-button";
-  import "@material/web/fab/fab";
-  import "@material/web/icon/icon";
+  // import "@material/web/progress/circular-progress";
+  // import "@material/web/button/text-button";
+  // import "@material/web/button/elevated-button";
+  // import "@material/web/fab/fab";
+  // import "@material/web/icon/icon";
   import {
     Button,
     Progress,
@@ -85,7 +85,7 @@
       showToast(
         "No bounds",
         "Trying drawing your planting area using the brush button in the top right.",
-        "danger"
+        "danger",
       );
       return;
     }
@@ -96,7 +96,7 @@
       showToast(
         "Bounds should be contiguous",
         "Make sure that your bounds are a single, connected shape",
-        "danger"
+        "danger",
       );
       return;
     }
@@ -128,7 +128,7 @@
   function showToast(
     title: string,
     description: string,
-    color: string = "primary"
+    color: string = "primary",
   ) {
     toast_color = color;
     toast_header_text = title;
@@ -151,7 +151,7 @@
     showToast(
       "Steward is ready to plant",
       "Click the ▶ button to start the mission",
-      "success"
+      "success",
     );
   }
 
@@ -170,9 +170,9 @@
       transition_request,
       function (response) {
         console.log(
-          `Transition response was ${response.success}: ${response.description}`
+          `Transition response was ${response.success}: ${response.description}`,
         );
-      }
+      },
     );
   }
 </script>

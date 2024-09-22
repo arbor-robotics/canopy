@@ -10,7 +10,7 @@
 
 <div class="icon-container flex justify-center">
   <span
-    class="material-symbols-outlined my-auto"
+    class="material-symbols-rounded my-auto"
     class:animate-pulse={pulse}
     class:animate-spin={spin}
     style="--icon-color: {color}; --size: {size}; --fill: {fill}"
@@ -20,7 +20,7 @@
 </div>
 
 <style>
-  .material-symbols-outlined {
+  .material-symbols-rounded {
     font-variation-settings:
       "FILL" var(--fill),
       "wght" 400,

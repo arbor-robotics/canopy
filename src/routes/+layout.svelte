@@ -7,6 +7,7 @@
   import "leaflet/dist/leaflet.css";
   import "leaflet-draw/dist/leaflet.draw.css";
   import NavigationRail from "../lib/navigation/NavigationRail.svelte";
+  import Toasts from "../lib/misc/Toasts.svelte";
   import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
   import { connection_status, ConnectionStatus } from "$lib/stores";
   import RosListener from "$lib/ros/RosListener.svelte";
@@ -14,6 +15,8 @@
 
 <div class="app overflow-hidden">
   <RosListener />
+
+  <Toasts />
 
   {#if $connection_status == ConnectionStatus.CONNECTED}
     <NavigationRail></NavigationRail>
@@ -23,12 +26,6 @@
   {:else}
     <ConnectionIndicator />
   {/if}
-
-  <!-- <footer>
-    <p>
-      visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit
-    </p>
-  </footer> -->
 </div>
 
 <style>

@@ -9,7 +9,11 @@
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
-<a class:disabled-button={!enabled} class="rail-button no-underline" href={url}>
+<a
+  class:disabled-button={!enabled}
+  class="rail-button no-underline transition-all"
+  href={url}
+>
   <div
     class="active-indicator"
     style="--active-color: {$page.url.pathname == url

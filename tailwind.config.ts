@@ -72,7 +72,7 @@ export default {
 
 
       },
-      fontFamily: {},
+      fontFamily: { 'sans': ['"Noto Sans"', 'ui-sans-serif', 'system-ui',], 'serif': ['Neuton', 'ui-serif'] },
       typography: (theme) => ({}),
     },
   },

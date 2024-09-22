@@ -30,6 +30,8 @@
 
   // let connectionStatus: ConnectionStatus = ConnectionStatus.DISCONNECTED;
 
+  let node = undefined;
+
   type TwistMsg = {
     linear: {
       x?: number;
@@ -50,12 +52,28 @@
   let connectionStatusColor =
     ConnectionStatusToColor[ConnectionStatus.DISCONNECTED];
 
-  onMount(async () => {
+  // Refresh the Rosbridge connection if the IP changes
+  rosbridge_ip.subscribe((value) => {
+    // Wait until the page has finished loading and onMount has been called
+    if (!node) return;
+
+    setupRosBridge();
+  });
+
+  // Refresh the Rosbridge connection if the port changes
+  rosbridge_port.subscribe((value) => {
+    // Wait until the page has finished loading and onMount has been called
+    if (!node) return;
+
+    setupRosBridge();
+  });
+
+  async function setupRosBridge() {
     let url = `ws://${$rosbridge_ip}:${$rosbridge_port}`;
     console.log(`Trying to connect to ${url}`);
     const module = await import("./roslib");
 
-    let node = new ROSLIB.Ros({
+    node = new ROSLIB.Ros({
       url: url,
     });
 
@@ -175,6 +193,10 @@
       teleop_topic.publish(msg);
       console.log(`Publishing: ${msg}`);
     });
+  }
+
+  onMount(async () => {
+    await setupRosBridge();
   });
 </script>
 

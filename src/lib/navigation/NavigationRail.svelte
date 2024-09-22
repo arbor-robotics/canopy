@@ -1,7 +1,7 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import Icon from "../misc/Icon.svelte";
-  import "@material/web/button/filled-button.js";
+  // import "@material/web/button/filled-button.js";
   import NavigationRailButton from "./NavigationRailButton.svelte";
   import RosListener from "$lib/ros/RosListener.svelte";
   import logo from "$lib/images/logo.svg";
@@ -10,7 +10,7 @@
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
-<div id="rail">
+<div id="rail" class="bg-zinc-100 border-r-2 shadow-xl">
   <a id="logo" href="/"><img id="logo-img" src={logo} alt="Canopy logo" /></a>
 
   <div class="link-container">
@@ -21,6 +21,9 @@
       label="Steward"
       url="/steward"
       enabled={true}
+    ></NavigationRailButton>
+
+    <NavigationRailButton icon="settings" label="Parameters" url="/parameters"
     ></NavigationRailButton>
     <!-- <NavigationRailButton icon="monitoring" label="Stats" url="/" enabled={true}
     ></NavigationRailButton>
@@ -71,7 +74,7 @@
   .link-container {
     height: 100%;
     width: 5rem;
-    background-color: #f5f5ee;
+    /* background-color: #f5f5ee; */
     display: flex;
     flex-direction: column;
     justify-content: center;
