@@ -19,6 +19,7 @@
     rosbridge_port,
     camera_image,
     diagnostic_agg,
+    wh_battery_voltage,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -184,6 +185,22 @@
       if (msg == undefined) return;
 
       diagnostic_agg.set(msg);
+
+      // Extract battery voltage
+      msg.status.forEach((stat) => {
+        if (stat.name == "/Warthog Base/General/Battery") {
+          stat.values.forEach((kv) => {
+            if (kv.key == "Battery Voltage (V)") {
+              // Round to 1 decimal place
+              let rounded_voltage = kv.value;
+              rounded_voltage *= 10;
+              rounded_voltage = Math.floor(rounded_voltage) / 10;
+              wh_battery_voltage.set(rounded_voltage);
+            }
+          });
+        }
+      });
+
       // console.log(msg);
     });
 

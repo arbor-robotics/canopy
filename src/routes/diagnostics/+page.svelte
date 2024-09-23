@@ -13,7 +13,7 @@
 		// console.log(msg);
 
 		statuses = msg.status;
-		console.log(statuses[0]);
+		// console.log(statuses[0]);
 	});
 </script>
 

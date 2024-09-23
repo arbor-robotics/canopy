@@ -46,6 +46,7 @@ export const num_seedlings_in_plan = writable(0);
 export const teleop_value = writable<TeleopCommand>();
 export const camera_image = writable(undefined);
 export const diagnostic_agg = writable(undefined);
+export const wh_battery_voltage = writable(-1);
 
 
 

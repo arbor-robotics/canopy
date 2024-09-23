@@ -1,7 +1,7 @@
 <script lang="ts">
 	import Joystick from "$lib/misc/Joystick.svelte";
 	import { camera_image, type TeleopCommand } from "$lib/stores";
-	import { teleop_value } from "$lib/stores";
+	import { teleop_value, wh_battery_voltage } from "$lib/stores";
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
 	import { Button, ToggleGroup } from "bits-ui";
@@ -45,7 +45,7 @@
 					<span class="material-symbols-outlined">
 						battery_horiz_050
 					</span>
-					75%
+					{$wh_battery_voltage}V
 				</div>
 				<div class="inline-flex" id="health">
 					<span class="material-symbols-outlined symbol-filled">
