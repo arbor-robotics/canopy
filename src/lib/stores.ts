@@ -47,6 +47,7 @@ export const teleop_value = writable<TeleopCommand>();
 export const camera_image = writable(undefined);
 export const diagnostic_agg = writable(undefined);
 export const wh_battery_voltage = writable(-1);
+export const platform_locked = writable(true);
 
 
 

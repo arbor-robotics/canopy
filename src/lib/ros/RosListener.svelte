@@ -20,6 +20,7 @@
     camera_image,
     diagnostic_agg,
     wh_battery_voltage,
+    platform_locked,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -196,6 +197,17 @@
               rounded_voltage *= 10;
               rounded_voltage = Math.floor(rounded_voltage) / 10;
               wh_battery_voltage.set(rounded_voltage);
+            }
+          });
+        } else if (stat.name == "/Warthog Base/E-Stop") {
+          stat.values.forEach((kv) => {
+            if (kv.key == "warthog_node: MCU Status") {
+              // console.log(kv.value);
+              if (kv.value == "Stop loop open, platform immobilized.") {
+                platform_locked.set(true);
+              } else {
+                platform_locked.set(false);
+              }
             }
           });
         }

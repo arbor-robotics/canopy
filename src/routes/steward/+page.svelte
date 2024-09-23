@@ -1,10 +1,15 @@
 <script lang="ts">
 	import Joystick from "$lib/misc/Joystick.svelte";
 	import { camera_image, type TeleopCommand } from "$lib/stores";
-	import { teleop_value, wh_battery_voltage } from "$lib/stores";
+	import {
+		teleop_value,
+		wh_battery_voltage,
+		platform_locked,
+	} from "$lib/stores";
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
 	import { Button, ToggleGroup } from "bits-ui";
+	import Icon from "$lib/misc/Icon.svelte";
 
 	let joystick_value: Writable<TeleopCommand> = writable<TeleopCommand>();
 
@@ -63,26 +68,38 @@
 					<span class="material-symbols-outlined"> favorite </span>
 				</div>
 			</div>
-			<div class="inline-flex rounded-lg shadow-sm m-4">
-				<Button.Root
-					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-				>
-					Manual
-				</Button.Root>
-				<Button.Root
-					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-				>
-					Auto
-				</Button.Root>
-				<Button.Root
-					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-red-600 text-white shadow-sm hover:bg-red-700 focus:outline-none focus:bg-red-700 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-				>
-					<!-- <span class="material-symbols-outlined text-base">
-						pan_tool
-					</span> -->
-					Stop
-				</Button.Root>
-			</div>
+			{#if $platform_locked}
+				<div class="inline-flex rounded-lg my-4 mx-auto">
+					<div
+						class="py-3 px-4 flex flex-row opacity-80 pointer-events-none justify-center w-48 gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium border border-gray-200 bg-slate-50 text-gray-800 shadow-sm"
+					>
+						<Icon id="lock" size="1rem" color=""></Icon>
+
+						<p class="">E-Stop Active</p>
+					</div>
+				</div>
+			{:else}
+				<div class="inline-flex rounded-lg shadow-sm m-4">
+					<Button.Root
+						class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+					>
+						Manual
+					</Button.Root>
+					<Button.Root
+						class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+					>
+						Auto
+					</Button.Root>
+					<Button.Root
+						class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-red-600 text-white shadow-sm hover:bg-red-700 focus:outline-none focus:bg-red-700 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+					>
+						<!-- <span class="material-symbols-outlined text-base">
+							pan_tool
+						</span> -->
+						Stop
+					</Button.Root>
+				</div>
+			{/if}
 		</div>
 	</div>
 
