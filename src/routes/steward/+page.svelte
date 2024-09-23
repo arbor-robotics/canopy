@@ -89,6 +89,6 @@
 	<img
 		src={camera_data}
 		alt="Camera stream"
-		class="w-[32rem] h-[20rem] absolute bottom-0 m-4 rounded-lg"
+		class="w-[24rem] h-[16rem] absolute bottom-0 m-4 rounded-lg"
 	/>
 </div>

@@ -18,6 +18,7 @@
     rosbridge_ip,
     rosbridge_port,
     camera_image,
+    diagnostic_agg,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -85,6 +86,8 @@
     });
     node.on("error", function (error) {
       console.log("Error connecting to websocket server: ", error);
+      location.reload(); // Reload the page
+
       connection_status.set(ConnectionStatus.ERROR);
     });
     node.on("close", function () {
@@ -169,7 +172,19 @@
       if (msg == undefined) return;
 
       camera_image.set(msg.data);
-      console.log(msg);
+    });
+
+    let diagnostics_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/diagnostics/agg",
+      messageType: "diagnostic_msgs/DiagnosticArray",
+    });
+
+    diagnostics_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      diagnostic_agg.set(msg);
+      // console.log(msg);
     });
 
     let teleop_topic = new ROSLIB.Topic({

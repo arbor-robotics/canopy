@@ -10,7 +10,7 @@
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
-<div id="rail" class="bg-zinc-100 border-r-2 shadow-xl">
+<div id="rail" class="bg-sand-50 border-r-2 shadow-xl">
   <a id="logo" href="/"><img id="logo-img" src={logo} alt="Canopy logo" /></a>
 
   <div class="link-container">
@@ -24,6 +24,12 @@
     ></NavigationRailButton>
 
     <NavigationRailButton icon="settings" label="Parameters" url="/parameters"
+    ></NavigationRailButton>
+
+    <NavigationRailButton
+      icon="stethoscope"
+      label="Diagnostics"
+      url="/diagnostics"
     ></NavigationRailButton>
     <!-- <NavigationRailButton icon="monitoring" label="Stats" url="/" enabled={true}
     ></NavigationRailButton>

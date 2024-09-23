@@ -11,6 +11,18 @@
   import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
   import { connection_status, ConnectionStatus } from "$lib/stores";
   import RosListener from "$lib/ros/RosListener.svelte";
+  import { onNavigate } from "$app/navigation";
+
+  onNavigate((navigation) => {
+    if (!document.startViewTransition) return;
+
+    return new Promise((resolve) => {
+      document.startViewTransition(async () => {
+        resolve();
+        await navigation.complete;
+      });
+    });
+  });
 </script>
 
 <div class="app overflow-hidden">
@@ -28,7 +40,7 @@
   {/if}
 </div>
 
-<style>
+<style lang="scss">
   .app {
     display: flex;
     flex-direction: row;
@@ -44,6 +56,7 @@
     /* max-width: 64rem; */
     margin: 0 auto;
     box-sizing: border-box;
+    background-color: #fffcf5;
   }
 
   footer {
@@ -63,4 +76,8 @@
       padding: 12px 0;
     }
   }
+
+  /* PAGE VIEW TRANSITIONS */
+
+  /* END PAGE VIEW TRANSITIONS */
 </style>
