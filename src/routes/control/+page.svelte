@@ -36,6 +36,7 @@
 	let camera_data: string = "";
 
 	camera_image.subscribe((new_value) => {
+		if (!new_value) return;
 		camera_data = `data:image/jpg;base64,${new_value}`;
 	});
 </script>
@@ -114,9 +115,17 @@
 		</div>
 	</div>
 
-	<img
-		src={camera_data}
-		alt="Camera stream"
-		class="w-[24rem] h-[16rem] absolute bottom-0 m-4 rounded-lg"
-	/>
+	{#if camera_data == ""}
+		<div
+			class="w-[18rem] h-[12rem] absolute bottom-0 m-4 rounded-lg flex items-center justify-center border-2"
+		>
+			<span class="material-symbols-outlined text-4xl"> videocam_off </span>
+		</div>
+	{:else}
+		<img
+			src={camera_data}
+			alt="Camera stream"
+			class="w-[24rem] h-[16rem] absolute bottom-0 m-4 rounded-lg"
+		/>
+	{/if}
 </div>

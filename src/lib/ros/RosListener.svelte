@@ -194,7 +194,7 @@
     health_check_topic.subscribe(function (msg) {
       if (msg == undefined) return;
 
-      console.log(msg);
+      // console.log(msg);
       failed_checks.set(msg["checks"]);
     });
 
