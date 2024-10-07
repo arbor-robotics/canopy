@@ -182,39 +182,9 @@
   <meta name="description" content="About this app" />
 </svelte:head>
 
-<Styles />
+<!-- <Styles /> -->
 
 <div class="flex flex-row">
-  <div id="rail" class="flex flex-column">
-    <a id="logo" href="/"><img id="logo-img" src={logo} alt="Canopy logo" /></a>
-
-    <div class="link-container">
-      <WizardButton
-        icon="lasso_select"
-        label="Draw Bounds"
-        selected={current_step == 1}
-        on:click={goToStep1}
-      ></WizardButton>
-      <i class="bi bi-chevron-down opacity-30"></i>
-      <WizardButton
-        icon="map"
-        label="Generate Plan"
-        enabled={current_step > 1}
-        selected={current_step == 2}
-        on:click={goToStep2}
-      ></WizardButton>
-      <i class="bi bi-chevron-down opacity-30"></i>
-      <WizardButton
-        icon="rocket_launch"
-        label="Launch Steward"
-        enabled={current_step > 2}
-        selected={current_step == 3}
-      ></WizardButton>
-    </div>
-
-    <BehaviorStateIndicator />
-    <div id="status"></div>
-  </div>
   {#if current_step == 1}
     <OsmMap bind:this={osmMap} />
   {:else if current_step == 2}
@@ -314,41 +284,41 @@
   </Toast>
 </div>
 
-<style>
-  #logo {
-    font-size: 2rem;
-    font-family: "Bitter", serif;
-    font-style: italic;
-    margin-left: auto;
-    margin-right: auto;
-    padding-top: 1rem;
-  }
-  #logo-img {
-    width: 2.5rem;
-  }
-  #status {
-    font-size: 2rem;
-    font-family: "Bitter", serif;
-    font-style: italic;
-    margin-left: auto;
-    margin-right: auto;
-    padding-top: 1rem;
-  }
-  .link-container {
-    height: 100%;
-    width: 5rem;
-    background-color: #f5f5ee;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
+<style lang="scss">
+  // #logo {
+  //   font-size: 2rem;
+  //   font-family: "Bitter", serif;
+  //   font-style: italic;
+  //   margin-left: auto;
+  //   margin-right: auto;
+  //   padding-top: 1rem;
+  // }
+  // #logo-img {
+  //   width: 2.5rem;
+  // }
+  // #status {
+  //   font-size: 2rem;
+  //   font-family: "Bitter", serif;
+  //   font-style: italic;
+  //   margin-left: auto;
+  //   margin-right: auto;
+  //   padding-top: 1rem;
+  // }
+  // .link-container {
+  //   height: 100%;
+  //   width: 5rem;
+  //   background-color: #f5f5ee;
+  //   display: flex;
+  //   flex-direction: column;
+  //   justify-content: center;
+  //   align-items: center;
+  // }
 
-  .counter-digits {
-  }
+  // .counter-digits {
+  // }
 
-  .hidden {
-    top: -100%;
-    user-select: none;
-  }
+  // .hidden {
+  //   top: -100%;
+  //   user-select: none;
+  // }
 </style>

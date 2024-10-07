@@ -3,7 +3,7 @@
 	import { writable } from "svelte/store";
 	import { rosbridge_ip, rosbridge_port, addToast } from "$lib/stores";
 	import { Button } from "bits-ui";
-import Cookies from "js-cookie";
+	import Cookies from "js-cookie";
 
 	function saveParameters() {
 		// Rosbridge
@@ -25,7 +25,7 @@ import Cookies from "js-cookie";
 </svelte:head>
 
 <div class="flex flex-col h-full w-full overflow-hidden max-w-2xl mx-auto p-8">
-	<p class="text-5xl font-light my-4">Parameters</p>
+	<p class="text-5xl font-light my-4">Settings</p>
 	<hr />
 	<p class="text-3xl font-light my-3">
 		<span class="material-symbols-rounded"> hub </span> Rosbridge

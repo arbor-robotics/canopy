@@ -10,13 +10,20 @@
 	import { writable } from "svelte/store";
 	import { Button, ToggleGroup } from "bits-ui";
 	import Icon from "$lib/misc/Icon.svelte";
+	import { Canvas } from "@threlte/core";
+	import Scene from "./Scene.svelte";
 
 	let joystick_value: Writable<TeleopCommand> = writable<TeleopCommand>();
 
 	let cached_teleop = undefined;
 
 	joystick_value.subscribe((value: TeleopCommand) => {
-		teleop_value.set(value);
+		// Scale twist messages here to make the joystick more/less sensitive
+		if (!value) return; // initially undefined
+		let scaled_value = value;
+		scaled_value.x *= -2;
+		scaled_value.y *= 0.8;
+		teleop_value.set(scaled_value);
 		cached_teleop = value;
 	});
 
@@ -39,7 +46,11 @@
 </svelte:head>
 
 <div class="flex flex-row h-full w-full overflow-hidden">
-	<div class="w-[48rem]"></div>
+	<div class="w-[48rem]">
+		<Canvas>
+			<Scene />
+		</Canvas>
+	</div>
 	<div class="grow overflow-hidden">
 		<div id="joystick-div" class="absolute bottom-0 right-0 flex flex-col">
 			<div id="joystick-container" class="m-4 mb-0 mx-auto">

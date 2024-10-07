@@ -5,31 +5,40 @@
   import NavigationRailButton from "./NavigationRailButton.svelte";
   import RosListener from "$lib/ros/RosListener.svelte";
   import logo from "$lib/images/logo.svg";
+  import { connection_status, ConnectionStatus } from "$lib/stores";
   import BehaviorStateIndicator from "$lib/ros/BehaviorStateIndicator.svelte";
+  import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
+  import HealthCheckIndicator from "$lib/ros/HealthCheckIndicator.svelte";
 </script>
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
-<div id="rail" class="bg-sand-50 border-r-2 shadow-xl">
+<div id="rail" class="bg-white border-r-2 shadow-xl">
   <a id="logo" href="/"><img id="logo-img" src={logo} alt="Canopy logo" /></a>
 
   <div class="link-container">
-    <NavigationRailButton icon="map" label="Land" url="/wizard" enabled={true}
+    <NavigationRailButton icon="map" label="Design" url="/design" enabled={true}
     ></NavigationRailButton>
     <NavigationRailButton
       icon="smart_toy"
-      label="Steward"
-      url="/steward"
+      label="Control"
+      url="/control"
       enabled={true}
     ></NavigationRailButton>
 
-    <NavigationRailButton icon="settings" label="Parameters" url="/parameters"
+    <NavigationRailButton icon="settings" label="Settings" url="/settings"
     ></NavigationRailButton>
 
     <NavigationRailButton
       icon="stethoscope"
       label="Diagnostics"
       url="/diagnostics"
+    ></NavigationRailButton>
+
+    <NavigationRailButton
+      icon="query_stats"
+      label="Statistics"
+      url="/statistics"
     ></NavigationRailButton>
     <!-- <NavigationRailButton icon="monitoring" label="Stats" url="/" enabled={true}
     ></NavigationRailButton>
@@ -40,8 +49,12 @@
       enabled={true}
     ></NavigationRailButton> -->
   </div>
-
-  <BehaviorStateIndicator />
+  {#if $connection_status == ConnectionStatus.CONNECTED}
+    <!-- <BehaviorStateIndicator /> -->
+    <HealthCheckIndicator />
+  {:else}
+    <ConnectionIndicator mini />
+  {/if}
   <div id="status"></div>
 </div>
 

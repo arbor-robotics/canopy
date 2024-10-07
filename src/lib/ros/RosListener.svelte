@@ -21,6 +21,7 @@
     diagnostic_agg,
     wh_battery_voltage,
     platform_locked,
+    failed_checks,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -59,6 +60,10 @@
   rosbridge_ip.subscribe((value) => {
     // Wait until the page has finished loading and onMount has been called
     if (!node) return;
+    if (value == undefined) {
+      console.log(`Rosbridge port was ${value}, skipping.`);
+      return;
+    }
 
     setupRosBridge();
   });
@@ -67,13 +72,17 @@
   rosbridge_port.subscribe((value) => {
     // Wait until the page has finished loading and onMount has been called
     if (!node) return;
+    if (value == undefined) {
+      console.log(`Rosbridge port was ${value}, skipping.`);
+      return;
+    }
 
     setupRosBridge();
   });
 
   async function setupRosBridge() {
     let url = `ws://${$rosbridge_ip}:${$rosbridge_port}`;
-    console.log(`Trying to connect to ${url}`);
+    console.log(`Trying to connect to Steward at ${url}`);
     const module = await import("./roslib");
 
     node = new ROSLIB.Ros({
@@ -83,7 +92,7 @@
     nodeWritable.set(node);
     // CONNECTION EVENTS
     node.on("connection", function () {
-      console.log("Connected to websocket server.");
+      console.log("Connected to Steward.");
       connection_status.set(ConnectionStatus.CONNECTED);
     });
     node.on("error", function (error) {
@@ -174,6 +183,19 @@
       if (msg == undefined) return;
 
       camera_image.set(msg.data);
+    });
+
+    let health_check_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/health/failed_checks",
+      messageType: "steward_msgs/FailedChecks",
+    });
+
+    health_check_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      console.log(msg);
+      failed_checks.set(msg["checks"]);
     });
 
     let diagnostics_topic = new ROSLIB.Topic({

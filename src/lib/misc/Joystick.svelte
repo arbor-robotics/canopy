@@ -7,7 +7,7 @@
 
     // CREDIT: https://github.com/stemkoski/HTML-Joysticks/blob/master/index.html
 
-    let stick = document.getElementById("stick");
+    let stick;
     let dragStart, touchId: number | null;
     let active = false;
     export let maxDistance = 64;

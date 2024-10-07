@@ -48,6 +48,7 @@ export const camera_image = writable(undefined);
 export const diagnostic_agg = writable(undefined);
 export const wh_battery_voltage = writable(-1);
 export const platform_locked = writable(true);
+export const failed_checks = writable([]);
 
 
 

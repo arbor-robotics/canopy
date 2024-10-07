@@ -30,14 +30,10 @@
 
   <Toasts />
 
-  {#if $connection_status == ConnectionStatus.CONNECTED}
-    <NavigationRail></NavigationRail>
-    <main class="p-0 overflow-hidden">
-      <slot />
-    </main>
-  {:else}
-    <ConnectionIndicator />
-  {/if}
+  <NavigationRail></NavigationRail>
+  <main class="p-0 overflow-hidden">
+    <slot />
+  </main>
 </div>
 
 <style lang="scss">
