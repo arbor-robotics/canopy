@@ -47,7 +47,7 @@
 </svelte:head>
 
 <div class="flex flex-row h-full w-full overflow-hidden">
-	<div class="w-[48rem]">
+	<div class="w-full">
 		<Canvas>
 			<Scene />
 		</Canvas>
@@ -119,7 +119,9 @@
 		<div
 			class="w-[18rem] h-[12rem] absolute bottom-0 m-4 rounded-lg flex items-center justify-center border-2"
 		>
-			<span class="material-symbols-outlined text-4xl"> videocam_off </span>
+			<span class="material-symbols-outlined text-4xl">
+				videocam_off
+			</span>
 		</div>
 	{:else}
 		<img
