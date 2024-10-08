@@ -26,8 +26,8 @@
     rosbridge_port.set(port_input.value);
 
     // cookies.
-    Cookies.set("rosbridge/port", port_input.value);
-    Cookies.set("rosbridge/ip", ip_input.value);
+    Cookies.set("rosbridge/port", port_input.value, { expires: 365 });
+    Cookies.set("rosbridge/ip", ip_input.value, { expires: 365 });
 
     console.log(`Set the cookie to value of ${Cookies.get("rosbridge/ip")}`);
 
@@ -45,9 +45,8 @@
       >
         <div class="flex flex-col">
           <Icon id="link_off" size={icon_size}></Icon>
-          
+
           <p class="text-xs">Disconnected</p>
-          
         </div>
       </Dialog.Trigger>
       <Dialog.Portal>

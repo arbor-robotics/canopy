@@ -13,8 +13,8 @@
 			document.getElementById("ros_port_input").value;
 		rosbridge_ip.set(rosbridge_ip_new);
 		rosbridge_port.set(rosbridge_port_new);
-		Cookies.set("rosbridge/ip", rosbridge_ip_new);
-		Cookies.set("rosbridge/port", rosbridge_port_new);
+		Cookies.set("rosbridge/ip", rosbridge_ip_new, { expires: 365 });
+		Cookies.set("rosbridge/port", rosbridge_port_new, { expires: 365 });
 		addToast({ message: "Changes saved", type: "success" });
 	}
 </script>
