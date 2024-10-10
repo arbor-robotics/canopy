@@ -14,244 +14,7 @@
   import { TexturePainter } from "$lib/3d/TexturePainter";
   import type { ThreeMFLoader } from "three/examples/jsm/Addons.js";
 
-  let forest_plan_msg = undefined;
-  let bounds_grid_msg = undefined;
-  let bounds_plane: THREE.Mesh;
-  let ground_plane: THREE.Mesh;
-
-  let steering_cost_msg = undefined;
-  let tree_meshes: THREE.Mesh[] = [];
-  let bounds_texture: THREE.DataTexture | undefined = undefined;
-  let plan_centroid_x = 0,
-    plan_centroid_y = 0;
-  let forestRadius = 0;
-
-  export let mode = "plan";
-
-  node.subscribe((node) => {
-    let forest_plan_topic = new ROSLIB.Topic({
-      ros: node,
-      name: "/vis/forest_plan",
-      messageType: "visualization_msgs/Marker",
-    });
-
-    forest_plan_topic.subscribe(function (msg) {
-      if (msg == undefined) return;
-
-      // Simple check to see if a UNIQUE forest plan has been received
-      // Do the current plan and incoming plan have the same number of trees?
-      if (
-        forest_plan_msg != undefined &&
-        forest_plan_msg.points.length === msg.points.length
-      )
-        return;
-
-      forest_plan_msg = msg;
-
-      const geometry = new THREE.CapsuleGeometry(1, 1, 4, 16);
-      geometry.translate(0, 0.5, 0);
-
-      const material = new THREE.MeshPhongMaterial({
-        color: osmPalette.tree,
-        transparent: true,
-        opacity: 0.3,
-        flatShading: true,
-      });
-
-      // This tracks the centroid of all forest plan points.
-
-      // Clear any existing tree meshes before adding the new ones
-      for (var mesh of tree_meshes) {
-        scene.remove(mesh);
-      }
-      tree_meshes = [];
-
-      // Ignore the first forest plan point, which is the robot's start position
-      for (var point of msg.points.slice(1)) {
-        // console.log(point.x);
-        const mesh = new THREE.Mesh(geometry, material);
-        mesh.position.x = point.x;
-        mesh.position.y = 0;
-        mesh.position.z = -point.y;
-        mesh.scale.x = 1;
-        mesh.scale.y = Math.random() + 1;
-        mesh.scale.z = 1;
-        mesh.updateMatrix();
-        mesh.matrixAutoUpdate = false;
-        tree_meshes.push(mesh);
-        scene.add(mesh);
-
-        plan_centroid_x += point.x;
-        plan_centroid_y += point.y;
-      }
-
-      plan_centroid_x /= msg.points.length;
-      plan_centroid_y /= msg.points.length;
-
-      if (mode == "plan") {
-        camera.position.x = plan_centroid_x;
-        camera.position.z = -plan_centroid_y;
-        controls.target.x = plan_centroid_x;
-        controls.target.z = -plan_centroid_y;
-      }
-
-      // if (bounds_plane != undefined) {
-      //   bounds_plane.position.x = plan_centroid_x;
-      //   bounds_plane.position.z = -plan_centroid_y;
-      // }
-
-      console.log(`Centroid: (${plan_centroid_x}, ${plan_centroid_y})`);
-    });
-
-    let bounds_grid_topic = new ROSLIB.Topic({
-      ros: node,
-      name: "/map/bounds",
-      messageType: "nav_msgs/OccupancyGrid",
-    });
-
-    bounds_grid_topic.subscribe(function (msg) {
-      if (msg == undefined) return;
-
-      // if (bounds_grid_msg != undefined || msg == undefined) return;
-
-      console.log(
-        `Received bounds grid with dims ${msg.info.width}, ${msg.info.height}`
-      );
-
-      if (bounds_texture == undefined) {
-        bounds_texture = new THREE.DataTexture(
-          new Uint8Array(91204),
-          msg.info.width,
-          msg.info.height
-        );
-      }
-
-      bounds_grid_msg = msg;
-
-      let gridWidth = msg.info.width,
-        gridHeight = msg.info.height,
-        res = msg.info.resolution;
-
-      forestRadius = Math.max(gridWidth, gridHeight) * res * 0.75;
-
-      // 4 channels, RGBA
-      let data = new Uint8Array(gridWidth * gridHeight * 4);
-
-      let forestColor = new THREE.Color(osmPalette.forest);
-      let grassColor = new THREE.Color(osmPalette.grass);
-      for (let i = 0; i < gridWidth * gridHeight; i++) {
-        let cellColor = msg.data[i] == 100 ? grassColor : forestColor;
-        const stride = i * 4; // 4 channels, RGBA
-
-        data[stride] = cellColor.r * 255;
-        data[stride + 1] = cellColor.g * 255;
-        data[stride + 2] = cellColor.b * 255;
-        data[stride + 3] = 255;
-      }
-
-      scene.remove(bounds_plane);
-      bounds_plane = new THREE.Mesh(
-        new THREE.PlaneGeometry(gridWidth * res, gridHeight * res),
-        new THREE.MeshBasicMaterial({
-          map: bounds_texture,
-          side: THREE.DoubleSide,
-        })
-      );
-      bounds_plane.rotateX(-Math.PI / 2);
-      bounds_plane.position.x =
-        msg.info.origin.position.x + (gridWidth * res) / 2;
-      bounds_plane.position.z =
-        -msg.info.origin.position.y - (gridHeight * res) / 2;
-
-      scene.add(bounds_plane);
-
-      scene.remove(ground_plane);
-
-      ground_plane = new THREE.Mesh(
-        new THREE.CircleGeometry(forestRadius),
-        new THREE.MeshBasicMaterial({
-          color: osmPalette.grass,
-        })
-      );
-      ground_plane.rotateX(-Math.PI / 2);
-      ground_plane.position.x =
-        msg.info.origin.position.x + (gridWidth * res) / 2;
-      ground_plane.position.z =
-        -msg.info.origin.position.y - (gridHeight * res) / 2;
-
-      // This is just to prevent clipping
-      ground_plane.position.y = bounds_plane.position.y - 0.01;
-      scene.add(ground_plane);
-
-      bounds_texture.image.data = data;
-      bounds_texture.needsUpdate = true;
-    });
-
-    let odom_topic = new ROSLIB.Topic({
-      ros: node,
-      name: "/odom",
-      messageType: "nav_msgs/Odometry",
-    });
-
-    odom_topic.subscribe(function (msg) {
-      // console.log(msg.pose.pose.position);
-      if (mode == "plant") {
-        let ego_x = msg.pose.pose.position.x;
-        let ego_y = msg.pose.pose.position.y;
-        egoMesh.position.x = ego_x;
-        egoMesh.position.z = -ego_y;
-        egoRing.position.x = ego_x;
-        egoRing.position.z = -ego_y;
-        camera.position.x = ego_x;
-        camera.position.z = -plan_centroid_y;
-        controls.target.x = ego_x;
-        controls.target.z = -ego_y;
-      }
-
-      // console.log(`Mesh now at ${egoMesh.position.x}, ${egoMesh.position.z}`);
-    });
-
-    let goal_pose_topic = new ROSLIB.Topic({
-      ros: node,
-      name: "/goal_pose",
-      messageType: "geometry_msgs/PoseStamped",
-    });
-
-    goal_pose_topic.subscribe(function (msg) {
-      if (mode == "plant") {
-        waypointRing.position.x = msg.pose.position.x;
-        waypointRing.position.z = -msg.pose.position.y;
-      }
-    });
-
-    let global_plan_topic = new ROSLIB.Topic({
-      ros: node,
-      name: "/received_global_plan",
-      messageType: "nav_msgs/Path",
-    });
-
-    global_plan_topic.subscribe(function (msg) {
-      let points = [];
-      const height_above_ground = 1.0; // meters
-      const line_width = 1.0; // meters
-      for (let pose of msg.poses) {
-        let pos = pose.pose.position;
-        points.push(pos.x, height_above_ground, -pos.y);
-      }
-      const line = new MeshLine();
-      line.setPoints(points);
-
-      const material = new MeshLineMaterial({
-        color: new THREE.Color(osmPalette.green_highlight),
-      });
-
-      scene.remove(global_plan);
-      global_plan = new THREE.Mesh(line, material);
-      scene.add(global_plan);
-
-      console.log(`Adding global plan with ${points.length} points`);
-    });
-  });
+  import { occ_grid } from "$lib/stores";
 
   let osmPalette = {
     blue: 0x0092da,
@@ -262,6 +25,259 @@
     tree: 0x95b887,
     water: 0xaad3df,
   };
+
+  function getHeatmapColor(d: number) {
+    /**
+     * Given a number from 0-100, provide an RGB color on a scale. For visualizing cost etc.
+     */
+    let pct = d / 100;
+    let color1 = [205, 235, 176]; // grass
+    let color2 = [44, 48, 113]; // #2c3071
+    // find a color d% between a1 and a2
+    let rgb_array = color1.map((p, i) =>
+      Math.floor(color1[i] + pct * (color2[i] - color1[i])),
+    );
+
+    // return new THREE.Color(
+    //   `rgb(${rgb_array[0]}, ${rgb_array[1]}, ${rgb_array[2]})`,
+    // );
+
+    return rgb_array;
+  }
+
+  let forest_plan_msg = undefined;
+  let bounds_plane: THREE.Mesh;
+  let ground_plane: THREE.Mesh;
+
+  let steering_cost_msg = undefined;
+  let tree_meshes: THREE.Mesh[] = [];
+  let costmap_texture: THREE.DataTexture | undefined = undefined;
+  let plan_centroid_x = 0,
+    plan_centroid_y = 0;
+  let forestRadius = 0;
+
+  export let mode = "plan";
+
+  // node.subscribe((node) => {
+  //   let forest_plan_topic = new ROSLIB.Topic({
+  //     ros: node,
+  //     name: "/vis/forest_plan",
+  //     messageType: "visualization_msgs/Marker",
+  //   });
+
+  //   forest_plan_topic.subscribe(function (msg) {
+  //     if (msg == undefined) return;
+
+  //     // Simple check to see if a UNIQUE forest plan has been received
+  //     // Do the current plan and incoming plan have the same number of trees?
+  //     if (
+  //       forest_plan_msg != undefined &&
+  //       forest_plan_msg.points.length === msg.points.length
+  //     )
+  //       return;
+
+  //     forest_plan_msg = msg;
+
+  //     const geometry = new THREE.CapsuleGeometry(1, 1, 4, 16);
+  //     geometry.translate(0, 0.5, 0);
+
+  //     const material = new THREE.MeshPhongMaterial({
+  //       color: osmPalette.tree,
+  //       transparent: true,
+  //       opacity: 0.3,
+  //       flatShading: true,
+  //     });
+
+  //     // This tracks the centroid of all forest plan points.
+
+  //     // Clear any existing tree meshes before adding the new ones
+  //     for (var mesh of tree_meshes) {
+  //       scene.remove(mesh);
+  //     }
+  //     tree_meshes = [];
+
+  //     // Ignore the first forest plan point, which is the robot's start position
+  //     for (var point of msg.points.slice(1)) {
+  //       // console.log(point.x);
+  //       const mesh = new THREE.Mesh(geometry, material);
+  //       mesh.position.x = point.x;
+  //       mesh.position.y = 0;
+  //       mesh.position.z = -point.y;
+  //       mesh.scale.x = 1;
+  //       mesh.scale.y = Math.random() + 1;
+  //       mesh.scale.z = 1;
+  //       mesh.updateMatrix();
+  //       mesh.matrixAutoUpdate = false;
+  //       tree_meshes.push(mesh);
+  //       scene.add(mesh);
+
+  //       plan_centroid_x += point.x;
+  //       plan_centroid_y += point.y;
+  //     }
+
+  //     plan_centroid_x /= msg.points.length;
+  //     plan_centroid_y /= msg.points.length;
+
+  //     if (mode == "plan") {
+  //       camera.position.x = plan_centroid_x;
+  //       camera.position.z = -plan_centroid_y;
+  //       controls.target.x = plan_centroid_x;
+  //       controls.target.z = -plan_centroid_y;
+  //     }
+
+  //     // if (bounds_plane != undefined) {
+  //     //   bounds_plane.position.x = plan_centroid_x;
+  //     //   bounds_plane.position.z = -plan_centroid_y;
+  //     // }
+
+  //     console.log(`Centroid: (${plan_centroid_x}, ${plan_centroid_y})`);
+  //   });
+
+  //   let bounds_grid_topic = new ROSLIB.Topic({
+  //     ros: node,
+  //     name: "/map/bounds",
+  //     messageType: "nav_msgs/OccupancyGrid",
+  //   });
+
+  occ_grid.subscribe((msg) => {
+    if (msg == undefined) return;
+
+    console.log(
+      `Received bounds grid with dims ${msg.info.width}, ${msg.info.height}`,
+    );
+
+    if (costmap_texture == undefined) {
+      costmap_texture = new THREE.DataTexture(
+        new Uint8Array(91204),
+        msg.info.width,
+        msg.info.height,
+      );
+    }
+
+    let gridWidth = msg.info.width,
+      gridHeight = msg.info.height,
+      res = msg.info.resolution;
+
+    forestRadius = Math.max(gridWidth, gridHeight) * res * 0.75;
+
+    // 4 channels, RGBA
+    let data = new Uint8Array(gridWidth * gridHeight * 4);
+
+    let forestColor = new THREE.Color(osmPalette.forest);
+    let grassColor = new THREE.Color(osmPalette.grass);
+    for (let i = 0; i < gridWidth * gridHeight; i++) {
+      let cellColor = getHeatmapColor(msg.data[i]);
+      const stride = i * 4; // 4 channels, RGBA
+
+      data[stride] = cellColor[0];
+      data[stride + 1] = cellColor[1];
+      data[stride + 2] = cellColor[2];
+      data[stride + 3] = 255;
+    }
+
+    scene.remove(bounds_plane);
+    bounds_plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(gridWidth * res, gridHeight * res),
+      new THREE.MeshBasicMaterial({
+        map: costmap_texture,
+        side: THREE.DoubleSide,
+      }),
+    );
+    bounds_plane.rotateX(-Math.PI / 2);
+    bounds_plane.position.x =
+      msg.info.origin.position.x + (gridWidth * res) / 2;
+    bounds_plane.position.z =
+      -msg.info.origin.position.y - (gridHeight * res) / 2;
+
+    scene.add(bounds_plane);
+
+    scene.remove(ground_plane);
+
+    ground_plane = new THREE.Mesh(
+      new THREE.CircleGeometry(forestRadius),
+      new THREE.MeshBasicMaterial({
+        color: osmPalette.grass,
+      }),
+    );
+    ground_plane.rotateX(-Math.PI / 2);
+    ground_plane.position.x =
+      msg.info.origin.position.x + (gridWidth * res) / 2;
+    ground_plane.position.z =
+      -msg.info.origin.position.y - (gridHeight * res) / 2;
+
+    // This is just to prevent clipping
+    ground_plane.position.y = bounds_plane.position.y - 0.01;
+    // scene.add(ground_plane);
+
+    costmap_texture.image.data = data;
+    costmap_texture.needsUpdate = true;
+  });
+
+  //   let odom_topic = new ROSLIB.Topic({
+  //     ros: node,
+  //     name: "/odom",
+  //     messageType: "nav_msgs/Odometry",
+  //   });
+
+  //   odom_topic.subscribe(function (msg) {
+  //     // console.log(msg.pose.pose.position);
+  //     if (mode == "plant") {
+  //       let ego_x = msg.pose.pose.position.x;
+  //       let ego_y = msg.pose.pose.position.y;
+  //       egoMesh.position.x = ego_x;
+  //       egoMesh.position.z = -ego_y;
+  //       egoRing.position.x = ego_x;
+  //       egoRing.position.z = -ego_y;
+  //       camera.position.x = ego_x;
+  //       camera.position.z = -plan_centroid_y;
+  //       controls.target.x = ego_x;
+  //       controls.target.z = -ego_y;
+  //     }
+
+  //     // console.log(`Mesh now at ${egoMesh.position.x}, ${egoMesh.position.z}`);
+  //   });
+
+  //   let goal_pose_topic = new ROSLIB.Topic({
+  //     ros: node,
+  //     name: "/goal_pose",
+  //     messageType: "geometry_msgs/PoseStamped",
+  //   });
+
+  //   goal_pose_topic.subscribe(function (msg) {
+  //     if (mode == "plant") {
+  //       waypointRing.position.x = msg.pose.position.x;
+  //       waypointRing.position.z = -msg.pose.position.y;
+  //     }
+  //   });
+
+  //   let global_plan_topic = new ROSLIB.Topic({
+  //     ros: node,
+  //     name: "/received_global_plan",
+  //     messageType: "nav_msgs/Path",
+  //   });
+
+  //   global_plan_topic.subscribe(function (msg) {
+  //     let points = [];
+  //     const height_above_ground = 1.0; // meters
+  //     const line_width = 1.0; // meters
+  //     for (let pose of msg.poses) {
+  //       let pos = pose.pose.position;
+  //       points.push(pos.x, height_above_ground, -pos.y);
+  //     }
+  //     const line = new MeshLine();
+  //     line.setPoints(points);
+
+  //     const material = new MeshLineMaterial({
+  //       color: new THREE.Color(osmPalette.green_highlight),
+  //     });
+
+  //     scene.remove(global_plan);
+  //     global_plan = new THREE.Mesh(line, material);
+  //     scene.add(global_plan);
+
+  //     console.log(`Adding global plan with ${points.length} points`);
+  //   });
+  // });
 
   let camera: THREE.PerspectiveCamera,
     controls: MapControls,
@@ -366,7 +382,7 @@
       60,
       window.innerWidth / window.innerHeight,
       1,
-      1000
+      1000,
     );
     camera.position.set(127.2, 254.4, 127.2);
 
@@ -385,22 +401,24 @@
     controls.maxDistance = 200;
 
     controls.minPolarAngle = 0;
-    controls.maxPolarAngle = Math.PI;
+    controls.maxPolarAngle = Math.PI / 2;
 
     controls.target = new THREE.Vector3(127.2, 0, 127.2);
 
     // Helpers
-    // const axesHelper = new THREE.AxesHelper(100);
-    // scene.add(axesHelper);
+    const axesHelper = new THREE.AxesHelper(100);
+    scene.add(axesHelper);
 
     // world
     bounds_plane = new THREE.Mesh(
       new THREE.PlaneGeometry(60, 60),
       new THREE.MeshBasicMaterial({
-        map: bounds_texture,
+        map: costmap_texture,
         side: THREE.DoubleSide,
-      })
+      }),
     );
+    bounds_plane.rotateX(-Math.PI / 2);
+
     scene.add(bounds_plane);
     // const geometry = new THREE.PlaneGeometry(254.4, 254.4);
     // const material = new THREE.MeshBasicMaterial({
@@ -470,7 +488,7 @@
         color: osmPalette.gray,
         transparent: true,
         opacity: 0.8,
-      })
+      }),
     );
     coneHelper.rotateX(-Math.PI / 2);
     coneHelper.position.y = 1.2;
@@ -483,7 +501,7 @@
         new THREE.CylinderGeometry(1, 1, 3, 20),
         new THREE.MeshBasicMaterial({
           color: osmPalette.blue,
-        })
+        }),
       );
       scene.add(egoMesh);
 
@@ -493,7 +511,7 @@
         new THREE.MeshBasicMaterial({
           color: osmPalette.blue,
           transparent: true,
-        })
+        }),
       );
       egoRing.rotateX(-Math.PI / 2);
       egoRing.position.y = 1.2;
@@ -505,7 +523,7 @@
         new THREE.MeshBasicMaterial({
           color: osmPalette.green_highlight,
           transparent: true,
-        })
+        }),
       );
       waypointRing.rotateX(-Math.PI / 2);
       waypointRing.position.y = 1.2;

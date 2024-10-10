@@ -22,6 +22,7 @@
     wh_battery_voltage,
     platform_locked,
     failed_checks,
+    occ_grid,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -97,7 +98,7 @@
     });
     node.on("error", function (error) {
       console.log("Error connecting to websocket server: ", error);
-      location.reload(); // Reload the page
+      // location.reload(); // Reload the page
 
       connection_status.set(ConnectionStatus.ERROR);
     });
@@ -177,6 +178,8 @@
       ros: node,
       name: "/zed/left/image_rect_color/compressed",
       messageType: "sensor_msgs/CompressedImage",
+      queue_size: 1,
+      throttle_rate: 100,
     });
 
     camera_image_topic.subscribe(function (msg) {
@@ -196,6 +199,18 @@
 
       // console.log(msg);
       failed_checks.set(msg["checks"]);
+    });
+
+    let occ_grid_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/cost/occupancy",
+      messageType: "nav_msgs/OccupancyGrid",
+    });
+
+    occ_grid_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      occ_grid.set(msg);
     });
 
     let diagnostics_topic = new ROSLIB.Topic({

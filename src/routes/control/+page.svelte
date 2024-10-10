@@ -12,6 +12,7 @@
 	import Icon from "$lib/misc/Icon.svelte";
 	import { Canvas } from "@threlte/core";
 	import Scene from "./Scene.svelte";
+	import World from "$lib/3d/World.svelte";
 
 	let joystick_value: Writable<TeleopCommand> = writable<TeleopCommand>();
 
@@ -48,9 +49,7 @@
 
 <div class="flex flex-row h-full w-full overflow-hidden">
 	<div class="w-full">
-		<Canvas>
-			<Scene />
-		</Canvas>
+		<World />
 	</div>
 	<div class="grow overflow-hidden">
 		<div id="joystick-div" class="absolute bottom-0 right-0 flex flex-col">

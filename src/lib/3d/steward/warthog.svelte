@@ -13,6 +13,13 @@ Command: npx @threlte/gltf@2.0.3 warthog.glb --transform
   const gltf = useGltf("/models/warthog-transformed.glb", { useDraco: true });
 
   const component = forwardEventHandlers();
+
+  export let colors = {
+    yellow: "#E8C72B",
+    white: "#ffffff",
+  };
+
+  export let headlight_color = "#ff0000";
 </script>
 
 <T is={ref} dispose={false} {...$$restProps} bind:this={$component}>
@@ -48,17 +55,23 @@ Command: npx @threlte/gltf@2.0.3 warthog.glb --transform
       geometry={gltf.nodes.fenders.geometry}
       material={gltf.materials["Yellow Metal"]}
       rotation={[Math.PI, 0, Math.PI]}
-    />
+    >
+      <T.MeshToonMaterial color={colors.yellow} />
+    </T.Mesh>
     <T.Mesh
       geometry={gltf.nodes.Front_Headlight.geometry}
       material={gltf.nodes.Front_Headlight.material}
       rotation={[0, 1.57, 0]}
-    />
+    >
+      <T.MeshToonMaterial color={headlight_color} />
+    </T.Mesh>
     <T.Mesh
       geometry={gltf.nodes.antenna_left.geometry}
       material={gltf.materials.Antenna}
       rotation={[0, 1.57, 0]}
-    />
+    >
+      <T.MeshToonMaterial color={colors.white} />
+    </T.Mesh>
     <T.Mesh
       geometry={gltf.nodes.Wheel_RL.geometry}
       material={gltf.materials.Rubber}
