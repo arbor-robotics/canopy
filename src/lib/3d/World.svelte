@@ -1,11 +1,14 @@
 <script lang="ts">
   import { onMount } from "svelte";
   import * as THREE from "three";
+  import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
+  import { DRACOLoader } from "three/addons/loaders/DRACOLoader.js";
   import { MeshLine, MeshLineMaterial, MeshLineRaycast } from "three.meshline";
 
   import { GUI } from "three/addons/libs/lil-gui.module.min.js";
 
   import { MapControls } from "three/addons/controls/MapControls.js";
+  import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
   import { node } from "$lib/stores";
 
@@ -46,7 +49,7 @@
   }
 
   let forest_plan_msg = undefined;
-  let bounds_plane: THREE.Mesh;
+  let costmap_plane: THREE.Mesh;
   let ground_plane: THREE.Mesh;
 
   let steering_cost_msg = undefined;
@@ -175,21 +178,22 @@
       data[stride + 3] = 255;
     }
 
-    scene.remove(bounds_plane);
-    bounds_plane = new THREE.Mesh(
+    scene.remove(costmap_plane);
+    costmap_plane = new THREE.Mesh(
       new THREE.PlaneGeometry(gridWidth * res, gridHeight * res),
       new THREE.MeshBasicMaterial({
         map: costmap_texture,
         side: THREE.DoubleSide,
       }),
     );
-    bounds_plane.rotateX(-Math.PI / 2);
-    bounds_plane.position.x =
-      msg.info.origin.position.x + (gridWidth * res) / 2;
-    bounds_plane.position.z =
+    costmap_plane.rotateX(-Math.PI / 2);
+    costmap_plane.rotateZ(Math.PI / 2);
+    costmap_plane.position.z =
+      -1 * msg.info.origin.position.x - (gridWidth * res) / 2;
+    costmap_plane.position.x =
       -msg.info.origin.position.y - (gridHeight * res) / 2;
 
-    scene.add(bounds_plane);
+    scene.add(costmap_plane);
 
     scene.remove(ground_plane);
 
@@ -206,7 +210,7 @@
       -msg.info.origin.position.y - (gridHeight * res) / 2;
 
     // This is just to prevent clipping
-    ground_plane.position.y = bounds_plane.position.y - 0.01;
+    ground_plane.position.y = costmap_plane.position.y - 0.01;
     // scene.add(ground_plane);
 
     costmap_texture.image.data = data;
@@ -280,9 +284,10 @@
   // });
 
   let camera: THREE.PerspectiveCamera,
-    controls: MapControls,
     scene: THREE.Scene,
     renderer: THREE.WebGLRenderer;
+
+  let controls: OrbitControls;
 
   const raycaster = new THREE.Raycaster();
   const pointer = new THREE.Vector2();
@@ -384,42 +389,46 @@
       1,
       1000,
     );
-    camera.position.set(127.2, 254.4, 127.2);
+    camera.position.set(0, 10, 0);
 
     // controls
 
-    controls = new MapControls(camera, renderer.domElement);
-
-    //controls.addEventListener( 'change', render ); // call this only in static scenes (i.e., if there is no animation loop)
-
-    controls.enableDamping = true; // an animation loop is required when either damping or auto-rotation are enabled
-    controls.dampingFactor = 0.05;
-
-    controls.screenSpacePanning = false;
-
-    controls.minDistance = 10;
-    controls.maxDistance = 200;
-
-    controls.minPolarAngle = 0;
-    controls.maxPolarAngle = Math.PI / 2;
-
-    controls.target = new THREE.Vector3(127.2, 0, 127.2);
+    controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
 
     // Helpers
     const axesHelper = new THREE.AxesHelper(100);
     scene.add(axesHelper);
 
+    // Warthog
+    const loader = new GLTFLoader();
+    const dracoLoader = new DRACOLoader();
+    dracoLoader.setDecoderPath("models/draco/");
+    loader.setDRACOLoader(dracoLoader);
+
+    loader.load(
+      "models/warthog-transformed.glb",
+      function (gltf) {
+        scene.add(gltf.scene);
+      },
+      undefined,
+      function (error) {
+        console.error(error);
+      },
+    );
+
     // world
-    bounds_plane = new THREE.Mesh(
+    costmap_plane = new THREE.Mesh(
       new THREE.PlaneGeometry(60, 60),
       new THREE.MeshBasicMaterial({
         map: costmap_texture,
         side: THREE.DoubleSide,
       }),
     );
-    bounds_plane.rotateX(-Math.PI / 2);
+    costmap_plane.rotateX(-Math.PI / 2);
+    costmap_plane.rotateY(Math.PI / 2);
 
-    scene.add(bounds_plane);
+    scene.add(costmap_plane);
     // const geometry = new THREE.PlaneGeometry(254.4, 254.4);
     // const material = new THREE.MeshBasicMaterial({
     //   color: osmPalette.grass,
