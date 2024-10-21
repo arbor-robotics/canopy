@@ -5,19 +5,24 @@
   import Icon from "$lib/misc/Icon.svelte";
   import logo from "$lib/images/logo.svg";
 
+  import { addToast } from "$lib/stores";
+  import { getRandomPoint } from "./forest_generator";
+
   // import "@material/web/progress/circular-progress";
   // import "@material/web/button/text-button";
   // import "@material/web/button/elevated-button";
   // import "@material/web/fab/fab";
   // import "@material/web/icon/icon";
   import {
-    Button,
+    // Button,
     Progress,
     Styles,
     Toast,
     ToastBody,
     ToastHeader,
   } from "@sveltestrap/sveltestrap";
+
+  import { Button } from "bits-ui";
 
   import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
   import {
@@ -30,6 +35,7 @@
     planting_eta,
     num_planted_seedlings,
     num_seedlings_in_plan,
+    bounds_geojson,
   } from "$lib/stores";
   import World from "$lib/3d/World.svelte";
   import OsmMap from "$lib/misc/OsmMap.svelte";
@@ -51,22 +57,20 @@
   let current_step: number = 1;
 
   let geojson = undefined;
-  let forest_plan_geojson_topic = undefined;
-  let reqest_transition_client = undefined;
 
-  node.subscribe((node) => {
-    forest_plan_geojson_topic = new ROSLIB.Topic({
-      ros: node,
-      name: "/planning/bounds_geojson",
-      messageType: "std_msgs/String",
-    });
+  // node.subscribe((node) => {
+  //   forest_plan_geojson_topic = new ROSLIB.Topic({
+  //     ros: node,
+  //     name: "/planning/bounds_geojson",
+  //     messageType: "std_msgs/String",
+  //   });
 
-    reqest_transition_client = new ROSLIB.Service({
-      ros: node,
-      name: "/behavior/request_transition",
-      serviceType: "steward_msgs/RequestTransition",
-    });
-  });
+  //   reqest_transition_client = new ROSLIB.Service({
+  //     ros: node,
+  //     name: "/behavior/request_transition",
+  //     serviceType: "steward_msgs/RequestTransition",
+  //   });
+  // });
 
   let count = 0;
   let osmMap;
@@ -82,33 +86,36 @@
 
   function publishPlantingPlan() {
     if (osmMap.getGeoJSON() == undefined) {
-      showToast(
-        "No bounds",
-        "Trying drawing your planting area using the brush button in the top right.",
-        "danger",
-      );
+      addToast({
+        message:
+          "Draw a planting area using the brush button in the top right.",
+        type: "info",
+      });
       return;
     }
 
     let geometry = osmMap.getGeoJSON().geometry;
 
     if (geometry.coordinates.length > 1) {
-      showToast(
-        "Bounds should be contiguous",
-        "Make sure that your bounds are a single, connected shape",
-        "danger",
-      );
+      addToast({
+        message: "Make sure that your bounds form a single connected shape.",
+        type: "info",
+      });
       return;
     }
 
     geojson = JSON.stringify(osmMap.getGeoJSON().geometry);
     console.log(osmMap.getGeoJSON().geometry);
-    var json_msg = {
-      data: geojson,
-    };
-    forest_plan_geojson_topic.publish(json_msg);
-    boundsOK = true;
-    current_step++;
+
+    let random_point = getRandomPoint(osmMap.getGeoJSON().geometry);
+
+    console.log(random_point);
+
+    osmMap.addPoint(random_point);
+
+    bounds_geojson.set(geojson);
+    // boundsOK = true;
+    // current_step++;
   }
 
   let isToastOpen = false;
@@ -196,11 +203,12 @@
 
 <div class="absolute bottom-0 right-0 pb-4 pr-4">
   {#if current_step == 1}
-    <button on:click={publishPlantingPlan}>
-      <md-elevated-button class="flex flex-row">
-        Confirm Bounds</md-elevated-button
-      >
-    </button>
+    <Button.Root
+      class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-meadow-500 text-white hover:bg-meadow-600 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+      on:click={publishPlantingPlan}
+    >
+      Confirm Bounds
+    </Button.Root>
   {:else if current_step == 2}
     <button on:click={confirmPlan}>
       <md-elevated-button class="flex flex-row">

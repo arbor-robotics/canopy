@@ -6,6 +6,7 @@
     ConnectionStatus,
     node as nodeWritable,
     failed_checks,
+    heartbeat_toggle,
   } from "$lib/stores";
   import { Popover, Separator, Toggle } from "bits-ui";
   import { fly } from "svelte/transition";
@@ -21,7 +22,7 @@
 
 <Popover.Root>
   <Popover.Trigger
-    class="inline-flex h-10
+    class="flex flex-col h-20
 	items-center justify-center whitespace-nowrap rounded-input bg-dark px-[21px] text-[15px] font-medium text-background shadow-mini transition-all hover:cursor-pointer hover:bg-dark/95 active:scale-98"
   >
     {#each $failed_checks as check}
@@ -35,6 +36,17 @@
         ?
       {/if}
     {/each}
+
+    {#if $failed_checks.length == 0}
+      <Icon id="check" color="#007c63" size="2rem" />
+    {/if}
+    <div class="pt-4">
+      {#if $heartbeat_toggle}
+        <Icon id="circle" color="#404943" size="0.7rem" />
+      {:else}
+        <Icon id="circle" color="#404943" size="0.7rem" fill="0" />
+      {/if}
+    </div>
   </Popover.Trigger>
   <Popover.Content
     class="z-30 w-full max-w-[328px] rounded-[12px] border border-dark-10 bg-white p-4 shadow-popover"
@@ -58,6 +70,12 @@
           {check.message}
         </div>
       {/each}
+      {#if $failed_checks.length == 0}
+        <div class="flex flex-row">
+          <Icon id="check" color="#007c63" size="2rem" />
+          System OK.
+        </div>
+      {/if}
     </div>
     <Separator.Root class="-mx-4 mb-6 mt-[17px] block h-px bg-dark-10" />
   </Popover.Content>

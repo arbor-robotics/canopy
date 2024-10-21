@@ -23,6 +23,8 @@
     platform_locked,
     failed_checks,
     occ_grid,
+    bounds_geojson,
+    heartbeat_toggle,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -172,6 +174,32 @@
       if (msg == undefined) return;
 
       num_seedlings_in_plan.set(msg.points.length);
+    });
+
+    let bounds_geojson_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/cost/bounds",
+      messageType: "std_msgs/String",
+    });
+
+    bounds_geojson.subscribe((geojson) => {
+      console.log(`PUBLISHING ${geojson}`);
+      var json_msg = {
+        data: geojson,
+      };
+
+      bounds_geojson_topic.publish(json_msg);
+    });
+
+    let global_heartbeat_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/hb/global",
+      messageType: "std_msgs/Empty",
+    });
+
+    global_heartbeat_topic.subscribe((msg) => {
+      console.log(`❤️`);
+      heartbeat_toggle.set(!$heartbeat_toggle);
     });
 
     let camera_image_topic = new ROSLIB.Topic({

@@ -12,7 +12,7 @@
     await import("leaflet-draw");
     await import("leaflet-paintpolygon");
 
-    let map = L.map("map").setView([40.4401, -79.9467], 17);
+    let map = L.map("map").setView([40.44002092, -79.9409749], 19);
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution:
@@ -28,9 +28,11 @@
   export function getGeoJSON() {
     return paintpolygonControl.getData();
   }
+
+  // export
 </script>
 
-<div id="map" class="z-0">Hello, world!</div>
+<div id="map" class="z-0"></div>
 
 <style>
   #map {

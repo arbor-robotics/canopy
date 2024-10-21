@@ -51,6 +51,10 @@ export const platform_locked = writable(true);
 export const failed_checks = writable([]);
 export const occ_grid = writable(undefined);
 
+export const bounds_geojson = writable<string>("");
+
+export const heartbeat_toggle = writable<boolean>(false);
+
 
 
 console.log(Cookies.get())

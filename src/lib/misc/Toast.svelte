@@ -1,6 +1,7 @@
 <script>
     import { createEventDispatcher } from "svelte";
     import { fade, fly } from "svelte/transition";
+    import Icon from "./Icon.svelte";
     // import SuccessIcon from "./SuccessIcon.svelte";
     // import ErrorIcon from "./ErrorIcon.svelte";
     // import InfoIcon from "./InfoIcon.svelte";
@@ -9,7 +10,7 @@
     const dispatch = createEventDispatcher();
 
     export let type = "error";
-    export let delay = 3;
+    export let delay = 5;
 
     setTimeout(() => {
         dispatch("dismiss");
@@ -31,7 +32,10 @@
     in:fly
     out:fly
 >
-    <div id="hs-toast-solid-color-dark-label" class="flex p-4">
+    <div
+        id="hs-toast-solid-color-dark-label"
+        class="flex flex-row p-4 items-center"
+    >
         {#if type == "success"}
             <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -47,6 +51,14 @@
                     d="m4.5 12.75 6 6 9-13.5"
                 />
             </svg>
+        {:else if type == "error"}
+            <div class="pr-4">
+                <Icon id="error" size="2rem" color="#ff0000" fill="0" />
+            </div>
+        {:else if type == "info"}
+            <div class="pr-4">
+                <Icon id="lightbulb" size="2rem" fill="0" />
+            </div>
         {/if}
         <slot />
     </div>
