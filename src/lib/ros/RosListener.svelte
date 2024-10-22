@@ -25,6 +25,9 @@
     occ_grid,
     bounds_geojson,
     heartbeat_toggle,
+    ego_lat,
+    ego_lon,
+    ego_alt,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -198,8 +201,20 @@
     });
 
     global_heartbeat_topic.subscribe((msg) => {
-      console.log(`❤️`);
       heartbeat_toggle.set(!$heartbeat_toggle);
+    });
+
+    let gnss_fix_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/gnss/fix",
+      messageType: "sensor_msgs/NavSatFix",
+    });
+
+    gnss_fix_topic.subscribe((msg) => {
+      // console.log(msg.latitude);
+      ego_alt.set(msg.altitude);
+      ego_lon.set(msg.longitude);
+      ego_lat.set(msg.latitude);
     });
 
     let camera_image_topic = new ROSLIB.Topic({

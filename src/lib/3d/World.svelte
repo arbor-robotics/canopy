@@ -142,81 +142,6 @@
   //     messageType: "nav_msgs/OccupancyGrid",
   //   });
 
-  occ_grid.subscribe((msg) => {
-    if (msg == undefined) return;
-
-    console.log(
-      `Received bounds grid with dims ${msg.info.width}, ${msg.info.height}`,
-    );
-
-    if (costmap_texture == undefined) {
-      costmap_texture = new THREE.DataTexture(
-        new Uint8Array(91204),
-        msg.info.width,
-        msg.info.height,
-      );
-    }
-
-    let gridWidth = msg.info.width,
-      gridHeight = msg.info.height,
-      res = msg.info.resolution;
-
-    forestRadius = Math.max(gridWidth, gridHeight) * res * 0.75;
-
-    // 4 channels, RGBA
-    let data = new Uint8Array(gridWidth * gridHeight * 4);
-
-    let forestColor = new THREE.Color(osmPalette.forest);
-    let grassColor = new THREE.Color(osmPalette.grass);
-    for (let i = 0; i < gridWidth * gridHeight; i++) {
-      let cellColor = getHeatmapColor(msg.data[i]);
-      const stride = i * 4; // 4 channels, RGBA
-
-      data[stride] = cellColor[0];
-      data[stride + 1] = cellColor[1];
-      data[stride + 2] = cellColor[2];
-      data[stride + 3] = 255;
-    }
-
-    scene.remove(costmap_plane);
-    costmap_plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(gridWidth * res, gridHeight * res),
-      new THREE.MeshBasicMaterial({
-        map: costmap_texture,
-        side: THREE.DoubleSide,
-      }),
-    );
-    costmap_plane.rotateX(-Math.PI / 2);
-    costmap_plane.rotateZ(Math.PI / 2);
-    costmap_plane.position.z =
-      -1 * msg.info.origin.position.x - (gridWidth * res) / 2;
-    costmap_plane.position.x =
-      -msg.info.origin.position.y - (gridHeight * res) / 2;
-
-    scene.add(costmap_plane);
-
-    scene.remove(ground_plane);
-
-    ground_plane = new THREE.Mesh(
-      new THREE.CircleGeometry(forestRadius),
-      new THREE.MeshBasicMaterial({
-        color: osmPalette.grass,
-      }),
-    );
-    ground_plane.rotateX(-Math.PI / 2);
-    ground_plane.position.x =
-      msg.info.origin.position.x + (gridWidth * res) / 2;
-    ground_plane.position.z =
-      -msg.info.origin.position.y - (gridHeight * res) / 2;
-
-    // This is just to prevent clipping
-    ground_plane.position.y = costmap_plane.position.y - 0.01;
-    // scene.add(ground_plane);
-
-    costmap_texture.image.data = data;
-    costmap_texture.needsUpdate = true;
-  });
-
   //   let odom_topic = new ROSLIB.Topic({
   //     ros: node,
   //     name: "/odom",
@@ -314,6 +239,82 @@
       // update any render target sizes here
     }
   }
+
+  occ_grid.subscribe((msg) => {
+    if (msg == undefined) return;
+    if (scene == undefined) return;
+
+    // console.log(
+    //   `Received bounds grid with dims ${msg.info.width}, ${msg.info.height}`,
+    // );
+
+    if (costmap_texture == undefined) {
+      costmap_texture = new THREE.DataTexture(
+        new Uint8Array(91204),
+        msg.info.width,
+        msg.info.height,
+      );
+    }
+
+    let gridWidth = msg.info.width,
+      gridHeight = msg.info.height,
+      res = msg.info.resolution;
+
+    forestRadius = Math.max(gridWidth, gridHeight) * res * 0.75;
+
+    // 4 channels, RGBA
+    let data = new Uint8Array(gridWidth * gridHeight * 4);
+
+    let forestColor = new THREE.Color(osmPalette.forest);
+    let grassColor = new THREE.Color(osmPalette.grass);
+    for (let i = 0; i < gridWidth * gridHeight; i++) {
+      let cellColor = getHeatmapColor(msg.data[i]);
+      const stride = i * 4; // 4 channels, RGBA
+
+      data[stride] = cellColor[0];
+      data[stride + 1] = cellColor[1];
+      data[stride + 2] = cellColor[2];
+      data[stride + 3] = 255;
+    }
+
+    scene.remove(costmap_plane);
+    costmap_plane = new THREE.Mesh(
+      new THREE.PlaneGeometry(gridWidth * res, gridHeight * res),
+      new THREE.MeshBasicMaterial({
+        map: costmap_texture,
+        side: THREE.DoubleSide,
+      }),
+    );
+    costmap_plane.rotateX(-Math.PI / 2);
+    costmap_plane.rotateZ(Math.PI / 2);
+    costmap_plane.position.z =
+      -1 * msg.info.origin.position.x - (gridWidth * res) / 2;
+    costmap_plane.position.x =
+      -msg.info.origin.position.y - (gridHeight * res) / 2;
+
+    scene.add(costmap_plane);
+
+    scene.remove(ground_plane);
+
+    ground_plane = new THREE.Mesh(
+      new THREE.CircleGeometry(forestRadius),
+      new THREE.MeshBasicMaterial({
+        color: osmPalette.grass,
+      }),
+    );
+    ground_plane.rotateX(-Math.PI / 2);
+    ground_plane.position.x =
+      msg.info.origin.position.x + (gridWidth * res) / 2;
+    ground_plane.position.z =
+      -msg.info.origin.position.y - (gridHeight * res) / 2;
+
+    // This is just to prevent clipping
+    ground_plane.position.y = costmap_plane.position.y - 0.01;
+    // scene.add(ground_plane);
+
+    costmap_texture.image.data = data;
+    costmap_texture.needsUpdate = true;
+  });
 
   function onPointerMove(event) {
     // calculate pointer position in normalized device coordinates

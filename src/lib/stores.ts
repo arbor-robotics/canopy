@@ -55,6 +55,10 @@ export const bounds_geojson = writable<string>("");
 
 export const heartbeat_toggle = writable<boolean>(false);
 
+export const ego_lat = writable<number>(-1);
+export const ego_lon = writable<number>(-1);
+export const ego_alt = writable<number>(-1);
+
 
 
 console.log(Cookies.get())

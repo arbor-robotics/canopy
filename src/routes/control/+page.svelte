@@ -13,6 +13,13 @@
 	import { Canvas } from "@threlte/core";
 	import Scene from "./Scene.svelte";
 	import World from "$lib/3d/World.svelte";
+	import { map } from "d3";
+	import OsmMap from "$lib/misc/OsmMap.svelte";
+	import { fade, blur } from "svelte/transition";
+
+	let map_view_active = false;
+
+	let osmMap;
 
 	let joystick_value: Writable<TeleopCommand> = writable<TeleopCommand>();
 
@@ -40,6 +47,14 @@
 		if (!new_value) return;
 		camera_data = `data:image/jpg;base64,${new_value}`;
 	});
+
+	function toggleMapView() {
+		map_view_active = !map_view_active;
+	}
+
+	function listenForWaypoint() {
+		osmMap.listenForWaypoint();
+	}
 </script>
 
 <svelte:head>
@@ -49,7 +64,33 @@
 
 <div class="flex flex-row h-full w-full overflow-hidden">
 	<div class="w-full">
-		<World />
+		{#if map_view_active}
+			<div in:blur={{ duration: 300 }}><OsmMap bind:this={osmMap} /></div>
+		{:else}
+			<div in:blur={{ duration: 300 }}><World /></div>
+		{/if}
+	</div>
+	<div id="topright" class="absolute top-0 right-0 p-4 flex flex-row">
+		{#if map_view_active}
+			<Button.Root
+				class="py-3 px-4 mx-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-slate-50 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+				on:click={listenForWaypoint}
+			>
+				<Icon id="flag" size="1rem" color="" fill="0"></Icon>
+				Add waypoint
+			</Button.Root>
+		{/if}
+		<Button.Root
+			class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-slate-50 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+			on:click={toggleMapView}
+		>
+			{#if map_view_active}
+				<Icon id="my_location" size="1rem" color="" fill="0"></Icon>
+				Ego view
+			{:else}
+				<Icon id="map" size="1rem" color="" fill="0"></Icon> Map view
+			{/if}
+		</Button.Root>
 	</div>
 	<div class="grow overflow-hidden">
 		<div id="joystick-div" class="absolute bottom-0 right-0 flex flex-col">
