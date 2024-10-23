@@ -17,7 +17,7 @@
 	import OsmMap from "$lib/misc/OsmMap.svelte";
 	import { fade, blur } from "svelte/transition";
 
-	let map_view_active = false;
+	let map_view_active = true;
 
 	let osmMap;
 
@@ -30,7 +30,7 @@
 		if (!value) return; // initially undefined
 		let scaled_value = value;
 		scaled_value.x *= -2;
-		scaled_value.y *= 0.8;
+		scaled_value.y *= 1.5;
 		teleop_value.set(scaled_value);
 		cached_teleop = value;
 	});

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  import { ego_alt, ego_lat, ego_lon } from "$lib/stores";
+  import { ego_yaw, ego_lat, ego_lon, waypoints } from "$lib/stores";
 
   // We need to wrap Leaflet in this onMount hook,
   // since it requires access to the window object.
@@ -12,6 +12,8 @@
   let map, flagIcon, egoIcon, egoMarker, egoLat, egoLon, L;
 
   let listening_for_waypoint = false;
+
+  let egoMarkerRotation = 0;
 
   let waypoint_markers = [];
 
@@ -49,16 +51,42 @@
     }
   });
 
+  ego_yaw.subscribe((val) => {
+    if (L == undefined || !ego_yaw) return;
+
+    console.log(val);
+
+    let icon: HTMLDivElement = document.getElementById("ego-icon");
+    if (!icon) return;
+
+    let css_rotation = -val + Math.PI / 2;
+    icon.style.transform = `rotate(${css_rotation}rad)`;
+  });
+
   function onMapClick(e) {
     // alert("You clicked the map at " + e.latlng);
 
     if (listening_for_waypoint) {
       var marker = L.marker(e.latlng, { icon: flagIcon }).addTo(map);
+      var prev_marker: L.Marker = waypoint_markers.pop();
+      if (prev_marker != undefined) prev_marker.removeFrom(map);
+
       waypoint_markers.push(marker);
       listening_for_waypoint = false;
       console.log(
         `There are now ${waypoint_markers.length} waypoints on the map.`,
       );
+
+      let latlons: Array<Array<number>> = [];
+
+      waypoint_markers.forEach((marker: L.Marker) => {
+        let latlon = marker.getLatLng();
+        latlons.push([latlon.lat, latlon.lng]);
+      });
+
+      console.log(latlons);
+
+      waypoints.set(latlons);
     } else {
       console.log("No event was triggered.");
     }
@@ -79,9 +107,14 @@ flag
     });
 
     egoIcon = L.divIcon({
-      html: `<span class="material-symbols-outlined">
-smart_toy
-</span>`,
+      html: `<div class="icon-container flex justify-center" id="ego-icon">
+  <span
+    class="material-symbols-rounded my-auto"
+    style="--icon-color: #ff0000; --size: 1rem; --fill: 1"
+  >
+    navigation
+  </span>
+</div>`,
       className: "div-icon",
     });
 
@@ -103,6 +136,18 @@ smart_toy
     return paintpolygonControl.getData();
   }
 
+  export function startDraw() {
+    paintpolygonControl.startDraw();
+  }
+
+  export function startErase() {
+    paintpolygonControl.startErase();
+  }
+
+  export function startPan() {
+    paintpolygonControl.stop();
+  }
+
   // export
 </script>
 
@@ -114,9 +159,18 @@ smart_toy
     width: 100%;
   }
 
-  .div-icon {
-    /* background-color: white;
-    width: 1rem;
-    height: 1rem; */
+  .material-symbols-rounded {
+    font-variation-settings:
+      "FILL" var(--fill),
+      "wght" 400,
+      "GRAD" 0,
+      "opsz" 24;
+    color: var(--icon-color);
+    font-size: var(--size);
+  }
+  .icon-container {
+    user-select: none;
+    background-color: var(--icon-color);
+    margin: 0;
   }
 </style>

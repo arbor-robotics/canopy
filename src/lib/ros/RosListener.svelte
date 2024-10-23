@@ -28,6 +28,8 @@
     ego_lat,
     ego_lon,
     ego_alt,
+    ego_yaw,
+    waypoints,
   } from "$lib/stores";
   // import {
   //   is_connected,
@@ -194,6 +196,28 @@
       bounds_geojson_topic.publish(json_msg);
     });
 
+    let waypoint_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/goal_pose_geo",
+      messageType: "geometry_msgs/PoseStamped",
+    });
+
+    waypoints.subscribe((waypoints) => {
+      if (waypoints.length < 1) return;
+      let top_wp = waypoints[0];
+      console.log(`PUBLISHING ${top_wp}`);
+      var pose_msg = {
+        pose: {
+          position: {
+            x: top_wp[1],
+            y: top_wp[0],
+          },
+        },
+      };
+
+      waypoint_topic.publish(pose_msg);
+    });
+
     let global_heartbeat_topic = new ROSLIB.Topic({
       ros: node,
       name: "/hb/global",
@@ -202,6 +226,16 @@
 
     global_heartbeat_topic.subscribe((msg) => {
       heartbeat_toggle.set(!$heartbeat_toggle);
+    });
+
+    let ego_yaw_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/gnss/yaw",
+      messageType: "std_msgs/Float32",
+    });
+
+    ego_yaw_topic.subscribe((msg) => {
+      ego_yaw.set(msg.data);
     });
 
     let gnss_fix_topic = new ROSLIB.Topic({

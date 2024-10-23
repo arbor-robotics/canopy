@@ -201,6 +201,31 @@
   {/if}
 </div>
 
+<div class="inline-flex rounded-lg shadow-sm m-4 absolute top-0 right-0">
+  <Button.Root
+    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+    on:click={osmMap.startDraw}
+  >
+    <Icon id="brush" size="1.25rem" color="" fill="0"></Icon>
+    Paint Forest
+  </Button.Root>
+  <Button.Root
+    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+    on:click={osmMap.startErase}
+  >
+    <Icon id="ink_eraser" size="1.25rem" color="" fill="0"></Icon>
+    Erase
+  </Button.Root>
+  <Button.Root
+    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+    on:click={osmMap.startPan}
+  >
+    <Icon id="pan_tool" size="1.25rem" color="" fill="0"></Icon>
+
+    Move
+  </Button.Root>
+</div>
+
 <div class="absolute bottom-0 right-0 pb-4 pr-4">
   {#if current_step == 1}
     <Button.Root

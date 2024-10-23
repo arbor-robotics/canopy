@@ -58,7 +58,8 @@ export const heartbeat_toggle = writable<boolean>(false);
 export const ego_lat = writable<number>(-1);
 export const ego_lon = writable<number>(-1);
 export const ego_alt = writable<number>(-1);
-
+export const ego_yaw = writable<number>(-1);
+export const waypoints = writable<Array<Array<number>>>([]);
 
 
 console.log(Cookies.get())
