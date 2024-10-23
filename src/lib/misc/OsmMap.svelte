@@ -1,7 +1,15 @@
 <script lang="ts">
   import { onMount } from "svelte";
 
-  import { ego_yaw, ego_lat, ego_lon, waypoints } from "$lib/stores";
+  import {
+    ego_yaw,
+    ego_lat,
+    ego_lon,
+    waypoints,
+    plan_seedlings,
+  } from "$lib/stores";
+
+  import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
 
   // We need to wrap Leaflet in this onMount hook,
   // since it requires access to the window object.
@@ -9,16 +17,42 @@
 
   let paintpolygonControl;
 
-  let map, flagIcon, egoIcon, egoMarker, egoLat, egoLon, L;
+  let map, flagIcon, egoIcon, egoMarker, egoLat, egoLon, L, popup, seedlingIcon;
 
   let listening_for_waypoint = false;
 
   let egoMarkerRotation = 0;
 
-  let waypoint_markers = [];
+  let waypoint_markers: any[] = [];
+  let seedlings_markers: any[] = [];
+
+  enum MapAction {
+    DRAW,
+    PAN,
+    CLEAR,
+    ERASE,
+  }
+
+  let selected_action = MapAction.PAN;
 
   export function listenForWaypoint() {
     listening_for_waypoint = true;
+  }
+
+  export function clearSeedlingMarkers() {
+    seedlings_markers.forEach((marker) => {
+      marker.remove();
+      console.log(`Removing ${marker} from map.`);
+    });
+
+    seedlings_markers = [];
+  }
+
+  export async function addSeedlingMarker(seedling: object) {
+    var pointMarker = L.marker([seedling.lat, seedling.lon], {
+      icon: seedlingIcon,
+    }).addTo(map);
+    seedlings_markers.push(pointMarker);
   }
 
   ego_lat.subscribe((val) => {
@@ -63,6 +97,26 @@
     icon.style.transform = `rotate(${css_rotation}rad)`;
   });
 
+  plan_seedlings.subscribe((seedlings: object[]) => {
+    console.log(
+      `Seedling markers contains ${seedlings_markers.length} seedlings`,
+    );
+    seedlings_markers.forEach((marker) => {
+      marker.remove();
+      console.log(`Removing ${marker} from map.`);
+    });
+
+    seedlings_markers = [];
+    console.log(
+      `Seedling markers now contains ${seedlings_markers.length} seedlings`,
+    );
+
+    seedlings.forEach((seedling) => {
+      var pointMarker = L.marker([seedling.lat, seedling.lon]).addTo(map);
+      seedlings_markers.push(pointMarker);
+    });
+  });
+
   function onMapClick(e) {
     // alert("You clicked the map at " + e.latlng);
 
@@ -88,7 +142,16 @@
 
       waypoints.set(latlons);
     } else {
-      console.log("No event was triggered.");
+    }
+  }
+
+  function onMouseup(e) {
+    // alert("You clicked the map at " + e.latlng);
+
+    if (selected_action == MapAction.DRAW) {
+      console.log("Making forest");
+      generateSeedlings(getGeoJSON(), clearSeedlingMarkers, addSeedlingMarker);
+    } else {
     }
   }
 
@@ -98,6 +161,7 @@
     await import("leaflet-paintpolygon");
 
     map = L.map("map").setView([40.44002092, -79.9409749], 19);
+    popup = L.popup();
 
     flagIcon = L.divIcon({
       html: `<span class="material-symbols-outlined">
@@ -118,8 +182,21 @@ flag
       className: "div-icon",
     });
 
+    seedlingIcon = L.divIcon({
+      html: `<div class="icon-container flex justify-center" id="ego-icon" style="">
+  <span
+    class="material-symbols-rounded my-auto"
+    style="--icon-color: #ff0000; --size: 1rem; --fill: 1"
+  >
+    psychiatry
+  </span>
+</div>`,
+      className: "div-icon",
+      iconAnchor: [0, 20],
+    });
+
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
+      maxZoom: 20,
       attribution:
         '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
@@ -130,6 +207,7 @@ flag
     paintpolygonControl = L.control.paintPolygon({ menu: false }).addTo(map);
 
     map.on("click", onMapClick);
+    map.on("mouseup", onMouseup);
   });
 
   export function getGeoJSON() {
@@ -137,15 +215,45 @@ flag
   }
 
   export function startDraw() {
+    selected_action = MapAction.DRAW;
     paintpolygonControl.startDraw();
   }
 
   export function startErase() {
+    selected_action = MapAction.ERASE;
     paintpolygonControl.startErase();
   }
 
   export function startPan() {
+    selected_action = MapAction.PAN;
     paintpolygonControl.stop();
+  }
+
+  export function clear() {
+    paintpolygonControl.eraseAll();
+    clearSeedlingMarkers();
+  }
+
+  export function addPoint(point: number[]) {
+    let latlng = L.latLng(point[0], point[1]);
+    popup
+      .setLatLng(latlng)
+      .setContent("You clicked the map at " + latlng.toString())
+      .openOn(map);
+    var pointMarker = L.marker(latlng).addTo(map);
+    console.log(`Adding point at ${point[0]}, ${point[1]}`);
+  }
+
+  export function addPoints(points: number[][]) {
+    points.forEach((point) => {
+      let latlng = L.latLng(point[0], point[1]);
+      popup
+        .setLatLng(latlng)
+        .setContent("You clicked the map at " + latlng.toString())
+        .openOn(map);
+      var pointMarker = L.marker(latlng).addTo(map);
+      console.log(`Adding point at ${point[0]}, ${point[1]}`);
+    });
   }
 
   // export

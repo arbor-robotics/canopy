@@ -61,6 +61,8 @@ export const ego_alt = writable<number>(-1);
 export const ego_yaw = writable<number>(-1);
 export const waypoints = writable<Array<Array<number>>>([]);
 
+export const plan_seedlings = writable<object[]>([]);
+
 
 console.log(Cookies.get())
 let cookie_port = Cookies.get("rosbridge/port")

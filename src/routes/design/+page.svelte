@@ -6,7 +6,7 @@
   import logo from "$lib/images/logo.svg";
 
   import { addToast } from "$lib/stores";
-  import { getRandomPoint } from "./forest_generator";
+  // import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
 
   // import "@material/web/progress/circular-progress";
   // import "@material/web/button/text-button";
@@ -84,7 +84,7 @@
     PAUSE = 1,
   }
 
-  function publishPlantingPlan() {
+  async function publishPlantingPlan() {
     if (osmMap.getGeoJSON() == undefined) {
       addToast({
         message:
@@ -107,11 +107,11 @@
     geojson = JSON.stringify(osmMap.getGeoJSON().geometry);
     console.log(osmMap.getGeoJSON().geometry);
 
-    let random_point = getRandomPoint(osmMap.getGeoJSON().geometry);
+    // await generateSeedlings(osmMap);
 
-    console.log(random_point);
+    // console.log(random_point);
 
-    osmMap.addPoint(random_point);
+    // osmMap.addPoints(random_points);
 
     bounds_geojson.set(geojson);
     // boundsOK = true;
@@ -223,6 +223,14 @@
     <Icon id="pan_tool" size="1.25rem" color="" fill="0"></Icon>
 
     Move
+  </Button.Root>
+  <Button.Root
+    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+    on:click={osmMap.clear}
+  >
+    <Icon id="delete" size="1.25rem" color="" fill="0"></Icon>
+
+    Clear
   </Button.Root>
 </div>
 

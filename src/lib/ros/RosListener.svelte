@@ -188,7 +188,7 @@
     });
 
     bounds_geojson.subscribe((geojson) => {
-      console.log(`PUBLISHING ${geojson}`);
+      // console.log(`PUBLISHING ${geojson}`);
       var json_msg = {
         data: geojson,
       };
