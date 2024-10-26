@@ -39,14 +39,14 @@
   {#if mini}
     <Dialog.Root>
       <Dialog.Trigger
-        class="inline-flex h-12 items-center justify-center rounded-input bg-dark
+        class="inline-flex h-12 w-12 items-center justify-center rounded-input bg-dark
    text-[15px] font-semibold text-background shadow-mini
   hover:bg-black/5 active:scale-98 active:transition-all rounded-xl"
       >
-        <div class="flex flex-col">
+        <div class="flex flex-col animate-pulse">
           <Icon id="link_off" size={icon_size}></Icon>
 
-          <p class="text-xs">Disconnected</p>
+          <p class="text-xs">Disconnected from Steward</p>
         </div>
       </Dialog.Trigger>
       <Dialog.Portal>

@@ -7,6 +7,7 @@
     ego_lon,
     waypoints,
     plan_seedlings,
+    plan_bounds,
   } from "$lib/stores";
 
   import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
@@ -18,6 +19,8 @@
   let paintpolygonControl;
 
   let map, flagIcon, egoIcon, egoMarker, egoLat, egoLon, L, popup, seedlingIcon;
+
+  export let seedlings: object[] = [];
 
   let listening_for_waypoint = false;
 
@@ -111,10 +114,16 @@
       `Seedling markers now contains ${seedlings_markers.length} seedlings`,
     );
 
-    seedlings.forEach((seedling) => {
-      var pointMarker = L.marker([seedling.lat, seedling.lon]).addTo(map);
-      seedlings_markers.push(pointMarker);
+    seedlings.forEach((seedling, idx) => {
+      if (seedling == undefined) {
+        console.log(`Seedling at ${idx} was ${seedling}`);
+      }
+      addSeedlingMarker(seedling);
     });
+  });
+
+  plan_bounds.subscribe((geojson) => {
+    if (paintpolygonControl) paintpolygonControl.setData(geojson);
   });
 
   function onMapClick(e) {
@@ -150,9 +159,33 @@
 
     if (selected_action == MapAction.DRAW) {
       console.log("Making forest");
-      generateSeedlings(getGeoJSON(), clearSeedlingMarkers, addSeedlingMarker);
+      generateSeedlings(
+        getGeoJSON(),
+        clearSeedlingMarkers,
+        addSeedlingMarker,
+      ).then((new_seedlings) => {
+        seedlings = new_seedlings;
+      });
     } else {
     }
+  }
+
+  function loadPlanFromStorage() {
+    try {
+      let plan_seedlings_str = localStorage.getItem("plan_seedlings");
+
+      if (plan_seedlings_str != null) {
+        plan_seedlings.set(JSON.parse(plan_seedlings_str));
+      }
+    } catch (error) {}
+
+    try {
+      let plan_bounds_str = localStorage.getItem("plan_bounds");
+
+      if (plan_bounds_str != null) {
+        plan_bounds.set(JSON.parse(plan_bounds_str));
+      }
+    } catch (error) {}
   }
 
   onMount(async () => {
@@ -208,10 +241,16 @@ flag
 
     map.on("click", onMapClick);
     map.on("mouseup", onMouseup);
+
+    loadPlanFromStorage();
   });
 
   export function getGeoJSON() {
     return paintpolygonControl.getData();
+  }
+
+  export function getPlanSeedlings() {
+    return seedlings;
   }
 
   export function startDraw() {

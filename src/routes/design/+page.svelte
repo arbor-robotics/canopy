@@ -5,7 +5,9 @@
   import Icon from "$lib/misc/Icon.svelte";
   import logo from "$lib/images/logo.svg";
 
-  import { addToast } from "$lib/stores";
+  import { addToast, plan_bounds, plan_seedlings } from "$lib/stores";
+  import Cookies from "js-cookie";
+
   // import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
 
   // import "@material/web/progress/circular-progress";
@@ -35,7 +37,6 @@
     planting_eta,
     num_planted_seedlings,
     num_seedlings_in_plan,
-    bounds_geojson,
   } from "$lib/stores";
   import World from "$lib/3d/World.svelte";
   import OsmMap from "$lib/misc/OsmMap.svelte";
@@ -56,7 +57,7 @@
 
   let current_step: number = 1;
 
-  let geojson = undefined;
+  let bounds_str = undefined;
 
   // node.subscribe((node) => {
   //   forest_plan_geojson_topic = new ROSLIB.Topic({
@@ -73,7 +74,7 @@
   // });
 
   let count = 0;
-  let osmMap;
+  let osmMap: OsmMap;
   let toast_header_text: string;
   let toast_body_text: string;
   let toast_color: string;
@@ -84,7 +85,7 @@
     PAUSE = 1,
   }
 
-  async function publishPlantingPlan() {
+  async function savePlan() {
     if (osmMap.getGeoJSON() == undefined) {
       addToast({
         message:
@@ -94,9 +95,10 @@
       return;
     }
 
-    let geometry = osmMap.getGeoJSON().geometry;
+    let geojson = osmMap.getGeoJSON();
 
-    if (geometry.coordinates.length > 1) {
+    console.log(geojson);
+    if (geojson.geometry.coordinates.length > 1) {
       addToast({
         message: "Make sure that your bounds form a single connected shape.",
         type: "info",
@@ -104,16 +106,21 @@
       return;
     }
 
-    geojson = JSON.stringify(osmMap.getGeoJSON().geometry);
-    console.log(osmMap.getGeoJSON().geometry);
+    addToast({
+      message: "Plan saved.",
+      type: "success",
+    });
 
-    // await generateSeedlings(osmMap);
+    bounds_str = JSON.stringify(geojson);
+    let plan_seedlings_str = JSON.stringify(osmMap.getPlanSeedlings());
 
-    // console.log(random_point);
+    console.log(plan_seedlings_str);
 
-    // osmMap.addPoints(random_points);
+    plan_bounds.set(geojson);
+    plan_seedlings.set(osmMap.getPlanSeedlings());
+    localStorage.setItem("plan_seedlings", plan_seedlings_str);
+    localStorage.setItem("plan_bounds", bounds_str);
 
-    bounds_geojson.set(geojson);
     // boundsOK = true;
     // current_step++;
   }
@@ -238,9 +245,11 @@
   {#if current_step == 1}
     <Button.Root
       class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-meadow-500 text-white hover:bg-meadow-600 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-      on:click={publishPlantingPlan}
+      on:click={savePlan}
     >
-      Confirm Bounds
+      <Icon id="save" size="1.25rem" color="" fill="0"></Icon>
+
+      Save Plan
     </Button.Root>
   {:else if current_step == 2}
     <button on:click={confirmPlan}>

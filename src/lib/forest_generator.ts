@@ -90,6 +90,8 @@ export async function generateSeedlings(json: any, clearFn, addFn, min_dist: num
     // Clear old seedlings
     seedlings = [];
 
+    console.log(boundary)
+
     let bbox = getBoundingBox(boundary)
 
     clearFn();
@@ -120,4 +122,6 @@ export async function generateSeedlings(json: any, clearFn, addFn, min_dist: num
         await addFn(seedling)
         // plan_seedlings.set(seedlings);
     }
+
+    return seedlings;
 }

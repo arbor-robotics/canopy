@@ -23,7 +23,6 @@
     platform_locked,
     failed_checks,
     occ_grid,
-    bounds_geojson,
     heartbeat_toggle,
     ego_lat,
     ego_lon,
@@ -181,20 +180,20 @@
       num_seedlings_in_plan.set(msg.points.length);
     });
 
-    let bounds_geojson_topic = new ROSLIB.Topic({
-      ros: node,
-      name: "/cost/bounds",
-      messageType: "std_msgs/String",
-    });
+    // let bounds_geojson_topic = new ROSLIB.Topic({
+    //   ros: node,
+    //   name: "/cost/bounds",
+    //   messageType: "std_msgs/String",
+    // });
 
-    bounds_geojson.subscribe((geojson) => {
-      // console.log(`PUBLISHING ${geojson}`);
-      var json_msg = {
-        data: geojson,
-      };
+    // bounds_geojson.subscribe((geojson) => {
+    //   // console.log(`PUBLISHING ${geojson}`);
+    //   var json_msg = {
+    //     data: geojson,
+    //   };
 
-      bounds_geojson_topic.publish(json_msg);
-    });
+    //   bounds_geojson_topic.publish(json_msg);
+    // });
 
     let waypoint_topic = new ROSLIB.Topic({
       ros: node,

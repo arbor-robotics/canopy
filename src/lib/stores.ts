@@ -51,8 +51,6 @@ export const platform_locked = writable(true);
 export const failed_checks = writable([]);
 export const occ_grid = writable(undefined);
 
-export const bounds_geojson = writable<string>("");
-
 export const heartbeat_toggle = writable<boolean>(false);
 
 export const ego_lat = writable<number>(-1);
@@ -62,9 +60,8 @@ export const ego_yaw = writable<number>(-1);
 export const waypoints = writable<Array<Array<number>>>([]);
 
 export const plan_seedlings = writable<object[]>([]);
+export const plan_bounds = writable<object>({});
 
-
-console.log(Cookies.get())
 let cookie_port = Cookies.get("rosbridge/port")
 let cookie_ip = Cookies.get("rosbridge/ip")
 console.log(`Cookie port is ${cookie_port}`)
