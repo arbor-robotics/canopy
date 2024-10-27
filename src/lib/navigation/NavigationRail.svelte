@@ -17,7 +17,11 @@
   <a id="logo" href="/"><img id="logo-img" src={logo} alt="Canopy logo" /></a>
 
   <div class="link-container">
-    <NavigationRailButton icon="map" label="Design" url="/design" enabled={true}
+    <NavigationRailButton
+      icon="palette"
+      label="Design"
+      url="/design"
+      enabled={true}
     ></NavigationRailButton>
     <NavigationRailButton
       icon="smart_toy"

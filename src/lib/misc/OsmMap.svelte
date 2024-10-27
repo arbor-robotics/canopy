@@ -6,8 +6,8 @@
     ego_lat,
     ego_lon,
     waypoints,
-    plan_seedlings,
-    plan_bounds,
+    plan,
+    type Plan,
   } from "$lib/stores";
 
   import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
@@ -91,8 +91,6 @@
   ego_yaw.subscribe((val) => {
     if (L == undefined || !ego_yaw) return;
 
-    console.log(val);
-
     let icon: HTMLDivElement = document.getElementById("ego-icon");
     if (!icon) return;
 
@@ -100,7 +98,9 @@
     icon.style.transform = `rotate(${css_rotation}rad)`;
   });
 
-  plan_seedlings.subscribe((seedlings: object[]) => {
+  plan.subscribe((plan) => {
+    if (plan == undefined) return;
+
     console.log(
       `Seedling markers contains ${seedlings_markers.length} seedlings`,
     );
@@ -114,16 +114,14 @@
       `Seedling markers now contains ${seedlings_markers.length} seedlings`,
     );
 
-    seedlings.forEach((seedling, idx) => {
+    plan.seedlings.forEach((seedling, idx) => {
       if (seedling == undefined) {
         console.log(`Seedling at ${idx} was ${seedling}`);
       }
       addSeedlingMarker(seedling);
     });
-  });
 
-  plan_bounds.subscribe((geojson) => {
-    if (paintpolygonControl) paintpolygonControl.setData(geojson);
+    if (paintpolygonControl) paintpolygonControl.setData(plan.bounds);
   });
 
   function onMapClick(e) {
@@ -163,6 +161,7 @@
         getGeoJSON(),
         clearSeedlingMarkers,
         addSeedlingMarker,
+        10,
       ).then((new_seedlings) => {
         seedlings = new_seedlings;
       });
@@ -172,20 +171,14 @@
 
   function loadPlanFromStorage() {
     try {
-      let plan_seedlings_str = localStorage.getItem("plan_seedlings");
+      let plan_str = localStorage.getItem("plan");
 
-      if (plan_seedlings_str != null) {
-        plan_seedlings.set(JSON.parse(plan_seedlings_str));
+      if (plan_str != null) {
+        plan.set(JSON.parse(plan_str));
       }
-    } catch (error) {}
-
-    try {
-      let plan_bounds_str = localStorage.getItem("plan_bounds");
-
-      if (plan_bounds_str != null) {
-        plan_bounds.set(JSON.parse(plan_bounds_str));
-      }
-    } catch (error) {}
+    } catch (error) {
+      console.error(`Could not load plan from browser storage: ${error}`);
+    }
   }
 
   onMount(async () => {
@@ -216,7 +209,7 @@ flag
     });
 
     seedlingIcon = L.divIcon({
-      html: `<div class="icon-container flex justify-center" id="ego-icon" style="">
+      html: `<div class="icon-container flex justify-center" id="seedling-icon" style="">
   <span
     class="material-symbols-rounded my-auto"
     style="--icon-color: #ff0000; --size: 1rem; --fill: 1"

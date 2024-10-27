@@ -5,6 +5,11 @@
 		teleop_value,
 		wh_battery_voltage,
 		platform_locked,
+		connection_status,
+		ConnectionStatus,
+		systemwide_status_level,
+		systemwide_status_level_string,
+		systemwide_status_message,
 	} from "$lib/stores";
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
@@ -16,6 +21,7 @@
 	import { map } from "d3";
 	import OsmMap from "$lib/misc/OsmMap.svelte";
 	import { fade, blur } from "svelte/transition";
+	import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
 
 	let map_view_active = true;
 
@@ -28,6 +34,7 @@
 	joystick_value.subscribe((value: TeleopCommand) => {
 		// Scale twist messages here to make the joystick more/less sensitive
 		if (!value) return; // initially undefined
+		if (value.x < 0.01 && value.y < 0.01) return;
 		let scaled_value = value;
 		scaled_value.x *= -2;
 		scaled_value.y *= 1.5;
@@ -62,14 +69,11 @@
 	<meta name="description" content="Control and observe the robot" />
 </svelte:head>
 
-<div class="flex flex-row h-full w-full overflow-hidden">
-	<div class="w-full">
-		{#if map_view_active}
-			<div in:blur={{ duration: 300 }}><OsmMap bind:this={osmMap} /></div>
-		{:else}
-			<div in:blur={{ duration: 300 }}><World /></div>
-		{/if}
+<div class="flex flex-row h-full w-full">
+	<div class="w-[50%] bg-blue-300">
+		<OsmMap bind:this={osmMap} />
 	</div>
+	<div class="w-[50%]"><World /></div>
 	<div id="topright" class="absolute top-0 right-0 p-4 flex flex-row">
 		{#if map_view_active}
 			<Button.Root
@@ -80,7 +84,7 @@
 				Add waypoint
 			</Button.Root>
 		{/if}
-		<Button.Root
+		<!-- <Button.Root
 			class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-slate-50 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
 			on:click={toggleMapView}
 		>
@@ -90,14 +94,24 @@
 			{:else}
 				<Icon id="map" size="1rem" color="" fill="0"></Icon> Map view
 			{/if}
-		</Button.Root>
+		</Button.Root> -->
 	</div>
 	<div class="grow overflow-hidden">
-		<div id="joystick-div" class="absolute bottom-0 right-0 flex flex-col">
-			<div id="joystick-container" class="m-4 mb-0 mx-auto">
+		<div
+			id="joystick-div"
+			class="absolute bottom-0 right-0 flex flex-col"
+			class:pointer-events-none={$connection_status !=
+				ConnectionStatus.CONNECTED}
+		>
+			<div
+				id="joystick-container"
+				class="m-4 mb-0 mx-auto"
+				class:opacity-50={$connection_status !=
+					ConnectionStatus.CONNECTED}
+			>
 				<Joystick bind:value={joystick_value} />
 			</div>
-			<div class="inline-flex mx-6 justify-between">
+			<!-- <div class="inline-flex mx-6 justify-between">
 				<div class="inline-flex" id="battery">
 					<span class="material-symbols-outlined">
 						battery_horiz_050
@@ -119,15 +133,25 @@
 					</span>
 					<span class="material-symbols-outlined"> favorite </span>
 				</div>
-			</div>
-			{#if $platform_locked}
+			</div> -->
+			{#if $connection_status != ConnectionStatus.CONNECTED}
+				<div class="inline-flex rounded-lg my-4 mx-auto">
+					<div
+						class="py-3 px-4 flex flex-row pointer-events-none justify-center w-48 gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium border border-gray-200 bg-slate-50 text-gray-800 shadow-sm"
+					>
+						<Icon id="link_off" size="1.5rem" color=""></Icon>
+
+						<p class="">Disconnected <br />from Steward</p>
+					</div>
+				</div>
+			{:else if $platform_locked}
 				<div class="inline-flex rounded-lg my-4 mx-auto">
 					<div
 						class="py-3 px-4 flex flex-row opacity-80 pointer-events-none justify-center w-48 gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium border border-gray-200 bg-slate-50 text-gray-800 shadow-sm"
 					>
 						<Icon id="lock" size="1rem" color=""></Icon>
 
-						<p class="">E-Stop Active</p>
+						<p class="">{$systemwide_status_level_string}</p>
 					</div>
 				</div>
 			{:else}

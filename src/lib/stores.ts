@@ -1,10 +1,11 @@
 import { writable, type Writable } from "svelte/store";
 import Cookies from "js-cookie";
 
-export enum Level {
-  OK,
-  WARN,
-  ERROR,
+export enum SystemwideStatusLevel {
+  HEALTHY = 0,
+  WARN = 1,
+  TELEOP_ONLY = 2,
+  OUT_OF_SERVICE = 3
 }
 
 export enum Mode {
@@ -30,14 +31,20 @@ export type TeleopCommand = {
   y: number
 }
 
+export type Plan = {
+  bounds: object,
+  seedlings: object[]
+}
+
 export const node: Writable<any> = writable(undefined);
 export const connection_status = writable(ConnectionStatus.DISCONNECTED);
 export const current_behavior_state = writable(BehaviorState.PAUSED);
 export const warning_count = writable(undefined);
 export const error_count = writable(undefined);
 export const current_mode = writable(Mode.DISABLED);
-export const global_status_level = writable(Level.WARN);
-export const global_status_message = writable("");
+export const systemwide_status_level = writable(SystemwideStatusLevel.OUT_OF_SERVICE);
+export const systemwide_status_level_string = writable("Out of Service");
+export const systemwide_status_message = writable("");
 export const plan_progress = writable(0);
 export const planting_eta = writable(0);
 export const num_planted_seedlings = writable(0);
@@ -59,8 +66,7 @@ export const ego_alt = writable<number>(-1);
 export const ego_yaw = writable<number>(-1);
 export const waypoints = writable<Array<Array<number>>>([]);
 
-export const plan_seedlings = writable<object[]>([]);
-export const plan_bounds = writable<object>({});
+export const plan = writable<Plan>();
 
 let cookie_port = Cookies.get("rosbridge/port")
 let cookie_ip = Cookies.get("rosbridge/ip")

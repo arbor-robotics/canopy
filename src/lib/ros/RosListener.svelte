@@ -28,18 +28,13 @@
     ego_lon,
     ego_alt,
     ego_yaw,
+    SystemwideStatusLevel,
     waypoints,
+    systemwide_status_level,
+    systemwide_status_message,
+    systemwide_status_level_string,
+    plan,
   } from "$lib/stores";
-  // import {
-  //   is_connected,
-  //   current_mode,
-  //   Mode,
-  //   global_status_level,
-  //   global_status_message,
-  //   Level,
-  // } from "../guadian_store";
-
-  // let connectionStatus: ConnectionStatus = ConnectionStatus.DISCONNECTED;
 
   let node = undefined;
 
@@ -133,6 +128,51 @@
 
     plan_progress_topic.subscribe(function (msg) {
       plan_progress.set(msg.data);
+    });
+
+    let systemwide_status_level_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/health/system_wide_status",
+      messageType: "steward_msgs/SystemwideStatus",
+    });
+
+    systemwide_status_level_topic.subscribe(function (msg) {
+      let level: number = msg.level;
+      let status_string: string = "";
+
+      systemwide_status_level.set(level);
+
+      switch (level) {
+        case SystemwideStatusLevel.HEALTHY:
+          status_string = "Healthy";
+          break;
+        case SystemwideStatusLevel.WARN:
+          status_string = "Warn";
+          break;
+        case SystemwideStatusLevel.TELEOP_ONLY:
+          status_string = "Teleop Only";
+          break;
+        case SystemwideStatusLevel.OUT_OF_SERVICE:
+          status_string = "Out of Service";
+          break;
+        default:
+          console.warn(`Received unknown status level ${level}`);
+          status_string = "Unknown";
+      }
+
+      systemwide_status_level_string.set(status_string);
+    });
+
+    let plan_json_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/plan_json",
+      messageType: "std_msgs/String",
+    });
+
+    plan.subscribe(function (plan: Plan) {
+      let json_string = JSON.stringify(plan);
+
+      plan_json_topic.publish({ data: json_string });
     });
 
     let planting_eta_topic = new ROSLIB.Topic({
@@ -279,7 +319,7 @@
 
     let occ_grid_topic = new ROSLIB.Topic({
       ros: node,
-      name: "/cost/occupancy",
+      name: "/cost/dist_to_seedlings",
       messageType: "nav_msgs/OccupancyGrid",
     });
 

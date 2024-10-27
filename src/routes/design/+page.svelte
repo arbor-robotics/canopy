@@ -5,7 +5,7 @@
   import Icon from "$lib/misc/Icon.svelte";
   import logo from "$lib/images/logo.svg";
 
-  import { addToast, plan_bounds, plan_seedlings } from "$lib/stores";
+  import { addToast, plan, type Plan } from "$lib/stores";
   import Cookies from "js-cookie";
 
   // import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
@@ -45,6 +45,7 @@
   import BehaviorStateIndicator from "$lib/ros/BehaviorStateIndicator.svelte";
 
   import { spring } from "svelte/motion";
+  import { Plane } from "three";
 
   const displayed_seedling_count = spring();
   $: displayed_seedling_count.set($num_planted_seedlings);
@@ -116,10 +117,9 @@
 
     console.log(plan_seedlings_str);
 
-    plan_bounds.set(geojson);
-    plan_seedlings.set(osmMap.getPlanSeedlings());
-    localStorage.setItem("plan_seedlings", plan_seedlings_str);
-    localStorage.setItem("plan_bounds", bounds_str);
+    plan.set({ seedlings: osmMap.getPlanSeedlings(), bounds: geojson });
+
+    localStorage.setItem("plan", JSON.stringify($plan));
 
     // boundsOK = true;
     // current_step++;

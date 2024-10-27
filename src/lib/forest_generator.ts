@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 
 import {
-    plan_seedlings,
+    plan, type Plan
 } from "$lib/stores";
 import type OsmMap from "$lib/misc/OsmMap.svelte";
 
@@ -9,8 +9,9 @@ let seedlings: object[] = [];
 
 let L;
 
-plan_seedlings.subscribe((val) => {
-    seedlings = val;
+plan.subscribe((val) => {
+    if (val == undefined) return;
+    seedlings = val.seedlings;
 })
 
 function randomFromInterval(min: number, max: number) { // min and max included 

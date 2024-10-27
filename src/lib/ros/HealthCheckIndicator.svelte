@@ -7,6 +7,8 @@
     node as nodeWritable,
     failed_checks,
     heartbeat_toggle,
+    systemwide_status_level,
+    systemwide_status_message,
   } from "$lib/stores";
   import { Popover, Separator, Toggle } from "bits-ui";
   import { fly } from "svelte/transition";
@@ -28,6 +30,8 @@
     {#each $failed_checks as check}
       {#if check.code == "BRIDGE_FAILURE"}
         <Icon id="flyover" color="#cc0000" size="2rem" />
+      {:else if check.code == "LOCALIZATION_UNAVAILABLE"}
+        <Icon id="my_location" color="#fc8913" size="2rem" />
       {:else if check.trigger_status.level == 3}
         🔴
       {:else if check.trigger_status.level == 2}
@@ -60,6 +64,8 @@
         <div class="flex flex-row">
           {#if check.code == "BRIDGE_FAILURE"}
             <Icon id="flyover" color="#cc0000" size="2rem" />
+          {:else if check.code == "LOCALIZATION_UNAVAILABLE"}
+            <Icon id="my_location" color="#fc8913" size="2rem" />
           {:else if check.trigger_status.level == 3}
             🔴
           {:else if check.trigger_status.level == 2}

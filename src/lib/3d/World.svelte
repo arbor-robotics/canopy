@@ -381,7 +381,7 @@
     renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(window.devicePixelRatio);
     // renderer.setSize(window.innerWidth, window.innerHeight);
-    document.getElementById("map")?.appendChild(renderer.domElement);
+    document.getElementById("three-map")?.appendChild(renderer.domElement);
     // document.body.appendChild(renderer.domElement);
 
     camera = new THREE.PerspectiveCamera(
@@ -592,10 +592,10 @@
   });
 </script>
 
-<div id="map"></div>
+<div id="three-map"></div>
 
 <style>
-  #map {
+  #three-map {
     height: 100vh;
     width: 100%;
   }
