@@ -10,6 +10,8 @@
 		systemwide_status_level,
 		systemwide_status_level_string,
 		systemwide_status_message,
+		current_mode,
+		Mode,
 	} from "$lib/stores";
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
@@ -31,19 +33,34 @@
 
 	let cached_teleop = undefined;
 
+	let joystick_released = true;
+
 	joystick_value.subscribe((value: TeleopCommand) => {
 		// Scale twist messages here to make the joystick more/less sensitive
 		if (!value) return; // initially undefined
-		if (value.x < 0.01 && value.y < 0.01) return;
+		if (Math.abs(value.x) < 0.01 && Math.abs(value.y) < 0.01) {
+			if (joystick_released) {
+				return;
+			} else {
+				joystick_released = true;
+				// console.log(`Joystick released`);
+			}
+		} else {
+			joystick_released = false;
+			// console.log(`Joystick active`);
+		}
+
 		let scaled_value = value;
 		scaled_value.x *= -2;
 		scaled_value.y *= 1.5;
+		// console.log(scaled_value);
 		teleop_value.set(scaled_value);
 		cached_teleop = value;
 	});
 
 	setInterval(() => {
-		if (cached_teleop != undefined) teleop_value.set(cached_teleop);
+		if (cached_teleop != undefined && !joystick_released)
+			teleop_value.set(cached_teleop);
 	}, 0.1);
 
 	let value: string[] | undefined = ["bold"];
@@ -61,6 +78,16 @@
 
 	function listenForWaypoint() {
 		osmMap.listenForWaypoint();
+	}
+
+	function requestManualMode() {
+		window.onRequestMode(Mode.TELEOP);
+	}
+	function requestAutoMode() {
+		window.onRequestMode(Mode.AUTO);
+	}
+	function requestPause() {
+		window.onRequestMode(Mode.STOPPED);
 	}
 </script>
 
@@ -103,14 +130,18 @@
 			class:pointer-events-none={$connection_status !=
 				ConnectionStatus.CONNECTED}
 		>
-			<div
-				id="joystick-container"
-				class="m-4 mb-0 mx-auto"
-				class:opacity-50={$connection_status !=
-					ConnectionStatus.CONNECTED}
-			>
-				<Joystick bind:value={joystick_value} />
-			</div>
+			{#if $current_mode == Mode.TELEOP}
+				<div
+					id="joystick-container"
+					class="m-4 mb-0 mx-auto"
+					class:opacity-50={$connection_status !=
+						ConnectionStatus.CONNECTED}
+					in:fade={{ duration: 100 }}
+					out:fade={{ duration: 100 }}
+				>
+					<Joystick bind:value={joystick_value} />
+				</div>
+			{/if}
 			<!-- <div class="inline-flex mx-6 justify-between">
 				<div class="inline-flex" id="battery">
 					<span class="material-symbols-outlined">
@@ -144,7 +175,7 @@
 						<p class="">Disconnected <br />from Steward</p>
 					</div>
 				</div>
-			{:else if $platform_locked}
+				<!-- {:else if $platform_locked}
 				<div class="inline-flex rounded-lg my-4 mx-auto">
 					<div
 						class="py-3 px-4 flex flex-row opacity-80 pointer-events-none justify-center w-48 gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium border border-gray-200 bg-slate-50 text-gray-800 shadow-sm"
@@ -153,26 +184,53 @@
 
 						<p class="">{$systemwide_status_level_string}</p>
 					</div>
-				</div>
+				</div> -->
 			{:else}
 				<div class="inline-flex rounded-lg shadow-sm m-4">
 					<Button.Root
-						class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+						class="transition-all py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-200 focus:outline-none focus:bg-slate-300 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+						disabled={$systemwide_status_level > 2}
+						on:click={requestManualMode}
 					>
-						Manual
+						<div
+							class="flex flex-col"
+							class:animate-pulse={$current_mode == Mode.TELEOP}
+						>
+							<Icon
+								id="search_hands_free"
+								size="1.5rem"
+								color=""
+								fill="0"
+							></Icon>
+							<p class="text-xs">Manual</p>
+						</div>
 					</Button.Root>
 					<Button.Root
-						class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+						class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-sky-100 text-sky-600 shadow-sm hover:bg-sky-200 focus:outline-none focus:bg-sky-300 transition-all disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+						disabled={$systemwide_status_level > 1}
+						on:click={requestAutoMode}
 					>
-						Auto
+						<div
+							class="flex flex-col"
+							class:animate-pulse={$current_mode == Mode.AUTO}
+						>
+							<Icon id="smart_toy" size="1.5rem" color="" fill="0"
+							></Icon>
+							<p class="text-xs">Auto</p>
+						</div>
 					</Button.Root>
 					<Button.Root
-						class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-red-600 text-white shadow-sm hover:bg-red-700 focus:outline-none focus:bg-red-700 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+						class="transition-all py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-sand-300 text-gray-800 shadow-sm hover:bg-sand-400 focus:outline-none focus:bg-sand-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+						on:click={requestPause}
 					>
-						<!-- <span class="material-symbols-outlined text-base">
-							pan_tool
-						</span> -->
-						Stop
+						<div
+							class="flex flex-col"
+							class:animate-pulse={$current_mode == Mode.STOPPED}
+						>
+							<Icon id="pause" size="1.5rem" color="" fill="0"
+							></Icon>
+							<p class="text-xs">Pause</p>
+						</div>
 					</Button.Root>
 				</div>
 			{/if}
@@ -195,3 +253,6 @@
 		/>
 	{/if}
 </div>
+
+<style>
+</style>

@@ -17,7 +17,8 @@
   import { TexturePainter } from "$lib/3d/TexturePainter";
   import type { ThreeMFLoader } from "three/examples/jsm/Addons.js";
 
-  import { occ_grid } from "$lib/stores";
+  import { occ_grid, cmd_path } from "$lib/stores";
+  import { path } from "d3";
 
   let osmPalette = {
     blue: 0x0092da,
@@ -222,6 +223,8 @@
   let egoRing: THREE.Mesh;
   let waypointRing: THREE.Mesh;
   let global_plan: THREE.Mesh;
+  let cmd_path_mesh: THREE.Mesh;
+  let cmd_path_meshline: MeshLine;
 
   function resizeCanvasToDisplaySize() {
     const canvas = renderer.domElement;
@@ -314,6 +317,19 @@
 
     costmap_texture.image.data = data;
     costmap_texture.needsUpdate = true;
+  });
+
+  cmd_path.subscribe((path_msg) => {
+    if (path_msg == undefined) return;
+    if (scene == undefined) return;
+
+    const points = [];
+
+    path_msg.poses.forEach((pose) => {
+      let point = pose.pose.position;
+      points.push(-point.y, 0.5, -point.x);
+    });
+    cmd_path_meshline.setPoints(points);
   });
 
   function onPointerMove(event) {
@@ -424,12 +440,19 @@
       new THREE.MeshBasicMaterial({
         map: costmap_texture,
         side: THREE.DoubleSide,
+        color: "#7378B2",
       }),
     );
     costmap_plane.rotateX(-Math.PI / 2);
-    costmap_plane.rotateY(Math.PI / 2);
+    // costmap_plane.rotateY(Math.PI / 2);
+    // costmap_plane.rotateZ(Math.PI / 2);
 
     scene.add(costmap_plane);
+
+    cmd_path_meshline = new MeshLine();
+    const material = new MeshLineMaterial({ lineWidth: 0.5, color: "#FA8072" });
+    cmd_path_mesh = new THREE.Mesh(cmd_path_meshline, material);
+    scene.add(cmd_path_mesh);
     // const geometry = new THREE.PlaneGeometry(254.4, 254.4);
     // const material = new THREE.MeshBasicMaterial({
     //   color: osmPalette.grass,

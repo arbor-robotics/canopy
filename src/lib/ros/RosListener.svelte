@@ -34,6 +34,8 @@
     systemwide_status_message,
     systemwide_status_level_string,
     plan,
+    cmd_path,
+    current_mode,
   } from "$lib/stores";
 
   let node = undefined;
@@ -129,6 +131,28 @@
     plan_progress_topic.subscribe(function (msg) {
       plan_progress.set(msg.data);
     });
+
+    let current_mode_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/current_mode",
+      messageType: "steward_msgs/Mode",
+    });
+
+    current_mode_topic.subscribe(function (msg) {
+      console.log(`Current mode: ${msg.level}`);
+      current_mode.set(msg.level);
+    });
+
+    let requested_mode_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/requested_mode",
+      messageType: "steward_msgs/Mode",
+    });
+
+    window.onRequestMode = (level: number) => {
+      requested_mode_topic.publish({ level: level });
+      console.log(level);
+    };
 
     let systemwide_status_level_topic = new ROSLIB.Topic({
       ros: node,
@@ -369,6 +393,16 @@
       // console.log(msg);
     });
 
+    let cmd_path_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/cmd_vel/path",
+      messageType: "nav_msgs/Path",
+    });
+
+    cmd_path_topic.subscribe((msg) => {
+      cmd_path.set(msg);
+    });
+
     let teleop_topic = new ROSLIB.Topic({
       ros: node,
       name: "/cmd_vel",
@@ -388,7 +422,7 @@
         },
       };
       teleop_topic.publish(msg);
-      console.log(`Publishing: ${msg}`);
+      console.log(`Publishing Teleop command`);
     });
   }
 

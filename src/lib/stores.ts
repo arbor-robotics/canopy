@@ -9,9 +9,10 @@ export enum SystemwideStatusLevel {
 }
 
 export enum Mode {
-  ACTIVE,
-  DISABLED,
-  MANUAL,
+  TELEOP = 0,
+  ASSISTED = 1,
+  AUTO = 2,
+  STOPPED = 3
 }
 
 export enum ConnectionStatus {
@@ -41,7 +42,7 @@ export const connection_status = writable(ConnectionStatus.DISCONNECTED);
 export const current_behavior_state = writable(BehaviorState.PAUSED);
 export const warning_count = writable(undefined);
 export const error_count = writable(undefined);
-export const current_mode = writable(Mode.DISABLED);
+export const current_mode = writable(Mode.STOPPED);
 export const systemwide_status_level = writable(SystemwideStatusLevel.OUT_OF_SERVICE);
 export const systemwide_status_level_string = writable("Out of Service");
 export const systemwide_status_message = writable("");
@@ -65,6 +66,8 @@ export const ego_lon = writable<number>(-1);
 export const ego_alt = writable<number>(-1);
 export const ego_yaw = writable<number>(-1);
 export const waypoints = writable<Array<Array<number>>>([]);
+
+export const cmd_path = writable<object>();
 
 export const plan = writable<Plan>();
 
