@@ -1,48 +1,64 @@
 <script lang="ts">
   import { page } from "$app/stores";
   import Icon from "../misc/Icon.svelte";
-  import "@material/web/button/filled-button.js";
+  // import "@material/web/button/filled-button.js";
   import NavigationRailButton from "./NavigationRailButton.svelte";
   import RosListener from "$lib/ros/RosListener.svelte";
   import logo from "$lib/images/logo.svg";
+  import { connection_status, ConnectionStatus } from "$lib/stores";
   import BehaviorStateIndicator from "$lib/ros/BehaviorStateIndicator.svelte";
+  import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
+  import HealthCheckIndicator from "$lib/ros/HealthCheckIndicator.svelte";
 </script>
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
-<div id="rail">
+<div id="rail" class="bg-white border-r-2 shadow-xl">
   <a id="logo" href="/"><img id="logo-img" src={logo} alt="Canopy logo" /></a>
 
   <div class="link-container">
-    <NavigationRailButton icon="kid_star" label="Wizard" url="/wizard"
-    ></NavigationRailButton>
     <NavigationRailButton
-      icon="nature"
-      label="Your Land"
-      url="/land"
-      enabled={false}
+      icon="palette"
+      label="Design"
+      url="/design"
+      enabled={true}
     ></NavigationRailButton>
     <NavigationRailButton
       icon="smart_toy"
-      label="Steward"
-      url="/robot"
-      enabled={false}
+      label="Control"
+      url="/control"
+      enabled={true}
     ></NavigationRailButton>
+
+    <NavigationRailButton icon="settings" label="Settings" url="/settings"
+    ></NavigationRailButton>
+
     <NavigationRailButton
-      icon="monitoring"
-      label="Stats"
-      url="/"
-      enabled={false}
+      icon="stethoscope"
+      label="Diagnostics"
+      url="/diagnostics"
+    ></NavigationRailButton>
+
+    <NavigationRailButton
+      icon="query_stats"
+      label="Statistics"
+      url="/statistics"
+    ></NavigationRailButton>
+    <!-- <NavigationRailButton icon="monitoring" label="Stats" url="/" enabled={true}
     ></NavigationRailButton>
     <NavigationRailButton
       icon="settings"
       label="Settings"
       url="/"
-      enabled={false}
-    ></NavigationRailButton>
+      enabled={true}
+    ></NavigationRailButton> -->
   </div>
-
-  <BehaviorStateIndicator />
+  {#if $connection_status == ConnectionStatus.CONNECTED}
+    <!-- <BehaviorStateIndicator /> -->
+    <HealthCheckIndicator />
+  {:else}
+    <ConnectionIndicator mini />
+  {/if}
   <div id="status"></div>
 </div>
 
@@ -81,7 +97,7 @@
   .link-container {
     height: 100%;
     width: 5rem;
-    background-color: #f5f5ee;
+    /* background-color: #f5f5ee; */
     display: flex;
     flex-direction: column;
     justify-content: center;

@@ -267,7 +267,7 @@ $rose-950: #4c0519;
 
 $grey-dk-000: $gray-050 !default;
 $grey-dk-100: $gray-100 !default;
-$grey-dk-200: $gray-200!default;
+$grey-dk-200: $gray-200 !default;
 $grey-dk-250: $gray-300 !default;
 $grey-dk-300: $gray-400 !default;
 $grey-lt-000: $gray-500 !default;
@@ -296,33 +296,71 @@ $red-200: $red-200 !default;
 $red-300: $red-300 !default;
 
 // Now set our color scheme
-// https://coolors.co/5b866c-619aa9-bf9aca-ec9a29-ff4848-fdf3ed-131e2a
-$green-050: #C3D5C9;
-$green-100: #9FBCA9;
-$green-200: #81A78F;
-$green-300:#257466;
 
-$yellow-300: #DEB31F;
+$sand-50: #fff9ed;
+$sand-100: #fff1d5;
+$sand-200: #ffe3b3;
+$sand-300: #ffc872;
+$sand-400: #fda53a;
+$sand-500: #fc8913;
+$sand-600: #ed6d09;
+$sand-700: #c4520a;
+$sand-800: #9c4010;
+$sand-900: #7d3611;
+$sand-950: #441a06;
 
-$red-300: #EE3134;
+$forest-50: #eefffb;
+$forest-100: #c6fff3;
+$forest-200: #8dffe8;
+$forest-300: #4cfcdc;
+$forest-400: #18e9ca;
+$forest-500: #00cdb1;
+$forest-600: #00a592;
+$forest-700: #028174;
+$forest-800: #07685f;
+$forest-900: #0c554e;
+$forest-950: #003432;
 
-$seashell: #F5F5EE;
-$seafoam: #79A48A;
-$seafoam-dark: #5B866C;
-$wisteria: #BF9ACA;
-$gambodge: #EC9A29;
-$rich-black: #131E2A;
-$moonstone: #619AA9;
+$meadow-50: #ebfef7;
+$meadow-100: #d0fbe8;
+$meadow-200: #a5f5d7;
+$meadow-300: #6aebc2;
+$meadow-400: #2fd8a8;
+$meadow-500: #0ab68b;
+$meadow-600: #009b78;
+$meadow-700: #007c63;
+$meadow-800: #03624f;
+$meadow-900: #045042;
+$meadow-950: #012d27;
 
-$neutral: $seashell;
+$lime-50: #f3fbf2;
+$lime-100: #e3f8e0;
+$lime-200: #c8efc3;
+$lime-300: #92de8b;
+$lime-400: #67ca5e;
+$lime-500: #41af38;
+$lime-600: #319029;
+$lime-700: #297124;
+$lime-800: #245a21;
+$lime-900: #1f4a1d;
+$lime-950: #0c280b;
 
-$primary: $seafoam-dark;
-$secondary: $wisteria;
+$seashell: #fdf3ed;
+$baby-powder: #f5f5ee;
+$seafoam: #79a48a;
+$seafoam-dark: #5b866c;
+$wisteria: #bf9aca;
+$gambodge: #ec9a29;
+$rich-black: #131e2a;
 
+// $neutral: #ffffff;
+$primary: $meadow-700;
+$neutral: $sand-50;
 $sidebar-color: $neutral;
 $code-background-color: $neutral;
 
-.nav-list .nav-list-item .nav-list-link:hover, .nav-list .nav-list-item .nav-list-link.active {
+.nav-list .nav-list-item .nav-list-link:hover,
+.nav-list .nav-list-item .nav-list-link.active {
     background-image: none !important;
 }
 
@@ -331,20 +369,98 @@ $body-background-color: $neutral;
 $search-background-color: $neutral;
 $table-background-color: $neutral;
 
-@import url('https://fonts.googleapis.com/css2?family=Bitter:ital@0;1&family=Roboto:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&display=swap');
 @import url("https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css");
+@import url("https://fonts.googleapis.com/css2?family=Neuton:ital,wght@0,200;0,300;0,400;0,700;0,800;1,400&family=Noto+Sans:ital,wght@0,100..900;1,100..900&display=swap");
 
 :root {
     // --md-ref-typeface-brand: 'Open Sans';
-    --md-ref-typeface-plain: 'Roboto';
-    font-family: var(--md-ref-typeface-plain);
+    // --md-ref-typeface-plain: "Roboto";
+    font-family: "Noto Sans", system-ui;
+}
+
+.noto-sans {
+    font-family: "Noto Sans", system-ui;
+    font-optical-sizing: auto;
+    font-weight: 100;
+    font-style: normal;
+    font-variation-settings: "wdth" 100;
+}
+
+.neuton-extralight {
+    font-family: "Neuton", system-ui;
+    font-weight: 200;
+    font-style: normal;
+}
+
+.neuton-light {
+    font-family: "Neuton", system-ui;
+    font-weight: 300;
+    font-style: normal;
+}
+
+.neuton-regular {
+    font-family: "Neuton", system-ui;
+    font-weight: 400;
+    font-style: normal;
+}
+
+.neuton-bold {
+    font-family: "Neuton", system-ui;
+    font-weight: 700;
+    font-style: normal;
+}
+
+.neuton-extrabold {
+    font-family: "Neuton", system-ui;
+    font-weight: 800;
+    font-style: normal;
+}
+
+.neuton-regular-italic {
+    font-family: "Neuton", system-ui;
+    font-weight: 400;
+    font-style: italic;
 }
 
 body {
-    background-color: $neutral !important;
+    // background-color: $neutral !important;
     background-image: none;
 }
 
 a {
     color: $primary;
+}
+
+.material-symbols-filled {
+    font-variation-settings:
+        "FILL" 1,
+        "wght" 400,
+        "GRAD" 0,
+        "opsz" 24;
+}
+
+.material-symbols-outlined {
+    font-variation-settings:
+        "FILL" 0,
+        "wght" 400,
+        "GRAD" 0,
+        "opsz" 24;
+}
+
+.material-symbols-rounded {
+    font-variation-settings:
+        "FILL" 0,
+        "wght" 400,
+        "GRAD" 0,
+        "opsz" 24;
+}
+
+.symbol-filled {
+    font-variation-settings: "FILL" 1;
+}
+
+.dt-layout-row:has(.dt-search),
+.dt-layout-row:has(.dt-length),
+.dt-layout-row:has(.dt-paging) {
+    display: none !important;
 }

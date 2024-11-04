@@ -13,17 +13,45 @@
     planting_eta,
     num_planted_seedlings,
     num_seedlings_in_plan,
+    teleop_value,
+    type TeleopCommand,
+    rosbridge_ip,
+    rosbridge_port,
+    camera_image,
+    diagnostic_agg,
+    wh_battery_voltage,
+    platform_locked,
+    failed_checks,
+    occ_grid,
+    heartbeat_toggle,
+    ego_lat,
+    ego_lon,
+    ego_alt,
+    ego_yaw,
+    SystemwideStatusLevel,
+    waypoints,
+    systemwide_status_level,
+    systemwide_status_message,
+    systemwide_status_level_string,
+    plan,
+    cmd_path,
+    current_mode,
   } from "$lib/stores";
-  // import {
-  //   is_connected,
-  //   current_mode,
-  //   Mode,
-  //   global_status_level,
-  //   global_status_message,
-  //   Level,
-  // } from "../guadian_store";
 
-  // let connectionStatus: ConnectionStatus = ConnectionStatus.DISCONNECTED;
+  let node = undefined;
+
+  type TwistMsg = {
+    linear: {
+      x?: number;
+      y?: number;
+      z?: number;
+    };
+    angular: {
+      x?: number;
+      y?: number;
+      z?: number;
+    };
+  };
 
   let ConnectionStatusToColor: any = {};
   ConnectionStatusToColor[ConnectionStatus.CONNECTED] = "#16a34a";
@@ -32,22 +60,49 @@
   let connectionStatusColor =
     ConnectionStatusToColor[ConnectionStatus.DISCONNECTED];
 
-  onMount(async () => {
-    console.log("Hello!");
+  // Refresh the Rosbridge connection if the IP changes
+  rosbridge_ip.subscribe((value) => {
+    // Wait until the page has finished loading and onMount has been called
+    if (!node) return;
+    if (value == undefined) {
+      console.log(`Rosbridge port was ${value}, skipping.`);
+      return;
+    }
+
+    setupRosBridge();
+  });
+
+  // Refresh the Rosbridge connection if the port changes
+  rosbridge_port.subscribe((value) => {
+    // Wait until the page has finished loading and onMount has been called
+    if (!node) return;
+    if (value == undefined) {
+      console.log(`Rosbridge port was ${value}, skipping.`);
+      return;
+    }
+
+    setupRosBridge();
+  });
+
+  async function setupRosBridge() {
+    let url = `ws://${$rosbridge_ip}:${$rosbridge_port}`;
+    console.log(`Trying to connect to Steward at ${url}`);
     const module = await import("./roslib");
 
-    let node = new ROSLIB.Ros({
-      url: "ws://localhost:9090",
+    node = new ROSLIB.Ros({
+      url: url,
     });
 
     nodeWritable.set(node);
     // CONNECTION EVENTS
     node.on("connection", function () {
-      console.log("Connected to websocket server.");
+      console.log("Connected to Steward.");
       connection_status.set(ConnectionStatus.CONNECTED);
     });
     node.on("error", function (error) {
       console.log("Error connecting to websocket server: ", error);
+      // location.reload(); // Reload the page
+
       connection_status.set(ConnectionStatus.ERROR);
     });
     node.on("close", function () {
@@ -77,6 +132,74 @@
       plan_progress.set(msg.data);
     });
 
+    let current_mode_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/current_mode",
+      messageType: "steward_msgs/Mode",
+    });
+
+    current_mode_topic.subscribe(function (msg) {
+      // console.log(`Current mode: ${msg.level}`);
+      current_mode.set(msg.level);
+    });
+
+    let requested_mode_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/requested_mode",
+      messageType: "steward_msgs/Mode",
+    });
+
+    window.onRequestMode = (level: number) => {
+      requested_mode_topic.publish({ level: level });
+      console.log(level);
+    };
+
+    let systemwide_status_level_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/health/system_wide_status",
+      messageType: "steward_msgs/SystemwideStatus",
+    });
+
+    systemwide_status_level_topic.subscribe(function (msg) {
+      let level: number = msg.level;
+      let status_string: string = "";
+
+      systemwide_status_level.set(level);
+
+      switch (level) {
+        case SystemwideStatusLevel.HEALTHY:
+          status_string = "Healthy";
+          break;
+        case SystemwideStatusLevel.WARN:
+          status_string = "Warn";
+          break;
+        case SystemwideStatusLevel.TELEOP_ONLY:
+          status_string = "Teleop Only";
+          break;
+        case SystemwideStatusLevel.OUT_OF_SERVICE:
+          status_string = "Out of Service";
+          break;
+        default:
+          console.warn(`Received unknown status level ${level}`);
+          status_string = "Unknown";
+      }
+
+      systemwide_status_level_string.set(status_string);
+    });
+
+    let plan_json_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/plan_json",
+      messageType: "std_msgs/String",
+    });
+
+    plan.subscribe(function (plan: Plan) {
+      let json_string = JSON.stringify(plan);
+
+      plan_json_topic.publish({ data: json_string });
+      console.log("PUBLISHED PLAN");
+    });
+
     let planting_eta_topic = new ROSLIB.Topic({
       ros: node,
       name: "/planning/eta",
@@ -85,6 +208,17 @@
 
     planting_eta_topic.subscribe(function (msg) {
       planting_eta.set(msg.data);
+    });
+
+    let test_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/test",
+      messageType: "std_msgs/Empty",
+    });
+
+    test_topic.subscribe(function (msg) {
+      // planting_eta.set(msg.data);
+      console.log(msg);
     });
 
     let num_planted_seedlings_topic = new ROSLIB.Topic({
@@ -110,6 +244,191 @@
 
       num_seedlings_in_plan.set(msg.points.length);
     });
+
+    // let bounds_geojson_topic = new ROSLIB.Topic({
+    //   ros: node,
+    //   name: "/cost/bounds",
+    //   messageType: "std_msgs/String",
+    // });
+
+    // bounds_geojson.subscribe((geojson) => {
+    //   // console.log(`PUBLISHING ${geojson}`);
+    //   var json_msg = {
+    //     data: geojson,
+    //   };
+
+    //   bounds_geojson_topic.publish(json_msg);
+    // });
+
+    let waypoint_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/goal_pose_geo",
+      messageType: "geometry_msgs/PoseStamped",
+    });
+
+    waypoints.subscribe((waypoints) => {
+      if (waypoints.length < 1) return;
+      let top_wp = waypoints[0];
+      console.log(`PUBLISHING ${top_wp}`);
+      var pose_msg = {
+        pose: {
+          position: {
+            x: top_wp[1],
+            y: top_wp[0],
+          },
+        },
+      };
+
+      waypoint_topic.publish(pose_msg);
+    });
+
+    let global_heartbeat_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/hb/global",
+      messageType: "std_msgs/Empty",
+    });
+
+    global_heartbeat_topic.subscribe((msg) => {
+      heartbeat_toggle.set(!$heartbeat_toggle);
+    });
+
+    let ego_yaw_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/gnss/yaw",
+      messageType: "std_msgs/Float32",
+    });
+
+    ego_yaw_topic.subscribe((msg) => {
+      ego_yaw.set(msg.data);
+    });
+
+    let gnss_fix_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/gnss/gpsfix",
+      messageType: "gps_msgs/GPSFix",
+    });
+
+    gnss_fix_topic.subscribe((msg) => {
+      console.log(msg);
+      ego_alt.set(msg.altitude);
+      ego_lon.set(msg.longitude);
+      ego_lat.set(msg.latitude);
+    });
+
+    let camera_image_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/zed/left/image_rect_color/compressed",
+      messageType: "sensor_msgs/CompressedImage",
+      queue_size: 1,
+      throttle_rate: 100,
+    });
+
+    camera_image_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      camera_image.set(msg.data);
+    });
+
+    let health_check_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/health/failed_checks",
+      messageType: "steward_msgs/FailedChecks",
+    });
+
+    health_check_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      // console.log(msg);
+      failed_checks.set(msg["checks"]);
+    });
+
+    let occ_grid_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/cost/total",
+      messageType: "nav_msgs/OccupancyGrid",
+    });
+
+    occ_grid_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      occ_grid.set(msg);
+    });
+
+    let diagnostics_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/diagnostics/agg",
+      messageType: "diagnostic_msgs/DiagnosticArray",
+    });
+
+    diagnostics_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      diagnostic_agg.set(msg);
+
+      // Extract battery voltage
+      msg.status.forEach((stat) => {
+        if (stat.name == "/Warthog Base/General/Battery") {
+          stat.values.forEach((kv) => {
+            if (kv.key == "Battery Voltage (V)") {
+              // Round to 1 decimal place
+              let rounded_voltage = kv.value;
+              rounded_voltage *= 10;
+              rounded_voltage = Math.floor(rounded_voltage) / 10;
+              wh_battery_voltage.set(rounded_voltage);
+            }
+          });
+        } else if (stat.name == "/Warthog Base/E-Stop") {
+          stat.values.forEach((kv) => {
+            if (kv.key == "warthog_node: MCU Status") {
+              // console.log(kv.value);
+              if (kv.value == "Stop loop open, platform immobilized.") {
+                platform_locked.set(true);
+              } else {
+                platform_locked.set(false);
+              }
+            }
+          });
+        }
+      });
+
+      // console.log(msg);
+    });
+
+    let cmd_path_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/cmd_vel/path",
+      messageType: "nav_msgs/Path",
+    });
+
+    cmd_path_topic.subscribe((msg) => {
+      cmd_path.set(msg);
+    });
+
+    let teleop_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/cmd_vel",
+      messageType: "geometry_msgs/Twist",
+    });
+
+    teleop_topic.advertise();
+
+    teleop_value.subscribe((value: TeleopCommand) => {
+      if (!value) return;
+      let msg: TwistMsg = {
+        linear: {
+          x: -value.y,
+        },
+        angular: {
+          z: value.x,
+        },
+      };
+      teleop_topic.publish(msg);
+      console.log(`Publishing Teleop command`);
+    });
+  }
+
+  onMount(async () => {
+    await setupRosBridge();
   });
 </script>
 

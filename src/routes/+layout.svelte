@@ -7,31 +7,36 @@
   import "leaflet/dist/leaflet.css";
   import "leaflet-draw/dist/leaflet.draw.css";
   import NavigationRail from "../lib/navigation/NavigationRail.svelte";
+  import Toasts from "../lib/misc/Toasts.svelte";
   import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
   import { connection_status, ConnectionStatus } from "$lib/stores";
   import RosListener from "$lib/ros/RosListener.svelte";
+  import { onNavigate } from "$app/navigation";
+
+  onNavigate((navigation) => {
+    if (!document.startViewTransition) return;
+
+    return new Promise((resolve) => {
+      document.startViewTransition(async () => {
+        resolve();
+        await navigation.complete;
+      });
+    });
+  });
 </script>
 
-<div class="app">
+<div class="app overflow-hidden">
   <RosListener />
 
-  {#if $connection_status == ConnectionStatus.CONNECTED}
-    <!-- <NavigationRail></NavigationRail> -->
-    <main class="p-0">
-      <slot />
-    </main>
-  {:else}
-    <ConnectionIndicator />
-  {/if}
+  <Toasts />
 
-  <!-- <footer>
-    <p>
-      visit <a href="https://kit.svelte.dev">kit.svelte.dev</a> to learn SvelteKit
-    </p>
-  </footer> -->
+  <NavigationRail></NavigationRail>
+  <main class="p-0 overflow-hidden">
+    <slot />
+  </main>
 </div>
 
-<style>
+<style lang="scss">
   .app {
     display: flex;
     flex-direction: row;
@@ -47,6 +52,7 @@
     /* max-width: 64rem; */
     margin: 0 auto;
     box-sizing: border-box;
+    background-color: #fffcf5;
   }
 
   footer {
@@ -66,4 +72,8 @@
       padding: 12px 0;
     }
   }
+
+  /* PAGE VIEW TRANSITIONS */
+
+  /* END PAGE VIEW TRANSITIONS */
 </style>

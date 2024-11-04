@@ -5,19 +5,26 @@
   import Icon from "$lib/misc/Icon.svelte";
   import logo from "$lib/images/logo.svg";
 
-  import "@material/web/progress/circular-progress";
-  import "@material/web/button/text-button";
-  import "@material/web/button/elevated-button";
-  import "@material/web/fab/fab";
-  import "@material/web/icon/icon";
+  import { addToast, plan, type Plan } from "$lib/stores";
+  import Cookies from "js-cookie";
+
+  // import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
+
+  // import "@material/web/progress/circular-progress";
+  // import "@material/web/button/text-button";
+  // import "@material/web/button/elevated-button";
+  // import "@material/web/fab/fab";
+  // import "@material/web/icon/icon";
   import {
-    Button,
+    // Button,
     Progress,
     Styles,
     Toast,
     ToastBody,
     ToastHeader,
   } from "@sveltestrap/sveltestrap";
+
+  import { Button } from "bits-ui";
 
   import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
   import {
@@ -38,6 +45,7 @@
   import BehaviorStateIndicator from "$lib/ros/BehaviorStateIndicator.svelte";
 
   import { spring } from "svelte/motion";
+  import { Plane } from "three";
 
   const displayed_seedling_count = spring();
   $: displayed_seedling_count.set($num_planted_seedlings);
@@ -50,26 +58,24 @@
 
   let current_step: number = 1;
 
-  let geojson = undefined;
-  let forest_plan_geojson_topic = undefined;
-  let reqest_transition_client = undefined;
+  let bounds_str = undefined;
 
-  node.subscribe((node) => {
-    forest_plan_geojson_topic = new ROSLIB.Topic({
-      ros: node,
-      name: "/planning/bounds_geojson",
-      messageType: "std_msgs/String",
-    });
+  // node.subscribe((node) => {
+  //   forest_plan_geojson_topic = new ROSLIB.Topic({
+  //     ros: node,
+  //     name: "/planning/bounds_geojson",
+  //     messageType: "std_msgs/String",
+  //   });
 
-    reqest_transition_client = new ROSLIB.Service({
-      ros: node,
-      name: "/behavior/request_transition",
-      serviceType: "steward_msgs/RequestTransition",
-    });
-  });
+  //   reqest_transition_client = new ROSLIB.Service({
+  //     ros: node,
+  //     name: "/behavior/request_transition",
+  //     serviceType: "steward_msgs/RequestTransition",
+  //   });
+  // });
 
   let count = 0;
-  let osmMap;
+  let osmMap: OsmMap;
   let toast_header_text: string;
   let toast_body_text: string;
   let toast_color: string;
@@ -80,35 +86,43 @@
     PAUSE = 1,
   }
 
-  function publishPlantingPlan() {
+  async function savePlan() {
     if (osmMap.getGeoJSON() == undefined) {
-      showToast(
-        "No bounds",
-        "Trying drawing your planting area using the brush button in the top right.",
-        "danger"
-      );
+      addToast({
+        message:
+          "Draw a planting area using the brush button in the top right.",
+        type: "info",
+      });
       return;
     }
 
-    let geometry = osmMap.getGeoJSON().geometry;
+    let geojson = osmMap.getGeoJSON();
 
-    if (geometry.coordinates.length > 1) {
-      showToast(
-        "Bounds should be contiguous",
-        "Make sure that your bounds are a single, connected shape",
-        "danger"
-      );
+    console.log(geojson);
+    if (geojson.geometry.coordinates.length > 1) {
+      addToast({
+        message: "Make sure that your bounds form a single connected shape.",
+        type: "info",
+      });
       return;
     }
 
-    geojson = JSON.stringify(osmMap.getGeoJSON().geometry);
-    console.log(osmMap.getGeoJSON().geometry);
-    var json_msg = {
-      data: geojson,
-    };
-    forest_plan_geojson_topic.publish(json_msg);
-    boundsOK = true;
-    current_step++;
+    addToast({
+      message: "Plan saved.",
+      type: "success",
+    });
+
+    bounds_str = JSON.stringify(geojson);
+    let plan_seedlings_str = JSON.stringify(osmMap.getPlanSeedlings());
+
+    console.log(plan_seedlings_str);
+
+    plan.set({ seedlings: osmMap.getPlanSeedlings(), bounds: geojson });
+
+    localStorage.setItem("plan", JSON.stringify($plan));
+
+    // boundsOK = true;
+    // current_step++;
   }
 
   let isToastOpen = false;
@@ -128,7 +142,7 @@
   function showToast(
     title: string,
     description: string,
-    color: string = "primary"
+    color: string = "primary",
   ) {
     toast_color = color;
     toast_header_text = title;
@@ -151,7 +165,7 @@
     showToast(
       "Steward is ready to plant",
       "Click the ▶ button to start the mission",
-      "success"
+      "success",
     );
   }
 
@@ -170,9 +184,9 @@
       transition_request,
       function (response) {
         console.log(
-          `Transition response was ${response.success}: ${response.description}`
+          `Transition response was ${response.success}: ${response.description}`,
         );
-      }
+      },
     );
   }
 </script>
@@ -182,39 +196,9 @@
   <meta name="description" content="About this app" />
 </svelte:head>
 
-<Styles />
+<!-- <Styles /> -->
 
 <div class="flex flex-row">
-  <div id="rail" class="flex flex-column">
-    <a id="logo" href="/"><img id="logo-img" src={logo} alt="Canopy logo" /></a>
-
-    <div class="link-container">
-      <WizardButton
-        icon="lasso_select"
-        label="Draw Bounds"
-        selected={current_step == 1}
-        on:click={goToStep1}
-      ></WizardButton>
-      <i class="bi bi-chevron-down opacity-30"></i>
-      <WizardButton
-        icon="map"
-        label="Generate Plan"
-        enabled={current_step > 1}
-        selected={current_step == 2}
-        on:click={goToStep2}
-      ></WizardButton>
-      <i class="bi bi-chevron-down opacity-30"></i>
-      <WizardButton
-        icon="rocket_launch"
-        label="Launch Steward"
-        enabled={current_step > 2}
-        selected={current_step == 3}
-      ></WizardButton>
-    </div>
-
-    <BehaviorStateIndicator />
-    <div id="status"></div>
-  </div>
   {#if current_step == 1}
     <OsmMap bind:this={osmMap} />
   {:else if current_step == 2}
@@ -224,13 +208,49 @@
   {/if}
 </div>
 
+<div class="inline-flex rounded-lg shadow-sm m-4 absolute top-0 right-0">
+  <Button.Root
+    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+    on:click={osmMap.startDraw}
+  >
+    <Icon id="brush" size="1.25rem" color="" fill="0"></Icon>
+    Paint Forest
+  </Button.Root>
+  <Button.Root
+    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+    on:click={osmMap.startErase}
+  >
+    <Icon id="ink_eraser" size="1.25rem" color="" fill="0"></Icon>
+    Erase
+  </Button.Root>
+  <Button.Root
+    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+    on:click={osmMap.startPan}
+  >
+    <Icon id="pan_tool" size="1.25rem" color="" fill="0"></Icon>
+
+    Move
+  </Button.Root>
+  <Button.Root
+    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+    on:click={osmMap.clear}
+  >
+    <Icon id="delete" size="1.25rem" color="" fill="0"></Icon>
+
+    Clear
+  </Button.Root>
+</div>
+
 <div class="absolute bottom-0 right-0 pb-4 pr-4">
   {#if current_step == 1}
-    <button on:click={publishPlantingPlan}>
-      <md-elevated-button class="flex flex-row">
-        Confirm Bounds</md-elevated-button
-      >
-    </button>
+    <Button.Root
+      class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-meadow-500 text-white hover:bg-meadow-600 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+      on:click={savePlan}
+    >
+      <Icon id="save" size="1.25rem" color="" fill="0"></Icon>
+
+      Save Plan
+    </Button.Root>
   {:else if current_step == 2}
     <button on:click={confirmPlan}>
       <md-elevated-button class="flex flex-row">
@@ -314,41 +334,41 @@
   </Toast>
 </div>
 
-<style>
-  #logo {
-    font-size: 2rem;
-    font-family: "Bitter", serif;
-    font-style: italic;
-    margin-left: auto;
-    margin-right: auto;
-    padding-top: 1rem;
-  }
-  #logo-img {
-    width: 2.5rem;
-  }
-  #status {
-    font-size: 2rem;
-    font-family: "Bitter", serif;
-    font-style: italic;
-    margin-left: auto;
-    margin-right: auto;
-    padding-top: 1rem;
-  }
-  .link-container {
-    height: 100%;
-    width: 5rem;
-    background-color: #f5f5ee;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-  }
+<style lang="scss">
+  // #logo {
+  //   font-size: 2rem;
+  //   font-family: "Bitter", serif;
+  //   font-style: italic;
+  //   margin-left: auto;
+  //   margin-right: auto;
+  //   padding-top: 1rem;
+  // }
+  // #logo-img {
+  //   width: 2.5rem;
+  // }
+  // #status {
+  //   font-size: 2rem;
+  //   font-family: "Bitter", serif;
+  //   font-style: italic;
+  //   margin-left: auto;
+  //   margin-right: auto;
+  //   padding-top: 1rem;
+  // }
+  // .link-container {
+  //   height: 100%;
+  //   width: 5rem;
+  //   background-color: #f5f5ee;
+  //   display: flex;
+  //   flex-direction: column;
+  //   justify-content: center;
+  //   align-items: center;
+  // }
 
-  .counter-digits {
-  }
+  // .counter-digits {
+  // }
 
-  .hidden {
-    top: -100%;
-    user-select: none;
-  }
+  // .hidden {
+  //   top: -100%;
+  //   user-select: none;
+  // }
 </style>

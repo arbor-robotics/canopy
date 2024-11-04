@@ -9,21 +9,26 @@
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
-<a class={enabled ? "rail-button" : "rail-button disabled-button"} href={url}>
+<a
+  class:disabled-button={!enabled}
+  class="rail-button no-underline transition-all"
+  href={url}
+>
   <div
-    class="active-indicator"
+    class="active-indicator no-underline"
     style="--active-color: {$page.url.pathname == url
       ? 'var(--md-sys-color-secondary-container)'
       : 'none'}"
   >
     <Icon
       id={icon}
+      size="1.25rem"
       color={$page.url.pathname == url
         ? "var(--md-sys-color-on-secondary-container)"
         : "var(--md-sys-color-on-surface-variant)"}
     ></Icon>
   </div>
-  <div id="label">{label}</div>
+  <div id="label" class="no-underline">{label}</div>
 </a>
 
 <style>
@@ -43,6 +48,7 @@
     /* justify-content: center; */
     align-items: center;
     margin-bottom: 1.5rem;
+    text-decoration: none;
   }
 
   .active-indicator {
