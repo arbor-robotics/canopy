@@ -229,7 +229,7 @@ flag
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 20,
       attribution:
-        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        '&copy; nhref="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
     // Initialise the FeatureGroup to store editable layers
     // var editableLayers = new L.FeatureGroup();

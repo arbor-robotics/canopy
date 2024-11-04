@@ -9,40 +9,43 @@
   import BehaviorStateIndicator from "$lib/ros/BehaviorStateIndicator.svelte";
   import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
   import HealthCheckIndicator from "$lib/ros/HealthCheckIndicator.svelte";
+  import { base } from "$app/paths";
 </script>
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
 <div id="rail" class="bg-white border-r-2 shadow-xl">
-  <a id="logo" href="/"><img id="logo-img" src={logo} alt="Canopy logo" /></a>
+  <a id="logo" href="{base}/"
+    ><img id="logo-img" src={logo} alt="Canopy logo" /></a
+  >
 
   <div class="link-container">
     <NavigationRailButton
       icon="palette"
       label="Design"
-      url="/design"
+      url="{base}/design"
       enabled={true}
     ></NavigationRailButton>
     <NavigationRailButton
       icon="smart_toy"
       label="Control"
-      url="/control"
+      url="{base}/control"
       enabled={true}
     ></NavigationRailButton>
 
-    <NavigationRailButton icon="settings" label="Settings" url="/settings"
+    <NavigationRailButton icon="settings" label="Settings" url="{base}/settings"
     ></NavigationRailButton>
 
     <NavigationRailButton
       icon="stethoscope"
       label="Diagnostics"
-      url="/diagnostics"
+      url="{base}/diagnostics"
     ></NavigationRailButton>
 
     <NavigationRailButton
       icon="query_stats"
       label="Statistics"
-      url="/statistics"
+      url="{base}/statistics"
     ></NavigationRailButton>
     <!-- <NavigationRailButton icon="monitoring" label="Stats" url="/" enabled={true}
     ></NavigationRailButton>
