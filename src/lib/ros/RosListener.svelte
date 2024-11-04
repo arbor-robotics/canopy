@@ -139,7 +139,7 @@
     });
 
     current_mode_topic.subscribe(function (msg) {
-      console.log(`Current mode: ${msg.level}`);
+      // console.log(`Current mode: ${msg.level}`);
       current_mode.set(msg.level);
     });
 
@@ -197,6 +197,7 @@
       let json_string = JSON.stringify(plan);
 
       plan_json_topic.publish({ data: json_string });
+      console.log("PUBLISHED PLAN");
     });
 
     let planting_eta_topic = new ROSLIB.Topic({
@@ -303,12 +304,12 @@
 
     let gnss_fix_topic = new ROSLIB.Topic({
       ros: node,
-      name: "/gnss/fix",
-      messageType: "sensor_msgs/NavSatFix",
+      name: "/gnss/gpsfix",
+      messageType: "gps_msgs/GPSFix",
     });
 
     gnss_fix_topic.subscribe((msg) => {
-      // console.log(msg.latitude);
+      console.log(msg);
       ego_alt.set(msg.altitude);
       ego_lon.set(msg.longitude);
       ego_lat.set(msg.latitude);
@@ -343,7 +344,7 @@
 
     let occ_grid_topic = new ROSLIB.Topic({
       ros: node,
-      name: "/cost/dist_to_seedlings",
+      name: "/cost/total",
       messageType: "nav_msgs/OccupancyGrid",
     });
 

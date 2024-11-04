@@ -181,6 +181,11 @@
     }
   }
 
+  // setInterval(() => {
+  //   console.log("Loading plan");
+  //   loadPlanFromStorage();
+  // }, 1000);
+
   onMount(async () => {
     L = await import("leaflet");
     await import("leaflet-draw");

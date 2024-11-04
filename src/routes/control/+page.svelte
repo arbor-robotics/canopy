@@ -15,19 +15,21 @@
 	} from "$lib/stores";
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
-	import { Button, ToggleGroup } from "bits-ui";
+	import { Button, ToggleGroup, Slider } from "bits-ui";
 	import Icon from "$lib/misc/Icon.svelte";
 	import { Canvas } from "@threlte/core";
 	import Scene from "./Scene.svelte";
 	import World from "$lib/3d/World.svelte";
 	import { map } from "d3";
 	import OsmMap from "$lib/misc/OsmMap.svelte";
-	import { fade, blur } from "svelte/transition";
+	import { fade, blur, fly } from "svelte/transition";
 	import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
 
 	let map_view_active = true;
 
 	let osmMap;
+
+	let teleop_assistance_level = 2;
 
 	let joystick_value: Writable<TeleopCommand> = writable<TeleopCommand>();
 
@@ -52,7 +54,7 @@
 
 		let scaled_value = value;
 		scaled_value.x *= -2;
-		scaled_value.y *= 1.5;
+		scaled_value.y *= 0.8;
 		// console.log(scaled_value);
 		teleop_value.set(scaled_value);
 		cached_teleop = value;
@@ -126,22 +128,51 @@
 	<div class="grow overflow-hidden">
 		<div
 			id="joystick-div"
-			class="absolute bottom-0 right-0 flex flex-col"
+			class="absolute bottom-0 right-0 flex flex-col mx-3"
 			class:pointer-events-none={$connection_status !=
 				ConnectionStatus.CONNECTED}
 		>
-			{#if $current_mode == Mode.TELEOP}
+			{#if $current_mode == Mode.TELEOP && ConnectionStatus.CONNECTED && $systemwide_status_level < 3}
 				<div
 					id="joystick-container"
 					class="m-4 mb-0 mx-auto"
 					class:opacity-50={$connection_status !=
 						ConnectionStatus.CONNECTED}
-					in:fade={{ duration: 100 }}
-					out:fade={{ duration: 100 }}
+					in:fly={{ duration: 100, y: 10 }}
+					out:fly={{ duration: 100, y: 10 }}
 				>
 					<Joystick bind:value={joystick_value} />
 				</div>
 			{/if}
+			<div
+				class="w-48 h-8 px-4 overflow-hidden flex flex-col justify-center"
+			>
+				<p class="text-sm pb-">Assistance Level</p>
+				<Slider.Root
+					bind:teleop_assistance_level
+					let:thumbs
+					min={0}
+					max={3}
+					step={1}
+					let:ticks
+					class="relative flex w-full touch-none select-none items-center"
+				>
+					<span
+						class="relative h-2 w-full grow overflow-hidden rounded-full bg-gray-800"
+					>
+						<Slider.Range class="absolute h-full bg-foreground" />
+					</span>
+					{#each thumbs as thumb}
+						<Slider.Thumb
+							{thumb}
+							class="block size-[25px] cursor-pointer rounded-full border border-border-input bg-white shadow  transition-colors hover:border-dark-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 active:scale-98 disabled:pointer-events-none disabled:opacity-50 dark:bg-foreground dark:shadow-card"
+						/>
+					{/each}
+					{#each ticks as tick}
+						<Slider.Tick {tick} />
+					{/each}
+				</Slider.Root>
+			</div>
 			<!-- <div class="inline-flex mx-6 justify-between">
 				<div class="inline-flex" id="battery">
 					<span class="material-symbols-outlined">
@@ -175,61 +206,104 @@
 						<p class="">Disconnected <br />from Steward</p>
 					</div>
 				</div>
-				<!-- {:else if $platform_locked}
-				<div class="inline-flex rounded-lg my-4 mx-auto">
+			{:else if $systemwide_status_level == 3}
+				<div class="inline-flex rounded-lg my-4 mx-auto opacity-80">
 					<div
 						class="py-3 px-4 flex flex-row opacity-80 pointer-events-none justify-center w-48 gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium border border-gray-200 bg-slate-50 text-gray-800 shadow-sm"
 					>
-						<Icon id="lock" size="1rem" color=""></Icon>
+						<Icon id="do_not_disturb_on" size="1rem" color=""
+						></Icon>
 
-						<p class="">{$systemwide_status_level_string}</p>
+						<p class="">Out of Service</p>
 					</div>
-				</div> -->
+				</div>
 			{:else}
 				<div class="inline-flex rounded-lg shadow-sm m-4">
 					<Button.Root
-						class="transition-all py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-200 focus:outline-none focus:bg-slate-300 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+						class="transition-all pt-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-200 focus:outline-none focus:bg-slate-300 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
 						disabled={$systemwide_status_level > 2}
 						on:click={requestManualMode}
 					>
-						<div
-							class="flex flex-col"
-							class:animate-pulse={$current_mode == Mode.TELEOP}
-						>
-							<Icon
-								id="search_hands_free"
-								size="1.5rem"
-								color=""
-								fill="0"
-							></Icon>
-							<p class="text-xs">Manual</p>
+						<div class="flex flex-col">
+							<div
+								class="flex flex-col"
+								class:animate-pulse={$current_mode ==
+									Mode.TELEOP}
+							>
+								<Icon
+									id="search_hands_free"
+									size="1.5rem"
+									color=""
+									fill="0"
+								></Icon>
+								<p class="text-xs">Manual</p>
+							</div>
+							<div
+								class="pb-1"
+								class:opacity-0={$current_mode != Mode.TELEOP}
+							>
+								<Icon
+									id="circle"
+									color="#404943"
+									size="0.5rem"
+								/>
+							</div>
 						</div>
 					</Button.Root>
 					<Button.Root
-						class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-sky-100 text-sky-600 shadow-sm hover:bg-sky-200 focus:outline-none focus:bg-sky-300 transition-all disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+						class="pt-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-sky-100 text-sky-600 shadow-sm hover:bg-sky-200 focus:outline-none focus:bg-sky-300 transition-all disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
 						disabled={$systemwide_status_level > 1}
 						on:click={requestAutoMode}
 					>
-						<div
-							class="flex flex-col"
-							class:animate-pulse={$current_mode == Mode.AUTO}
-						>
-							<Icon id="smart_toy" size="1.5rem" color="" fill="0"
-							></Icon>
-							<p class="text-xs">Auto</p>
+						<div class="flex flex-col">
+							<div
+								class="flex flex-col"
+								class:animate-pulse={$current_mode == Mode.AUTO}
+							>
+								<Icon
+									id="smart_toy"
+									size="1.5rem"
+									color=""
+									fill="0"
+								></Icon>
+								<p class="text-xs">Auto</p>
+							</div>
+							<div
+								class="pb-1"
+								class:opacity-0={$current_mode != Mode.AUTO}
+							>
+								<Icon
+									id="circle"
+									color="#404943"
+									size="0.5rem"
+								/>
+							</div>
 						</div>
 					</Button.Root>
 					<Button.Root
-						class="transition-all py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-sand-300 text-gray-800 shadow-sm hover:bg-sand-400 focus:outline-none focus:bg-sand-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+						class="transition-all pt-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-sand-300 text-gray-800 shadow-sm hover:bg-sand-400 focus:outline-none focus:bg-sand-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
 						on:click={requestPause}
 					>
-						<div
-							class="flex flex-col"
-							class:animate-pulse={$current_mode == Mode.STOPPED}
-						>
-							<Icon id="pause" size="1.5rem" color="" fill="0"
-							></Icon>
-							<p class="text-xs">Pause</p>
+						<div class="flex flex-col">
+							<div
+								class="flex flex-col"
+								class:animate-pulse={$current_mode ==
+									Mode.STOPPED}
+							>
+								<Icon id="pause" size="1.5rem" color="" fill="0"
+								></Icon>
+								<p class="text-xs">Pause</p>
+							</div>
+							<div
+								class="pb-1"
+								class:opacity-0={$current_mode != Mode.STOPPED}
+							>
+								<Icon
+									id="circle"
+									color="#404943"
+									size="0.5rem"
+								/>
+							</div>
 						</div>
 					</Button.Root>
 				</div>
