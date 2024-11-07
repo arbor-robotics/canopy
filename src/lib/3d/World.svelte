@@ -351,57 +351,58 @@
     cmd_path_meshline.setPoints(points);
   });
 
-  // trajectory_candidates.subscribe((candidates_msg) => {
-  //   if (candidates_msg == undefined) return;
-  //   if (scene == undefined) return;
+  trajectory_candidates.subscribe((candidates_msg) => {
+    return;
+    if (candidates_msg == undefined) return;
+    if (scene == undefined) return;
 
-  //   // Clear any meshlines added to the scene
-  //   candidate_meshes.forEach((mesh) => {
-  //     scene.remove(mesh);
-  //   });
+    // Clear any meshlines added to the scene
+    candidate_meshes.forEach((mesh) => {
+      scene.remove(mesh);
+    });
 
-  //   candidate_meshes = [];
+    candidate_meshes = [];
 
-  //   let lowest_cost = 99999999999.9;
-  //   let highest_cost = 0.0;
-  //   candidates_msg.candidates.forEach((candidate) => {
-  //     if (candidate.cost < lowest_cost) {
-  //       lowest_cost = candidate.cost;
-  //     }
-  //     if (candidate.cost > highest_cost) {
-  //       highest_cost = candidate.cost;
-  //     }
-  //   });
+    let lowest_cost = 99999999999.9;
+    let highest_cost = 0.0;
+    candidates_msg.candidates.forEach((candidate) => {
+      if (candidate.cost < lowest_cost) {
+        lowest_cost = candidate.cost;
+      }
+      if (candidate.cost > highest_cost) {
+        highest_cost = candidate.cost;
+      }
+    });
 
-  //   // console.log(`Low: ${lowest_cost}, Hi: ${highest_cost}`);
+    // console.log(`Low: ${lowest_cost}, Hi: ${highest_cost}`);
 
-  //   candidates_msg.candidates.forEach((candidate) => {
-  //     const points = [];
-  //     let relative_cost =
-  //       (candidate.cost - lowest_cost) / (highest_cost - lowest_cost);
+    candidates_msg.candidates.forEach((candidate) => {
+      const points = [];
+      let relative_cost =
+        (candidate.cost - lowest_cost) / (highest_cost - lowest_cost);
 
-  //     let candidate_color = getCandidateColor(relative_cost);
-  //     // console.log(candidate_color);
+      let candidate_color = getCandidateColor(relative_cost);
+      // console.log(candidate_color);
 
-  //     let candidate_meshline = new MeshLine();
-  //     const material = new MeshLineMaterial({
-  //       lineWidth: 0.1,
-  //       color: candidate_color,
-  //       opacity: 1 - relative_cost,
-  //       transparent: true,
-  //     });
-  //     let candidate_mesh = new THREE.Mesh(candidate_meshline, material);
+      let candidate_meshline = new MeshLine();
+      const material = new MeshLineMaterial({
+        lineWidth: 0.1,
+        color: candidate_color,
+        opacity: 1 - relative_cost,
+        transparent: true,
+      });
+      let candidate_mesh = new THREE.Mesh(candidate_meshline, material);
 
-  //     // console.log(candidate);
-  //     candidate.trajectory.poses.forEach((pose) => {
-  //       let point = pose.pose.position;
-  //       points.push(-point.y, 0.5, -point.x);
-  //     });
-  //     candidate_meshline.setPoints(points);
-  //     candidate_meshes.push(candidate_mesh);
-  //     scene.add(candidate_mesh);
-  //   });
-  // });
+      // console.log(candidate);
+      candidate.trajectory.poses.forEach((pose) => {
+        let point = pose.pose.position;
+        points.push(-point.y, 0.5, -point.x);
+      });
+      candidate_meshline.setPoints(points);
+      candidate_meshes.push(candidate_mesh);
+      scene.add(candidate_mesh);
+    });
+  });
 
   function onPointerMove(event) {
     // calculate pointer position in normalized device coordinates

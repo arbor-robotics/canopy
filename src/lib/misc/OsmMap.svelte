@@ -259,7 +259,7 @@ flag
   </span>
 </div>`,
       className: "div-icon",
-      iconAnchor: [0, 20],
+      iconAnchor: [0, 10],
     });
 
     reachedSeedlingIcon = L.divIcon({
