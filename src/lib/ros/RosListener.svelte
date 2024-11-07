@@ -36,6 +36,8 @@
     plan,
     cmd_path,
     current_mode,
+    trajectory_candidates,
+    seedling_reached,
   } from "$lib/stores";
 
   let node = undefined;
@@ -263,23 +265,19 @@
     let waypoint_topic = new ROSLIB.Topic({
       ros: node,
       name: "/planning/goal_pose_geo",
-      messageType: "geometry_msgs/PoseStamped",
+      messageType: "geographic_msgs/GeoPoint",
     });
 
     waypoints.subscribe((waypoints) => {
       if (waypoints.length < 1) return;
       let top_wp = waypoints[0];
       console.log(`PUBLISHING ${top_wp}`);
-      var pose_msg = {
-        pose: {
-          position: {
-            x: top_wp[1],
-            y: top_wp[0],
-          },
-        },
+      var geopoint_msg = {
+        latitude: top_wp[0],
+        longitude: top_wp[1],
       };
 
-      waypoint_topic.publish(pose_msg);
+      waypoint_topic.publish(geopoint_msg);
     });
 
     let global_heartbeat_topic = new ROSLIB.Topic({
@@ -309,7 +307,7 @@
     });
 
     gnss_fix_topic.subscribe((msg) => {
-      console.log(msg);
+      // console.log(msg);
       ego_alt.set(msg.altitude);
       ego_lon.set(msg.longitude);
       ego_lat.set(msg.latitude);
@@ -327,6 +325,36 @@
       if (msg == undefined) return;
 
       camera_image.set(msg.data);
+    });
+
+    let trajectory_candidates_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/candidates",
+      messageType: "steward_msgs/TrajectoryCandidates",
+      queue_size: 1,
+      throttle_rate: 100,
+    });
+
+    trajectory_candidates_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      // console.log(msg);
+      trajectory_candidates.set(msg);
+    });
+
+    let on_seedling_reached_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/behavior/seedling_reached",
+      messageType: "std_msgs/Empty",
+      queue_size: 1,
+      throttle_rate: 100,
+    });
+
+    on_seedling_reached_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      // console.log(msg);
+      seedling_reached.set(true);
     });
 
     let health_check_topic = new ROSLIB.Topic({

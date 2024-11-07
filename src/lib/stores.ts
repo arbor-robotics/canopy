@@ -58,6 +58,7 @@ export const wh_battery_voltage = writable(-1);
 export const platform_locked = writable(true);
 export const failed_checks = writable([]);
 export const occ_grid = writable(undefined);
+export const trajectory_candidates = writable(undefined);
 
 export const heartbeat_toggle = writable<boolean>(false);
 
@@ -66,6 +67,7 @@ export const ego_lon = writable<number>(-1);
 export const ego_alt = writable<number>(-1);
 export const ego_yaw = writable<number>(-1);
 export const waypoints = writable<Array<Array<number>>>([]);
+export const seedling_reached = writable<boolean>(false);
 
 export const cmd_path = writable<object>();
 

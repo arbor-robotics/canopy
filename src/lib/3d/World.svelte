@@ -17,7 +17,7 @@
   import { TexturePainter } from "$lib/3d/TexturePainter";
   import type { ThreeMFLoader } from "three/examples/jsm/Addons.js";
 
-  import { occ_grid, cmd_path } from "$lib/stores";
+  import { occ_grid, cmd_path, trajectory_candidates } from "$lib/stores";
   import { path } from "d3";
 
   let osmPalette = {
@@ -47,6 +47,23 @@
     // );
 
     return rgb_array;
+  }
+
+  function getCandidateColor(d: number) {
+    /**
+     * Given a number from 0-100, provide an RGB color on a scale. For visualizing cost etc.
+     */
+    let pct = d;
+    let color1 = [205, 235, 176]; // grass
+    let color2 = [250, 129, 115]; // #FA8173
+    // find a color d% between a1 and a2
+    let rgb_array = color1.map((p, i) =>
+      Math.floor(color1[i] + pct * (color2[i] - color1[i])),
+    );
+
+    return new THREE.Color(
+      `rgb(${rgb_array[0]}, ${rgb_array[1]}, ${rgb_array[2]})`,
+    );
   }
 
   let forest_plan_msg = undefined;
@@ -225,6 +242,8 @@
   let global_plan: THREE.Mesh;
   let cmd_path_mesh: THREE.Mesh;
   let cmd_path_meshline: MeshLine;
+  let candidate_meshes: Array<THREE.Mesh> = [];
+  let candidate_meshlines: Array<MeshLine> = [];
 
   function resizeCanvasToDisplaySize() {
     const canvas = renderer.domElement;
@@ -331,6 +350,58 @@
     });
     cmd_path_meshline.setPoints(points);
   });
+
+  // trajectory_candidates.subscribe((candidates_msg) => {
+  //   if (candidates_msg == undefined) return;
+  //   if (scene == undefined) return;
+
+  //   // Clear any meshlines added to the scene
+  //   candidate_meshes.forEach((mesh) => {
+  //     scene.remove(mesh);
+  //   });
+
+  //   candidate_meshes = [];
+
+  //   let lowest_cost = 99999999999.9;
+  //   let highest_cost = 0.0;
+  //   candidates_msg.candidates.forEach((candidate) => {
+  //     if (candidate.cost < lowest_cost) {
+  //       lowest_cost = candidate.cost;
+  //     }
+  //     if (candidate.cost > highest_cost) {
+  //       highest_cost = candidate.cost;
+  //     }
+  //   });
+
+  //   // console.log(`Low: ${lowest_cost}, Hi: ${highest_cost}`);
+
+  //   candidates_msg.candidates.forEach((candidate) => {
+  //     const points = [];
+  //     let relative_cost =
+  //       (candidate.cost - lowest_cost) / (highest_cost - lowest_cost);
+
+  //     let candidate_color = getCandidateColor(relative_cost);
+  //     // console.log(candidate_color);
+
+  //     let candidate_meshline = new MeshLine();
+  //     const material = new MeshLineMaterial({
+  //       lineWidth: 0.1,
+  //       color: candidate_color,
+  //       opacity: 1 - relative_cost,
+  //       transparent: true,
+  //     });
+  //     let candidate_mesh = new THREE.Mesh(candidate_meshline, material);
+
+  //     // console.log(candidate);
+  //     candidate.trajectory.poses.forEach((pose) => {
+  //       let point = pose.pose.position;
+  //       points.push(-point.y, 0.5, -point.x);
+  //     });
+  //     candidate_meshline.setPoints(points);
+  //     candidate_meshes.push(candidate_mesh);
+  //     scene.add(candidate_mesh);
+  //   });
+  // });
 
   function onPointerMove(event) {
     // calculate pointer position in normalized device coordinates
@@ -450,7 +521,7 @@
     scene.add(costmap_plane);
 
     cmd_path_meshline = new MeshLine();
-    const material = new MeshLineMaterial({ lineWidth: 0.5, color: "#FA8072" });
+    const material = new MeshLineMaterial({ lineWidth: 0.5, color: "#18827C" });
     cmd_path_mesh = new THREE.Mesh(cmd_path_meshline, material);
     scene.add(cmd_path_mesh);
     // const geometry = new THREE.PlaneGeometry(254.4, 254.4);

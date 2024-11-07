@@ -46,11 +46,9 @@ Command: npx @threlte/gltf@2.0.3 warthog.glb --transform
       material={gltf.materials["Black Metal"]}
       rotation={[0, 1.57, 0]}
     />
-    <T.Mesh
-      geometry={gltf.nodes["e-stop"].geometry}
-      material={gltf.materials.Red}
-      rotation={[0, 1.57, 0]}
-    />
+    <T.Mesh geometry={gltf.nodes["e-stop"].geometry} rotation={[0, 1.57, 0]}>
+      <T.MeshToonMaterial color={colors.yellow} />
+    </T.Mesh>
     <T.Mesh
       geometry={gltf.nodes.fenders.geometry}
       material={gltf.materials["Yellow Metal"]}
