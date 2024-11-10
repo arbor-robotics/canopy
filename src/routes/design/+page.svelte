@@ -1,374 +1,94 @@
 <script lang="ts">
-  import { page } from "$app/stores";
-  import { onMount } from "svelte";
+	import type { Writable } from "svelte/store";
+	import { writable } from "svelte/store";
+	import { rosbridge_ip, rosbridge_port, addToast } from "$lib/stores";
+	import { Button, ScrollArea } from "bits-ui";
+	import Cookies from "js-cookie";
+	import { base } from "$app/paths";
+	import Icon from "$lib/misc/Icon.svelte";
+	import { ForestGenerator } from "$lib/forest_generator";
+	import { onMount } from "svelte";
 
-  import Icon from "$lib/misc/Icon.svelte";
-  import logo from "$lib/images/logo.svg";
 
-  import { addToast, plan, type Plan } from "$lib/stores";
-  import Cookies from "js-cookie";
 
-  // import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
+	function saveParameters() {
+		// Rosbridge
 
-  // import "@material/web/progress/circular-progress";
-  // import "@material/web/button/text-button";
-  // import "@material/web/button/elevated-button";
-  // import "@material/web/fab/fab";
-  // import "@material/web/icon/icon";
-  import {
-    // Button,
-    Progress,
-    Styles,
-    Toast,
-    ToastBody,
-    ToastHeader,
-  } from "@sveltestrap/sveltestrap";
+		let rosbridge_ip_new = document.getElementById("ros_ip_input").value;
+		let rosbridge_port_new =
+			document.getElementById("ros_port_input").value;
+		rosbridge_ip.set(rosbridge_ip_new);
+		rosbridge_port.set(rosbridge_port_new);
+		Cookies.set("rosbridge/ip", rosbridge_ip_new, { expires: 365 });
+		Cookies.set("rosbridge/port", rosbridge_port_new, { expires: 365 });
+		addToast({ message: "Changes saved", type: "success" });
+	}
 
-  import { Button } from "bits-ui";
-
-  import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
-  import {
-    connection_status,
-    ConnectionStatus,
-    node,
-    BehaviorState,
-    current_behavior_state,
-    plan_progress,
-    planting_eta,
-    num_planted_seedlings,
-    num_seedlings_in_plan,
-  } from "$lib/stores";
-  import World from "$lib/3d/World.svelte";
-  import OsmMap from "$lib/misc/OsmMap.svelte";
-  import MessageBox from "$lib/misc/MessageBox.svelte";
-  import WizardButton from "$lib/navigation/WizardButton.svelte";
-  import BehaviorStateIndicator from "$lib/ros/BehaviorStateIndicator.svelte";
-
-  import { spring } from "svelte/motion";
-  import { Plane } from "three";
-
-  const displayed_seedling_count = spring();
-  $: displayed_seedling_count.set($num_planted_seedlings);
-  $: offset = modulo($displayed_seedling_count, 1);
-
-  function modulo(n: number, m: number) {
-    // handle negative numbers
-    return ((n % m) + m) % m;
-  }
-
-  let current_step: number = 1;
-
-  let bounds_str = undefined;
-
-  // node.subscribe((node) => {
-  //   forest_plan_geojson_topic = new ROSLIB.Topic({
-  //     ros: node,
-  //     name: "/planning/bounds_geojson",
-  //     messageType: "std_msgs/String",
-  //   });
-
-  //   reqest_transition_client = new ROSLIB.Service({
-  //     ros: node,
-  //     name: "/behavior/request_transition",
-  //     serviceType: "steward_msgs/RequestTransition",
-  //   });
-  // });
-
-  let count = 0;
-  let osmMap: OsmMap;
-  let toast_header_text: string;
-  let toast_body_text: string;
-  let toast_color: string;
-  let boundsOK = false;
-
-  enum StewardBehaviorTransition {
-    PLAY = 0,
-    PAUSE = 1,
-  }
-
-  async function savePlan() {
-    if (osmMap.getGeoJSON() == undefined) {
-      addToast({
-        message:
-          "Draw a planting area using the brush button in the top right.",
-        type: "info",
-      });
-      return;
-    }
-
-    let geojson = osmMap.getGeoJSON();
-
-    console.log(geojson);
-    if (geojson.geometry.coordinates.length > 1) {
-      addToast({
-        message: "Make sure that your bounds form a single connected shape.",
-        type: "info",
-      });
-      return;
-    }
-
-    addToast({
-      message: "Plan saved.",
-      type: "success",
-    });
-
-    bounds_str = JSON.stringify(geojson);
-    let plan_seedlings_str = JSON.stringify(osmMap.getPlanSeedlings());
-
-    console.log(plan_seedlings_str);
-
-    plan.set({ seedlings: osmMap.getPlanSeedlings(), bounds: geojson });
-
-    localStorage.setItem("plan", JSON.stringify($plan));
-
-    // boundsOK = true;
-    // current_step++;
-  }
-
-  let isToastOpen = false;
-
-  function toggleToast() {
-    isToastOpen = !isToastOpen;
-  }
-
-  function openToast() {
-    isToastOpen = true;
-  }
-
-  function onToastClose() {
-    isToastOpen = false;
-  }
-
-  function showToast(
-    title: string,
-    description: string,
-    color: string = "primary",
-  ) {
-    toast_color = color;
-    toast_header_text = title;
-    toast_body_text = description;
-    openToast();
-  }
-
-  function goToStep1() {
-    console.log("Moving to Step 1.");
-    current_step = 1;
-  }
-
-  function goToStep2() {
-    console.log("Moving to Step 2.");
-    current_step = 2;
-  }
-
-  function confirmPlan() {
-    current_step++;
-    showToast(
-      "Steward is ready to plant",
-      "Click the ▶ button to start the mission",
-      "success",
-    );
-  }
-
-  function toggleStewardState() {
-    let transition_request;
-    if ($current_behavior_state == BehaviorState.PAUSED) {
-      transition_request = {
-        transition: StewardBehaviorTransition.PLAY,
-      };
-    } else {
-      transition_request = {
-        transition: StewardBehaviorTransition.PAUSE,
-      };
-    }
-    reqest_transition_client.callService(
-      transition_request,
-      function (response) {
-        console.log(
-          `Transition response was ${response.success}: ${response.description}`,
-        );
-      },
-    );
-  }
+	let plans = [
+		{ name: "Flagstaff North", co2: "2300 tonnes/year", species_count: 12 },
+		{ name: "CFA Lawn", co2: "700 tonnes/year", species_count: 5 },
+		{ name: "Frick Park East", co2: "3100 tonnes/year", species_count: 14 },
+		{ name: "Panther Hollow", co2: "300 tonnes/year", species_count: 9 },
+	];
 </script>
 
 <svelte:head>
-  <title>Canopy</title>
-  <meta name="description" content="About this app" />
+	<title>Steward | Canopy</title>
+	<meta name="description" content="Control and observe the robot" />
 </svelte:head>
 
-<!-- <Styles /> -->
+<div class="flex flex-col h-full w-full overflow-hidden max-w-xl mx-auto p-8">
+	<div class="flex flex-row justify-center mt-4">
+		<a
+			href="{base}/design/new"
+			class="py-3 no-underline px-4 inline-flex items-center text-lg gap-x-2 font-medium rounded-lg border border-transparent bg-forest-600 text-white hover:bg-forest-700 focus:outline-none focus:ring-2 ring-forest-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+			style="text-decoration: none;"
+			on:click={saveParameters}
+		>
+			<Icon id="add" size="1.5rem" color="" fill="0"></Icon>
+			Create a new plan
+		</a>
+	</div>
+	or load a plan
 
-<div class="flex flex-row">
-  {#if current_step == 1}
-    <OsmMap bind:this={osmMap} />
-  {:else if current_step == 2}
-    <World />
-  {:else if current_step == 3}
-    <World mode={"plant"} />
-  {/if}
+	<div
+		class="w-full rounded-[10px] border border-gray-300 bg-background-alt px-2 py-4 shadow-card"
+	>
+		<ScrollArea.Root class="relative h-[205px] px-4">
+			<ScrollArea.Viewport class="h-full w-full">
+				<ScrollArea.Content>
+					{#each plans as plan}
+						<p class="text-xl font-semibold">{plan.name}</p>
+						<div class="flex flex-row space-x-2">
+							<div class="flex flex-row space-x-1">
+								<Icon id="co2" size="1.5rem" color="" fill="0"
+								></Icon>
+								<p>{plan.co2}</p>
+							</div>
+
+							<div class="flex flex-row space-x-1">
+								<Icon
+									id="nature"
+									size="1.5rem"
+									color=""
+									fill="0"
+								></Icon>
+								<p>{plan.species_count} species</p>
+							</div>
+						</div>
+						<hr class="my-3" />
+					{/each}
+				</ScrollArea.Content>
+			</ScrollArea.Viewport>
+			<ScrollArea.Scrollbar
+				orientation="vertical"
+				class="flex h-full w-2.5 touch-none select-none rounded-full border-l border-l-transparent p-px transition-all hover:w-3 hover:bg-dark-10"
+			>
+				<ScrollArea.Thumb
+					class="relative flex-1 rounded-full bg-muted-foreground opacity-40 transition-opacity hover:opacity-100"
+				/>
+			</ScrollArea.Scrollbar>
+			<ScrollArea.Corner />
+		</ScrollArea.Root>
+	</div>
 </div>
-
-<div class="inline-flex rounded-lg shadow-sm m-4 absolute top-0 right-0">
-  <Button.Root
-    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-    on:click={osmMap.startDraw}
-  >
-    <Icon id="brush" size="1.25rem" color="" fill="0"></Icon>
-    Paint Forest
-  </Button.Root>
-  <Button.Root
-    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-    on:click={osmMap.startErase}
-  >
-    <Icon id="ink_eraser" size="1.25rem" color="" fill="0"></Icon>
-    Erase
-  </Button.Root>
-  <Button.Root
-    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-    on:click={osmMap.startPan}
-  >
-    <Icon id="pan_tool" size="1.25rem" color="" fill="0"></Icon>
-
-    Move
-  </Button.Root>
-  <Button.Root
-    class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-    on:click={osmMap.clear}
-  >
-    <Icon id="delete" size="1.25rem" color="" fill="0"></Icon>
-
-    Clear
-  </Button.Root>
-</div>
-
-<div class="absolute bottom-0 right-0 pb-4 pr-4">
-  {#if current_step == 1}
-    <Button.Root
-      class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-meadow-500 text-white hover:bg-meadow-600 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-      on:click={savePlan}
-    >
-      <Icon id="save" size="1.25rem" color="" fill="0"></Icon>
-
-      Save Plan
-    </Button.Root>
-  {:else if current_step == 2}
-    <button on:click={confirmPlan}>
-      <md-elevated-button class="flex flex-row">
-        Confirm Plan</md-elevated-button
-      >
-    </button>
-  {:else if current_step == 3}
-    <button on:click={toggleStewardState}>
-      <md-elevated-button class="flex flex-row">
-        {#if $current_behavior_state == BehaviorState.PAUSED}
-          <Icon id="play_arrow" />
-        {:else}
-          <Icon id="pause" />
-        {/if}
-      </md-elevated-button>
-    </button>
-  {/if}
-</div>
-
-{#if current_step == 2 && $num_seedlings_in_plan < 1}
-  <div
-    class="absolute top-0 left-20 right-0 m-12 px-2 pointer-events-none flex flex-row items-center justify-center bg-white rounded-xl"
-  >
-    <div class="flex flex-row justify-center italic items-center">
-      <Icon id="autorenew" spin></Icon>
-      <p class="m-0">Generating Forest Plan</p>
-    </div>
-  </div>
-{/if}
-
-{#if current_step == 2 && $num_seedlings_in_plan > 0}
-  <div
-    class="absolute top-0 left-20 right-0 m-12 px-2 pointer-events-none flex flex-row items-center justify-center bg-white rounded-xl"
-  >
-    <p class="m-0 pr-4"><i class="bi bi-info-circle"></i></p>
-    <p class="font-bold m-0 pr-4">
-      {Math.floor($num_seedlings_in_plan)} seedlings.
-    </p>
-    <p class="italic m-0 pr-4">
-      {Math.floor($num_seedlings_in_plan * 0.006 * 2000)} lbs CO2/year (temperate
-      oak forest)
-    </p>
-  </div>
-{/if}
-
-{#if current_step == 3}
-  <div
-    class="absolute top-0 left-20 right-0 m-12 px-2 pointer-events-none flex flex-row items-center bg-white rounded-xl"
-  >
-    <p class="grow m-0 pl-4 text-center">
-      <i class="bi bi-tree"></i>
-      {Math.floor($displayed_seedling_count)}
-    </p>
-    {#if Math.ceil($plan_progress * 100) > 99}
-      <Progress color="success" value={100} class="grow-[8]"
-        >Planting complete</Progress
-      >
-    {:else}
-      <Progress value={$plan_progress * 100} class="grow-[8]"
-        >{Math.ceil($plan_progress * 100)}%</Progress
-      >
-    {/if}
-
-    <p class="font-bold grow m-0 pl-4 text-center">
-      <i class="bi bi-clock"></i>
-      {Math.round($planting_eta / 60)} min
-    </p>
-  </div>
-{/if}
-
-<div
-  class="absolute bottom-0 right-auto left-0 flex flex-row w-full justify-center pb-1"
->
-  <Toast isOpen={isToastOpen} autohide duration={100} on:close={onToastClose}>
-    <ToastHeader toggle={toggleToast} icon={toast_color}
-      >{toast_header_text}</ToastHeader
-    >
-    <ToastBody>
-      {toast_body_text}
-    </ToastBody>
-  </Toast>
-</div>
-
-<style lang="scss">
-  // #logo {
-  //   font-size: 2rem;
-  //   font-family: "Bitter", serif;
-  //   font-style: italic;
-  //   margin-left: auto;
-  //   margin-right: auto;
-  //   padding-top: 1rem;
-  // }
-  // #logo-img {
-  //   width: 2.5rem;
-  // }
-  // #status {
-  //   font-size: 2rem;
-  //   font-family: "Bitter", serif;
-  //   font-style: italic;
-  //   margin-left: auto;
-  //   margin-right: auto;
-  //   padding-top: 1rem;
-  // }
-  // .link-container {
-  //   height: 100%;
-  //   width: 5rem;
-  //   background-color: #f5f5ee;
-  //   display: flex;
-  //   flex-direction: column;
-  //   justify-content: center;
-  //   align-items: center;
-  // }
-
-  // .counter-digits {
-  // }
-
-  // .hidden {
-  //   top: -100%;
-  //   user-select: none;
-  // }
-</style>

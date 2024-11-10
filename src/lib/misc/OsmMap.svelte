@@ -8,6 +8,7 @@
     waypoints,
     plan,
     type Plan,
+    seedling_reached,
   } from "$lib/stores";
 
   import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
@@ -18,7 +19,16 @@
 
   let paintpolygonControl;
 
-  let map, flagIcon, egoIcon, egoMarker, egoLat, egoLon, L, popup, seedlingIcon;
+  let map,
+    flagIcon,
+    egoIcon,
+    egoMarker,
+    egoLat,
+    egoLon,
+    L,
+    popup,
+    seedlingIcon,
+    reachedSeedlingIcon;
 
   export let seedlings: object[] = [];
 
@@ -28,6 +38,7 @@
 
   let waypoint_markers: any[] = [];
   let seedlings_markers: any[] = [];
+  let reached_seedling_markers: any[] = [];
 
   enum MapAction {
     DRAW,
@@ -57,6 +68,31 @@
     }).addTo(map);
     seedlings_markers.push(pointMarker);
   }
+
+  export function addReachedSeedlingMarker() {
+    var pointMarker = L.marker([egoLat, egoLon], {
+      icon: reachedSeedlingIcon,
+    }).addTo(map);
+
+    reached_seedling_markers.push(pointMarker);
+
+    // Now remove the matching seedling marker
+    seedlings_markers.forEach((marker) => {
+      let dist = map.distance(marker.getLatLng(), [egoLat, egoLon]);
+      console.log(dist);
+
+      if (dist < 2) {
+        marker.remove();
+      }
+    });
+  }
+
+  seedling_reached.subscribe((reached) => {
+    console.log("Seedling reached!");
+    if (reached == false) return;
+
+    addReachedSeedlingMarker();
+  });
 
   ego_lat.subscribe((val) => {
     // console.log("Latitude updated!");
@@ -223,13 +259,26 @@ flag
   </span>
 </div>`,
       className: "div-icon",
+      iconAnchor: [0, 10],
+    });
+
+    reachedSeedlingIcon = L.divIcon({
+      html: `<div class="icon-container flex justify-center" id="seedling-icon" style="">
+  <span
+    class="material-symbols-rounded my-auto"
+    style="--icon-color: #ff0000; --size: 1rem; --fill: 1"
+  >
+    check
+  </span>
+</div>`,
+      className: "div-icon",
       iconAnchor: [0, 20],
     });
 
     L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 20,
       attribution:
-        '&copy; nhref="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
     }).addTo(map);
     // Initialise the FeatureGroup to store editable layers
     // var editableLayers = new L.FeatureGroup();

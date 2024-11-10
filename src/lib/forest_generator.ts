@@ -5,9 +5,27 @@ import {
 } from "$lib/stores";
 import type OsmMap from "$lib/misc/OsmMap.svelte";
 
+import species from "$lib/species.json"
+
 let seedlings: object[] = [];
 
 let L;
+
+export type Species = {
+    common_name: string,
+    scientific_name: string,
+    height_ft: number
+}
+
+export class ForestGenerator {
+    public ForestGenerator() {
+
+    }
+
+    public getSpeciesOptions() {
+        return species;
+    }
+}
 
 plan.subscribe((val) => {
     if (val == undefined) return;
