@@ -54,7 +54,7 @@
 
 		let scaled_value = value;
 		scaled_value.x *= -2;
-		scaled_value.y *= 2.0;
+		scaled_value.y *= 0.8;
 		// console.log(scaled_value);
 		teleop_value.set(scaled_value);
 		cached_teleop = value;

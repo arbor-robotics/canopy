@@ -1,0 +1,27 @@
+[
+    {
+        "common_name": "Red Maple",
+        "icon": "red_maple",
+        "scientific_name": "Acer rubrum",
+        "height_ft": 90,
+        "layer": 90
+    },
+    {
+        "common_name": "Sugar Maple",
+        "icon": "sugar_maple",
+        "scientific_name": "Acer saccharinum Marshall",
+        "height_ft": 90
+    },
+    {
+        "common_name": "Silver Maple",
+        "icon": "silver_maple",
+        "scientific_name": "Acer saccharinum L.",
+        "height_ft": 100
+    },
+    {
+        "common_name": "Common Serviceberry",
+        "icon": "common_serviceberry",
+        "scientific_name": "Amelanchier arborea",
+        "height_ft": 40
+    }
+]

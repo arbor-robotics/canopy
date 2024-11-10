@@ -313,19 +313,19 @@
       ego_lat.set(msg.latitude);
     });
 
-    let camera_image_topic = new ROSLIB.Topic({
-      ros: node,
-      name: "/zed/left/image_rect_color/compressed",
-      messageType: "sensor_msgs/CompressedImage",
-      queue_size: 1,
-      throttle_rate: 100,
-    });
+    // let camera_image_topic = new ROSLIB.Topic({
+    //   ros: node,
+    //   name: "/zed/left/image_rect_color/compressed",
+    //   messageType: "sensor_msgs/CompressedImage",
+    //   queue_size: 1,
+    //   throttle_rate: 100,
+    // });
 
-    camera_image_topic.subscribe(function (msg) {
-      if (msg == undefined) return;
+    // camera_image_topic.subscribe(function (msg) {
+    //   if (msg == undefined) return;
 
-      camera_image.set(msg.data);
-    });
+    //   camera_image.set(msg.data);
+    // });
 
     let trajectory_candidates_topic = new ROSLIB.Topic({
       ros: node,
