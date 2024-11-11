@@ -349,7 +349,7 @@ flag
 
 <style>
   #map {
-    height: 100vh;
+    height: 100%;
     width: 100%;
   }
 

@@ -14,7 +14,8 @@ let L;
 export type Species = {
     common_name: string,
     scientific_name: string,
-    height_ft: number
+    height_ft: number,
+    included: boolean
 }
 
 export class ForestGenerator {
