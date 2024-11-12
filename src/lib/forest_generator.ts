@@ -20,15 +20,34 @@ export type Species = {
     page: number
 }
 
+function isMarkerInsidePolygon(x, y, polyPoints) {
+    // https://stackoverflow.com/a/31813714/6238455
+    var inside = false;
+    for (var i = 0, j = polyPoints.length - 1; i < polyPoints.length; j = i++) {
+
+        var xi = polyPoints[i][1], yi = polyPoints[i][0];
+        var xj = polyPoints[j][1], yj = polyPoints[j][0];
+
+        var intersect = ((yi > y) != (yj > y))
+            && (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+
+        // console.log(`x: ${x}, y: ${y}, xi ${xi}, yi ${yi}, xj ${xj}, yj ${yj}`)
+    }
+    return inside;
+};
+
 export class ForestGenerator {
     species: Map<number, Species>;
     locations: Map<number[], Species>;
     bbox: number[];
+    geom: any;
 
-    constructor() {
+    constructor(public changeCb: any) {
         this.species = new Map<number, Species>([]);
         this.locations = new Map<number[], Species>([]);
         this.bbox = [-1, -1, -1, -1];
+        this.geom = undefined;
         species_json.forEach((species) => {
             this.species.set(species.page, species)
         });
@@ -54,15 +73,94 @@ export class ForestGenerator {
         return this.getIncludedSpecies().length
     }
 
-    public getLocations() {
-
+    public regeneratePoints() {
+        // let point = this.getRandomPoint()
+        // console.log(point)
+        // this.locations.set(point, this.species.get(1)!)
+        this.generateSeedlings()
+        this.changeCb()
     }
 
     public setGeometry(geom) {
         console.log(geom);
         this.bbox = getBoundingBox(geom)
+        this.geom = geom;
         console.log(this.bbox)
+        this.regeneratePoints()
     }
+
+    public async generateSeedlings(max_failures = 100) {
+        let num_failures = 0
+
+        this.locations.clear()
+
+        if (L == undefined)
+            L = await import("leaflet");
+
+        while (num_failures < max_failures) {
+            let coord = this.getRandomPoint()
+
+            let minDist = 99999;
+            // seedlings.forEach((seedling) => {
+            //     // let dist = d3.geoDistance(coord, [seedling.lat, seedling.lon])
+            //     let latLngA = L.latLng(coord[0], coord[1])
+            //     let latLngB = L.latLng(seedling.lat, seedling.lon)
+            //     let dist = latLngA.distanceTo(latLngB)
+            //     if (dist < minDist) minDist = dist;
+            // })
+            // if (minDist < min_dist) {
+            //     console.log(`Too close! Dist was ${minDist}`)
+            //     num_failures++;
+            //     continue;
+            // }
+            num_failures++;
+            let seedling = { lat: coord[0], lon: coord[1] }
+            // seedlings.push(seedling)
+            this.locations.set(coord, this.species.get(0))
+        }
+    }
+
+    public getRandomPoint() {
+
+        let min_lat, max_lat, min_lon, max_lon;
+
+        if (this.bbox == undefined) {
+            [min_lat, max_lat, min_lon, max_lon] = getBoundingBox(this.geom);
+            // console.log(`Interval: [${min_lat}, ${max_lat}], [${min_lon}, ${max_lon}]`)
+        } else {
+            [min_lat, max_lat, min_lon, max_lon] = this.bbox;
+        }
+
+
+
+
+        const MAX_TRIES = 100;
+
+        let result_found = false;
+        let result = [0, 0]
+
+        for (let i = 0; i < MAX_TRIES; i++) {
+            let rand_lon = randomFromInterval(min_lon, max_lon);
+            let rand_lat = randomFromInterval(min_lat, max_lat);
+
+            this.geom.coordinates.forEach((shape) => {
+
+                if (result_found) return result;
+                if (isMarkerInsidePolygon(rand_lat, rand_lon, shape[0])) {
+                    console.log(`${rand_lat} ${rand_lon} FALLS WITHIN!`);
+                    result = [rand_lat, rand_lon]
+                    result_found = true;
+                }
+            })
+        }
+
+        // console.log(`(${min_lon},${min_lat}) -> (${max_lon}, ${max_lat})`)
+
+
+
+        return result
+    }
+
 }
 
 plan.subscribe((val) => {

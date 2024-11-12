@@ -13,7 +13,16 @@
 	import OsmMap from "$lib/misc/OsmMap.svelte";
 	import SpeciesCard from "$lib/misc/SpeciesCard.svelte";
 
-	let generator = new ForestGenerator();
+	function onGeneratorChanged() {
+		console.log(generator.locations);
+
+		osmMap.clearSeedlingMarkers();
+		for (let [latlon, seedling] of generator.locations) {
+			osmMap.addSeedlingMarker(latlon, seedling);
+		}
+	}
+
+	let generator = new ForestGenerator(onGeneratorChanged);
 	let species_options = generator.getSpeciesOptions();
 	let included_species_count: number = generator.getIncludedSpeciesCount();
 

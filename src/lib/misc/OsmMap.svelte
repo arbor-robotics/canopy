@@ -11,7 +11,11 @@
     seedling_reached,
   } from "$lib/stores";
 
-  import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
+  import {
+    getRandomPoint,
+    generateSeedlings,
+    type Species,
+  } from "$lib/forest_generator";
 
   import { createEventDispatcher } from "svelte";
   const dispatch = createEventDispatcher();
@@ -67,29 +71,11 @@
     seedlings_markers = [];
   }
 
-  export async function addSeedlingMarker(seedling: object) {
-    var pointMarker = L.marker([seedling.lat, seedling.lon], {
+  export async function addSeedlingMarker(latlon: number[], seedling: Species) {
+    var pointMarker = L.marker([latlon[0], latlon[1]], {
       icon: seedlingIcon,
     }).addTo(map);
     seedlings_markers.push(pointMarker);
-  }
-
-  export function addReachedSeedlingMarker() {
-    var pointMarker = L.marker([egoLat, egoLon], {
-      icon: reachedSeedlingIcon,
-    }).addTo(map);
-
-    reached_seedling_markers.push(pointMarker);
-
-    // Now remove the matching seedling marker
-    seedlings_markers.forEach((marker) => {
-      let dist = map.distance(marker.getLatLng(), [egoLat, egoLon]);
-      console.log(dist);
-
-      if (dist < 2) {
-        marker.remove();
-      }
-    });
   }
 
   seedling_reached.subscribe((reached) => {
