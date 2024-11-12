@@ -21,7 +21,7 @@
 			osmMap.addSeedlingMarker(latlon, seedling);
 		}
 
-		save_plan();
+		savePlan();
 	}
 
 	let generator = new ForestGenerator(onGeneratorChanged);
@@ -29,13 +29,25 @@
 	let included_species_count: number = generator.getIncludedSpeciesCount();
 	let plan_name = "Schenley North";
 
-	function save_plan() {
+	function savePlan() {
 		let plan_string = generator.toString();
-		localStorage.setItem(`${plan_name}`, JSON.stringify(plan_string));
+		localStorage.setItem(`plan`, JSON.stringify(plan_string));
 		console.log(`Autosaved: ${plan_string.slice(0, 100)}...`);
 	}
 
-	onMount(() => {});
+	function loadPlan() {
+		let plan_string = localStorage.getItem(`plan`);
+		console.log(plan_string);
+
+		generator.loadFromString(plan_string);
+		let plan_obj = JSON.parse(JSON.parse(plan_string));
+
+		osmMap.setGeometry(plan_obj.geojson);
+	}
+
+	onMount(() => {
+		setTimeout(loadPlan, 500);
+	});
 
 	let current_step = 2;
 	let osmMap: OsmMap;
@@ -56,7 +68,8 @@
 
 	function onMapGeomChanged() {
 		console.log("REGEN");
-		generator.setGeometry(osmMap.getGeoJSON().geometry);
+		console.log(osmMap.getGeoJSON());
+		generator.setGeoJSON(osmMap.getGeoJSON());
 	}
 </script>
 

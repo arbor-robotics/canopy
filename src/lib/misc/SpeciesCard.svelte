@@ -20,7 +20,11 @@
   class:bg-lime-200={selected}
   class:border-lime-400={selected}
 >
-  <img src="{base}/res/leaves/silver_maple.svg" alt="" class="w-12 h-12 p-2" />
+  <img
+    src="{base}/res/leaves/{species.icon}.svg"
+    alt=""
+    class="w-12 h-12 p-2"
+  />
   <div class="flex flex-col">
     <p class="text-lg font-medium">
       {species.common}

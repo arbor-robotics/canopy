@@ -17,7 +17,8 @@ export type Species = {
     height_ft: number,
     included: boolean,
     description: string,
-    page: number
+    page: number,
+    icon: string
 }
 
 function isMarkerInsidePolygon(x, y, polyPoints) {
@@ -41,18 +42,35 @@ export class ForestGenerator {
     species: Map<number, Species>;
     locations: Map<number[], Species>;
     bbox: number[];
-    geom: any;
+    geojson: any;
 
     constructor(public changeCb: any) {
         this.species = new Map<number, Species>([]);
         this.locations = new Map<number[], Species>([]);
         this.bbox = [-1, -1, -1, -1];
-        this.geom = undefined;
+        this.geojson = undefined;
         species_json.forEach((species) => {
 
             this.species.set(species.page, species)
         });
         console.log(this.species)
+    }
+
+    public loadFromString(plan_string: string) {
+        let plan_obj = JSON.parse(JSON.parse(plan_string));
+        console.log(plan_obj)
+
+        this.locations.clear();
+
+        plan_obj.locations.forEach((location) => {
+            this.locations.set([location.lat, location.lon], this.species.get(location.species))
+        })
+
+        this.geojson = plan_obj.geojson
+
+        this.changeCb()
+
+        console.log(this.geojson)
     }
 
     public toString() {
@@ -69,7 +87,7 @@ export class ForestGenerator {
 
         let obj = {
             locations: locations_obj,
-            geom: this.geom
+            geojson: this.geojson
         }
 
         return JSON.stringify(obj)
@@ -104,10 +122,10 @@ export class ForestGenerator {
         this.changeCb()
     }
 
-    public setGeometry(geom) {
-        console.log(geom);
-        this.bbox = getBoundingBox(geom)
-        this.geom = geom;
+    public setGeoJSON(json) {
+        console.log(json);
+        this.bbox = getBoundingBox(json)
+        this.geojson = json;
         console.log(this.bbox)
         this.regeneratePoints()
     }
@@ -124,6 +142,9 @@ export class ForestGenerator {
         while (num_failures < max_failures) {
             let coord = this.getRandomPoint()
 
+            let species_id = Math.floor(randomFromInterval(1, 59))
+            let species = this.species.get(species_id)
+
             let minDist = 99999;
             for (let [latlon, seedling] of this.locations) {
                 // let dist = d3.geoDistance(coord, [seedling.lat, seedling.lon])
@@ -133,12 +154,12 @@ export class ForestGenerator {
                 if (dist < minDist) minDist = dist;
             }
             if (minDist < min_dist) {
-                console.log(`Too close! Dist was ${minDist}`)
+                // console.log(`Too close! Dist was ${minDist}`)
                 num_failures++;
                 continue;
             }
 
-            this.locations.set(coord, this.species.get(1))
+            this.locations.set(coord, species!)
         }
     }
 
@@ -147,7 +168,7 @@ export class ForestGenerator {
         let min_lat, max_lat, min_lon, max_lon;
 
         if (this.bbox == undefined) {
-            [min_lat, max_lat, min_lon, max_lon] = getBoundingBox(this.geom);
+            [min_lat, max_lat, min_lon, max_lon] = getBoundingBox(this.geojson.geometry);
             // console.log(`Interval: [${min_lat}, ${max_lat}], [${min_lon}, ${max_lon}]`)
         } else {
             [min_lat, max_lat, min_lon, max_lon] = this.bbox;
@@ -165,7 +186,7 @@ export class ForestGenerator {
             let rand_lon = randomFromInterval(min_lon, max_lon);
             let rand_lat = randomFromInterval(min_lat, max_lat);
 
-            this.geom.coordinates.forEach((shape) => {
+            this.geojson.geometry.coordinates.forEach((shape) => {
                 if (shape.length == 1) {
                     shape = shape[0]
                 }
@@ -197,8 +218,8 @@ function randomFromInterval(min: number, max: number) { // min and max included
     return Math.random() * (max - min) + min;
 }
 
-function getBoundingBox(geom: any) {
-    let shapes = geom.coordinates;
+function getBoundingBox(json: any) {
+    let shapes = json.geometry.coordinates;
     let min_lat = 99999.9;
     let min_lon = 99999.9;
 
@@ -297,7 +318,7 @@ export async function generateSeedlings(json: any, clearFn, addFn, min_dist: num
             if (dist < minDist) minDist = dist;
         })
         if (minDist < min_dist) {
-            console.log(`Too close! Dist was ${minDist}`)
+            // console.log(`Too close! Dist was ${minDist}`)
             num_failures++;
             continue;
         }
