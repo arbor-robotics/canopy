@@ -68,6 +68,7 @@ export const seedling_reached = writable<boolean>(false);
 export const cmd_path = writable<object>();
 
 export const complete_plan = writable<PlantingPlan>();
+export const behavior_message = writable<string>();
 
 let cookie_port = Cookies.get("rosbridge/port")
 let cookie_ip = Cookies.get("rosbridge/ip")

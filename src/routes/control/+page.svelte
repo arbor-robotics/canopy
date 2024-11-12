@@ -13,6 +13,7 @@
 		current_mode,
 		complete_plan,
 		Mode,
+		behavior_message,
 	} from "$lib/stores";
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
@@ -27,8 +28,6 @@
 	import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
 	import { ForestGenerator, type PlantingPlan } from "$lib/forest_generator";
 	import { onMount } from "svelte";
-
-	let map_view_active = true;
 
 	function onGeneratorChanged() {
 		console.log(generator.locations);
@@ -95,10 +94,6 @@
 		camera_data = `data:image/jpg;base64,${new_value}`;
 	});
 
-	function toggleMapView() {
-		map_view_active = !map_view_active;
-	}
-
 	function listenForWaypoint() {
 		osmMap.listenForWaypoint();
 	}
@@ -138,28 +133,7 @@
 		<OsmMap bind:this={osmMap} />
 	</div>
 	<div class="w-[50%]"><World /></div>
-	<div id="topright" class="absolute top-0 right-0 p-4 flex flex-row">
-		{#if map_view_active}
-			<Button.Root
-				class="py-3 px-4 mx-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-slate-50 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-				on:click={listenForWaypoint}
-			>
-				<Icon id="flag" size="1rem" color="" fill="0"></Icon>
-				Add waypoint
-			</Button.Root>
-		{/if}
-		<!-- <Button.Root
-			class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-slate-50 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-			on:click={toggleMapView}
-		>
-			{#if map_view_active}
-				<Icon id="my_location" size="1rem" color="" fill="0"></Icon>
-				Ego view
-			{:else}
-				<Icon id="map" size="1rem" color="" fill="0"></Icon> Map view
-			{/if}
-		</Button.Root> -->
-	</div>
+
 	<div class="grow overflow-hidden">
 		<div
 			id="joystick-div"
@@ -361,6 +335,23 @@
 			class="w-[24rem] h-[16rem] absolute bottom-0 m-4 rounded-lg"
 		/>
 	{/if}
+</div>
+
+<div
+	class="relative top-[-100vh] right-0 p-4 flex flex-row w-full justify-between"
+>
+	<div
+		class="flex flex-row items-center opacity-80 rounded-lg shadow-lg m-4 px-4 bg-white h-12"
+	>
+		<p class="font-semibold text-lg">{$behavior_message}</p>
+	</div>
+	<!-- <Button.Root
+		class="py-3 px-4 mx-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-slate-50 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
+		on:click={listenForWaypoint}
+	>
+		<Icon id="flag" size="1rem" color="" fill="0"></Icon>
+		Add waypoint
+	</Button.Root> -->
 </div>
 
 <style>

@@ -141,7 +141,7 @@
 				>
 					<Icon id="palette" size="1.25rem" color="" fill="0"></Icon>
 
-					Species Palette
+					<p class="hidden md:inline">Species Palette</p>
 				</Popover.Trigger>
 				<Popover.Content
 					class="z-30 w-full max-w-96 max-h-[36rem] rounded-[12px] border border-dark-10 bg-white p-4 shadow-md overflow-y-auto"
@@ -218,7 +218,7 @@
 					color=""
 					fill={current_action == MapAction.DRAW ? "1" : "0"}
 				></Icon>
-				Paint Forest
+				<p class="hidden md:inline">Paint Forest</p>
 			</Button.Root>
 			<Button.Root
 				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
@@ -230,7 +230,7 @@
 					color=""
 					fill={current_action == MapAction.ERASE ? "1" : "0"}
 				></Icon>
-				Erase
+				<p class="hidden md:inline">Erase</p>
 			</Button.Root>
 			<Button.Root
 				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
@@ -243,15 +243,14 @@
 					fill={current_action == MapAction.PAN ? "1" : "0"}
 				></Icon>
 
-				Move
+				<p class="hidden md:inline">Move</p>
 			</Button.Root>
 			<Button.Root
 				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-red-500 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
 				on:click={osmMap.clear}
 			>
 				<Icon id="delete" size="1.25rem" color="" fill="0"></Icon>
-
-				Clear
+				<p class="hidden md:inline">Clear</p>
 			</Button.Root>
 		</div>
 		<div

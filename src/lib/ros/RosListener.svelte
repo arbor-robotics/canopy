@@ -38,6 +38,7 @@
     current_mode,
     trajectory_candidates,
     seedling_reached,
+    behavior_message
   } from "$lib/stores";
   import type { PlantingPlan } from "$lib/forest_generator";
 
@@ -386,42 +387,16 @@
 
     let diagnostics_topic = new ROSLIB.Topic({
       ros: node,
-      name: "/diagnostics/agg",
-      messageType: "diagnostic_msgs/DiagnosticArray",
+      name: "/diagnostics",
+      messageType: "diagnostic_msgs/DiagnosticStatus",
     });
 
     diagnostics_topic.subscribe(function (msg) {
       if (msg == undefined) return;
 
-      diagnostic_agg.set(msg);
-
-      // Extract battery voltage
-      msg.status.forEach((stat) => {
-        if (stat.name == "/Warthog Base/General/Battery") {
-          stat.values.forEach((kv) => {
-            if (kv.key == "Battery Voltage (V)") {
-              // Round to 1 decimal place
-              let rounded_voltage = kv.value;
-              rounded_voltage *= 10;
-              rounded_voltage = Math.floor(rounded_voltage) / 10;
-              wh_battery_voltage.set(rounded_voltage);
-            }
-          });
-        } else if (stat.name == "/Warthog Base/E-Stop") {
-          stat.values.forEach((kv) => {
-            if (kv.key == "warthog_node: MCU Status") {
-              // console.log(kv.value);
-              if (kv.value == "Stop loop open, platform immobilized.") {
-                platform_locked.set(true);
-              } else {
-                platform_locked.set(false);
-              }
-            }
-          });
-        }
-      });
-
-      // console.log(msg);
+      if (msg.name == "trajectory_planner") {
+        behavior_message.set(msg.message)
+      }
     });
 
     let cmd_path_topic = new ROSLIB.Topic({
@@ -436,7 +411,7 @@
 
     let teleop_topic = new ROSLIB.Topic({
       ros: node,
-      name: "/cmd_vel",
+      name: "/cmd_vel/teleop",
       messageType: "geometry_msgs/Twist",
     });
 
