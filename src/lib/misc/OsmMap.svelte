@@ -11,13 +11,24 @@
     seedling_reached,
   } from "$lib/stores";
 
-  import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
+  import {
+    getRandomPoint,
+    generateSeedlings,
+    type Species,
+  } from "$lib/forest_generator";
+
+  import { base } from "$app/paths";
+
+  import { createEventDispatcher } from "svelte";
+  const dispatch = createEventDispatcher();
 
   // We need to wrap Leaflet in this onMount hook,
   // since it requires access to the window object.
   // No SSR!
 
   let paintpolygonControl;
+
+  export let useCurrentPos = false;
 
   let map,
     flagIcon,
@@ -47,7 +58,7 @@
     ERASE,
   }
 
-  let selected_action = MapAction.PAN;
+  export let selected_action = MapAction.PAN;
 
   export function listenForWaypoint() {
     listening_for_waypoint = true;
@@ -62,29 +73,13 @@
     seedlings_markers = [];
   }
 
-  export async function addSeedlingMarker(seedling: object) {
-    var pointMarker = L.marker([seedling.lat, seedling.lon], {
-      icon: seedlingIcon,
+  export async function addSeedlingMarker(latlon: number[], seedling: Species) {
+    var pointMarker = L.marker([latlon[0], latlon[1]], {
+      icon: new seedlingIcon({
+        iconUrl: `${base}/res/leaves/${seedling.icon}.svg`,
+      }),
     }).addTo(map);
     seedlings_markers.push(pointMarker);
-  }
-
-  export function addReachedSeedlingMarker() {
-    var pointMarker = L.marker([egoLat, egoLon], {
-      icon: reachedSeedlingIcon,
-    }).addTo(map);
-
-    reached_seedling_markers.push(pointMarker);
-
-    // Now remove the matching seedling marker
-    seedlings_markers.forEach((marker) => {
-      let dist = map.distance(marker.getLatLng(), [egoLat, egoLon]);
-      console.log(dist);
-
-      if (dist < 2) {
-        marker.remove();
-      }
-    });
   }
 
   seedling_reached.subscribe((reached) => {
@@ -160,6 +155,12 @@
     if (paintpolygonControl) paintpolygonControl.setData(plan.bounds);
   });
 
+  export function setGeometry(geom) {
+    console.log(`Setting to ${geom}`);
+    if (paintpolygonControl) paintpolygonControl.setData(geom);
+    else console.log("CONTROL NOT READY");
+  }
+
   function onMapClick(e) {
     // alert("You clicked the map at " + e.latlng);
 
@@ -191,16 +192,21 @@
   function onMouseup(e) {
     // alert("You clicked the map at " + e.latlng);
 
-    if (selected_action == MapAction.DRAW) {
-      console.log("Making forest");
-      generateSeedlings(
-        getGeoJSON(),
-        clearSeedlingMarkers,
-        addSeedlingMarker,
-        10,
-      ).then((new_seedlings) => {
-        seedlings = new_seedlings;
-      });
+    if (
+      selected_action == MapAction.DRAW ||
+      selected_action == MapAction.ERASE
+    ) {
+      // console.log("Making forest");
+      // generateSeedlings(
+      //   getGeoJSON(),
+      //   clearSeedlingMarkers,
+      //   addSeedlingMarker,
+      //   10,
+      // ).then((new_seedlings) => {
+      //   seedlings = new_seedlings;
+      // });
+
+      dispatch("geomchanged");
     } else {
     }
   }
@@ -227,7 +233,16 @@
     await import("leaflet-draw");
     await import("leaflet-paintpolygon");
 
-    map = L.map("map").setView([40.44002092, -79.9409749], 19);
+    if (useCurrentPos)
+      map = L.map("map", { zoomControl: false }).locate({
+        setView: true,
+        maxZoom: 19,
+      });
+    else
+      map = L.map("map", { zoomControl: false }).setView(
+        [40.44002092, -79.9409749],
+        19,
+      );
     popup = L.popup();
 
     flagIcon = L.divIcon({
@@ -249,17 +264,15 @@ flag
       className: "div-icon",
     });
 
-    seedlingIcon = L.divIcon({
-      html: `<div class="icon-container flex justify-center" id="seedling-icon" style="">
-  <span
-    class="material-symbols-rounded my-auto"
-    style="--icon-color: #ff0000; --size: 1rem; --fill: 1"
-  >
-    psychiatry
-  </span>
-</div>`,
-      className: "div-icon",
-      iconAnchor: [0, 10],
+    seedlingIcon = L.Icon.extend({
+      options: {
+        iconUrl: `${base}/res/leaves/silver_maple.svg`,
+        iconSize: [24, 24], // size of the icon
+        iconAnchor: [12, 24], // point of the icon which will correspond to marker's location
+        shadowSize: [50, 64],
+        shadowAnchor: [4, 62],
+        popupAnchor: [-3, -76],
+      },
     });
 
     reachedSeedlingIcon = L.divIcon({
@@ -289,7 +302,7 @@ flag
     map.on("click", onMapClick);
     map.on("mouseup", onMouseup);
 
-    loadPlanFromStorage();
+    // loadPlanFromStorage();
   });
 
   export function getGeoJSON() {
@@ -349,7 +362,7 @@ flag
 
 <style>
   #map {
-    height: 100vh;
+    height: 100%;
     width: 100%;
   }
 

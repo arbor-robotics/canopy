@@ -9,8 +9,6 @@
 	import { ForestGenerator } from "$lib/forest_generator";
 	import { onMount } from "svelte";
 
-
-
 	function saveParameters() {
 		// Rosbridge
 
@@ -49,7 +47,8 @@
 			Create a new plan
 		</a>
 	</div>
-	or load a plan
+	
+	or load your earlier plan:
 
 	<div
 		class="w-full rounded-[10px] border border-gray-300 bg-background-alt px-2 py-4 shadow-card"

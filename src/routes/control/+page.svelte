@@ -24,10 +24,24 @@
 	import OsmMap from "$lib/misc/OsmMap.svelte";
 	import { fade, blur, fly } from "svelte/transition";
 	import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
+	import { ForestGenerator, type Species } from "$lib/forest_generator";
+	import { onMount } from "svelte";
 
 	let map_view_active = true;
 
+	function onGeneratorChanged() {
+		console.log(generator.locations);
+
+		osmMap.clearSeedlingMarkers();
+		for (let [latlon, seedling] of generator.locations) {
+			osmMap.addSeedlingMarker(latlon, seedling);
+		}
+
+		// savePlan();
+	}
+
 	let osmMap;
+	let generator = new ForestGenerator(onGeneratorChanged);
 
 	let teleop_assistance_level = 2;
 
@@ -91,6 +105,20 @@
 	function requestPause() {
 		window.onRequestMode(Mode.STOPPED);
 	}
+
+	function loadPlan() {
+		let plan_string = localStorage.getItem(`plan`);
+		console.log(plan_string);
+
+		generator.loadFromString(plan_string);
+		let plan_obj = JSON.parse(JSON.parse(plan_string));
+
+		osmMap.setGeometry(plan_obj.geojson);
+	}
+
+	onMount(() => {
+		setTimeout(loadPlan, 500);
+	});
 </script>
 
 <svelte:head>

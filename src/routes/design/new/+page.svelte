@@ -2,37 +2,96 @@
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
 	import { rosbridge_ip, rosbridge_port, addToast } from "$lib/stores";
-	import { Button, Checkbox, ScrollArea } from "bits-ui";
+	import { Button, Checkbox, ScrollArea, Tabs, Popover } from "bits-ui";
 	import Cookies from "js-cookie";
 	import Icon from "$lib/misc/Icon.svelte";
-	import { ForestGenerator } from "$lib/forest_generator";
+	import { ForestGenerator, type Species } from "$lib/forest_generator";
 	import { onMount } from "svelte";
 	import { base } from "$app/paths";
+	import Pagination from "$lib/navigation/Pagination.svelte";
+	import { fly } from "svelte/transition";
+	import OsmMap from "$lib/misc/OsmMap.svelte";
+	import SpeciesCard from "$lib/misc/SpeciesCard.svelte";
 
-	let generator = new ForestGenerator();
-	let species_options = generator.getSpeciesOptions();
+	function onGeneratorChanged() {
+		console.log(generator.locations);
 
-	onMount(() => {});
+		osmMap.clearSeedlingMarkers();
+		for (let [latlon, seedling] of generator.locations) {
+			osmMap.addSeedlingMarker(latlon, seedling);
+		}
 
-	function saveParameters() {
-		// Rosbridge
-
-		let rosbridge_ip_new = document.getElementById("ros_ip_input").value;
-		let rosbridge_port_new =
-			document.getElementById("ros_port_input").value;
-		rosbridge_ip.set(rosbridge_ip_new);
-		rosbridge_port.set(rosbridge_port_new);
-		Cookies.set("rosbridge/ip", rosbridge_ip_new, { expires: 365 });
-		Cookies.set("rosbridge/port", rosbridge_port_new, { expires: 365 });
-		addToast({ message: "Changes saved", type: "success" });
+		savePlan();
 	}
 
-	let plans = [
-		{ name: "Flagstaff North", co2: "2300 tonnes/year", species_count: 12 },
-		{ name: "CFA Lawn", co2: "700 tonnes/year", species_count: 5 },
-		{ name: "Frick Park East", co2: "3100 tonnes/year", species_count: 14 },
-		{ name: "Panther Hollow", co2: "300 tonnes/year", species_count: 9 },
-	];
+	let generator = new ForestGenerator(onGeneratorChanged);
+	let species_options = generator.getSpeciesOptions();
+	let included_species_count: number = generator.getIncludedSpeciesCount();
+	let plan_name = "Schenley North";
+
+	function savePlan() {
+		let plan_string = generator.toString();
+		localStorage.setItem(`plan`, JSON.stringify(plan_string));
+		console.log(`Autosaved: ${plan_string.slice(0, 100)}...`);
+	}
+
+	function loadPlan() {
+		let plan_string = localStorage.getItem(`plan`);
+		console.log(plan_string);
+
+		generator.loadFromString(plan_string);
+		let plan_obj = JSON.parse(JSON.parse(plan_string));
+
+		osmMap.setGeometry(plan_obj.geojson);
+	}
+
+	onMount(() => {
+		setTimeout(loadPlan, 500);
+	});
+
+	enum MapAction {
+		DRAW,
+		PAN,
+		CLEAR,
+		ERASE,
+	}
+
+	let current_step = 2;
+	let osmMap: OsmMap;
+	let current_action = MapAction.PAN;
+
+	let selected_species_ids: Writable<Array<boolean>> = writable<
+		Array<boolean>
+	>([]);
+	let num_species_included: number = 0;
+	species_options.forEach((species) => {
+		$selected_species_ids.push(species.included);
+		if (species.included) num_species_included++;
+	});
+
+	function onSpeciesCardClicked(species: Species) {
+		generator.markIncluded(species.page, !species.included);
+		included_species_count = generator.getIncludedSpeciesCount();
+	}
+
+	function onMapGeomChanged() {
+		console.log("REGEN");
+		console.log(osmMap.getGeoJSON());
+		generator.setGeoJSON(osmMap.getGeoJSON());
+	}
+
+	function startDraw() {
+		osmMap.startDraw();
+		current_action = MapAction.DRAW;
+	}
+	function startErase() {
+		osmMap.startDraw();
+		current_action = MapAction.ERASE;
+	}
+	function startPan() {
+		osmMap.startPan();
+		current_action = MapAction.PAN;
+	}
 </script>
 
 <svelte:head>
@@ -40,121 +99,152 @@
 	<meta name="description" content="Control and observe the robot" />
 </svelte:head>
 
-<div class="flex flex-col h-full w-full overflow-hidden max-w-2xl mx-auto p-8">
-	<p class="text-4xl my-4">Let's plan your forest.</p>
-	<div class="flex">
-		<Icon id="counter_1" size="1.5rem" color="" fill="1"></Icon>
-		<p class="text-xl pl-2 font-medium">What would you like to plant?</p>
-	</div>
-	<p class="text-md">
-		Here are good options for <strong>Pittsburgh, PA</strong>. Check the
-		boxes next to the seedlings you'd like to include.
-	</p>
+<div class="size-full overflow-hidden">
+	<OsmMap
+		useCurrentPos={false}
+		bind:this={osmMap}
+		on:geomchanged={onMapGeomChanged}
+	/>
 
 	<div
-		class="w-full rounded-[10px] border border-gray-300 bg-background-alt px-2 py-4 shadow-card"
+		class="flex flex-row w-full items-center justify-between relative top-[-100vh]"
 	>
-		<ScrollArea.Root class="relative h-[205px] px-4">
-			<ScrollArea.Viewport class="h-full w-full">
-				<ScrollArea.Content>
-					{#each species_options as species}
-						<div class="flex flex-row">
-							<img
-								src="{base}/res/leaves/{species.icon}.svg"
-								alt=""
-								class="w-12 mr-2"
-							/>
-							<div class="flex flex-col">
-								<p class="text-xl font-semibold">
-									{species.common_name}
-								</p>
-								<div class="flex flex-row space-x-2">
-									<div class="flex flex-row space-x-1">
-										<Icon
-											id="co2"
-											size="1.5rem"
-											color=""
-											fill="0"
-										></Icon>
-										<p>{species.scientific_name}</p>
-									</div>
-
-									<div class="flex flex-row space-x-1">
-										<Icon
-											id="nature"
-											size="1.5rem"
-											color=""
-											fill="0"
-										></Icon>
-										<p>{species.height_ft} ft</p>
-									</div>
-								</div>
-							</div>
-							<div class="flex flex-col grow">
-								<Checkbox.Root
-									id="terms"
-									aria-labelledby="terms-label"
-									class="peer ml-auto my-auto inline-flex size-[30px] items-center justify-center rounded-md border-2 border-gray-300 bg-foreground transition-all duration-150 ease-in-out active:scale-98 data-[state=unchecked]:border-border-input data-[state=unchecked]:bg-background data-[state=unchecked]:hover:border-gray-400"
-								>
-									<Checkbox.Indicator
-										let:isChecked
-										let:isIndeterminate
-										class="inline-flex items-center justify-center text-background"
-									>
-										{#if isChecked}
-											<Icon
-												id="check"
-												size="2rem"
-												color=""
-												fill="1"
-											></Icon>
-										{:else if isIndeterminate}
-											<Icon
-												id="counter_2"
-												size="1.5rem"
-												color=""
-												fill="1"
-											></Icon>
-										{/if}
-									</Checkbox.Indicator>
-								</Checkbox.Root>
-							</div>
-						</div>
-
-						<hr class="my-3" />
-					{/each}
-				</ScrollArea.Content>
-			</ScrollArea.Viewport>
-			<ScrollArea.Scrollbar
-				orientation="vertical"
-				class="flex h-full w-2.5 touch-none select-none rounded-full border-l border-l-transparent p-px transition-all hover:w-3 hover:bg-dark-10"
-			>
-				<ScrollArea.Thumb
-					class="relative flex-1 rounded-full bg-muted-foreground opacity-40 transition-opacity hover:opacity-100"
-				/>
-			</ScrollArea.Scrollbar>
-			<ScrollArea.Corner />
-		</ScrollArea.Root>
-	</div>
-	<div class="flex flex-row justify-between mt-4">
-		<p>0 seedlings selected.</p>
-		<Button.Root
-			class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-forest-600 text-white hover:bg-forest-700 focus:outline-none focus:ring-2 ring-forest-700 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-			on:click={saveParameters}
+		<div
+			class="flex flex-row items-center rounded-lg shadow-md m-4 bg-white h-12"
 		>
-			Save
-		</Button.Root>
-	</div>
-	<div class="flex">
-		<Icon id="counter_2" size="1.5rem" color="" fill="0"></Icon>
-		<p class="text-xl pl-2">Where would you like to plant?</p>
-	</div>
-	<div class="flex">
-		<Icon id="counter_3" size="1.5rem" color="" fill="0"></Icon>
-		<p class="text-xl pl-2">Name and save your plan.</p>
-	</div>
-	<div class="flex">
-		<Icon id="counter_4" size="1.5rem" color="" fill="0"></Icon>
-		<p class="text-xl pl-2">Send to Steward.</p>
+			<input
+				type="text"
+				class="px-4 block w-full font-semibold border-gray-200 rounded-lg text-lg focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+				placeholder="Plan Name"
+				value={plan_name}
+			/>
+		</div>
+		<div class="inline-flex rounded-lg shadow-md m-4">
+			<Popover.Root>
+				<Popover.Trigger
+					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				>
+					<Icon id="palette" size="1.25rem" color="" fill="0"></Icon>
+
+					Species Palette
+				</Popover.Trigger>
+				<Popover.Content
+					class="z-30 w-full max-w-96 max-h-[36rem] rounded-[12px] border border-dark-10 bg-white p-4 shadow-md overflow-y-auto"
+					transition={fly}
+					sideOffset={8}
+				>
+					<Tabs.Root
+						value="understory"
+						class=" bg-background-alt shadow-card"
+					>
+						<Tabs.List
+							class="grid w-full grid-cols-3 gap-1 rounded-lg bg-neutral-200 p-1 text-sm font-semibold leading-[0.01em] shadow-mini-inset dark:border dark:border-neutral-600/30 dark:bg-background"
+						>
+							<Tabs.Trigger
+								value="understory"
+								class="h-8 rounded-[7px] bg-transparent py-2 data-[state=active]:bg-white data-[state=active]:shadow-mini dark:data-[state=active]:bg-neutral-500"
+								>Understory</Tabs.Trigger
+							>
+							<Tabs.Trigger
+								value="overstory"
+								class="h-8 rounded-[7px] bg-transparent py-2 data-[state=active]:bg-white data-[state=active]:shadow-mini dark:data-[state=active]:bg-muted"
+								>Overstory</Tabs.Trigger
+							>
+							<Tabs.Trigger
+								value="emergent"
+								class="h-8 rounded-[7px] bg-transparent py-2 data-[state=active]:bg-white data-[state=active]:shadow-mini dark:data-[state=active]:bg-muted"
+								>Emergent</Tabs.Trigger
+							>
+						</Tabs.List>
+						<Tabs.Content value="understory" class="pt-3">
+							{#each species_options as [id, species], i}
+								{#if species.height_ft <= 40}
+									<SpeciesCard
+										{species}
+										on:toggled={() =>
+											onSpeciesCardClicked(species)}
+									/>
+								{/if}
+							{/each}
+						</Tabs.Content>
+						<Tabs.Content value="overstory" class="pt-3">
+							{#each species_options as [id, species]}
+								{#if species.height_ft > 40 && species.height_ft < 100}
+									<SpeciesCard
+										{species}
+										on:toggled={() =>
+											onSpeciesCardClicked(species)}
+									/>
+								{/if}
+							{/each}
+						</Tabs.Content>
+						<Tabs.Content value="emergent" class="pt-3">
+							{#each species_options as [id, species]}
+								{#if species.height_ft >= 100}
+									<SpeciesCard
+										{species}
+										on:toggled={() =>
+											onSpeciesCardClicked(species)}
+									/>
+								{/if}
+							{/each}
+						</Tabs.Content>
+					</Tabs.Root>
+				</Popover.Content>
+			</Popover.Root>
+			<Button.Root
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				on:click={startDraw}
+				disabled={included_species_count < 1}
+			>
+				<Icon
+					id="brush"
+					size="1.25rem"
+					color=""
+					fill={current_action == MapAction.DRAW ? "1" : "0"}
+				></Icon>
+				Paint Forest
+			</Button.Root>
+			<Button.Root
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				on:click={startErase}
+			>
+				<Icon
+					id="ink_eraser"
+					size="1.25rem"
+					color=""
+					fill={current_action == MapAction.ERASE ? "1" : "0"}
+				></Icon>
+				Erase
+			</Button.Root>
+			<Button.Root
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				on:click={startPan}
+			>
+				<Icon
+					id="pan_tool"
+					size={"1.25rem"}
+					color=""
+					fill={current_action == MapAction.PAN ? "1" : "0"}
+				></Icon>
+
+				Move
+			</Button.Root>
+			<Button.Root
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-red-500 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				on:click={osmMap.clear}
+			>
+				<Icon id="delete" size="1.25rem" color="" fill="0"></Icon>
+
+				Clear
+			</Button.Root>
+		</div>
+		<div
+			class="flex flex-row items-center rounded-lg shadow-lg m-4 px-4 bg-white h-12"
+		>
+			<p class="font-semibold text-lg">
+				{included_species_count} species
+			</p>
+		</div>
 	</div>
 </div>
