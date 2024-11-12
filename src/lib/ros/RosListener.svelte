@@ -33,12 +33,13 @@
     systemwide_status_level,
     systemwide_status_message,
     systemwide_status_level_string,
-    plan,
+    complete_plan,
     cmd_path,
     current_mode,
     trajectory_candidates,
     seedling_reached,
   } from "$lib/stores";
+  import type { PlantingPlan } from "$lib/forest_generator";
 
   let node = undefined;
 
@@ -189,17 +190,18 @@
       systemwide_status_level_string.set(status_string);
     });
 
-    let plan_json_topic = new ROSLIB.Topic({
+    let complete_plan_topic = new ROSLIB.Topic({
       ros: node,
-      name: "/planning/plan_json",
-      messageType: "std_msgs/String",
+      name: "/planning/complete_plan",
+      messageType: "steward_msgs/PlantingPlan",
     });
 
-    plan.subscribe(function (plan: Plan) {
-      let json_string = JSON.stringify(plan);
+    complete_plan.subscribe((plan) => {
+      if (!plan) return; // undefined.
 
-      plan_json_topic.publish({ data: json_string });
       console.log("PUBLISHED PLAN");
+      console.log(plan);
+      complete_plan_topic.publish(plan);
     });
 
     let planting_eta_topic = new ROSLIB.Topic({

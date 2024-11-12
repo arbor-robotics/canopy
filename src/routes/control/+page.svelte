@@ -11,6 +11,7 @@
 		systemwide_status_level_string,
 		systemwide_status_message,
 		current_mode,
+		complete_plan,
 		Mode,
 	} from "$lib/stores";
 	import type { Writable } from "svelte/store";
@@ -24,7 +25,7 @@
 	import OsmMap from "$lib/misc/OsmMap.svelte";
 	import { fade, blur, fly } from "svelte/transition";
 	import ConnectionIndicator from "$lib/ros/ConnectionIndicator.svelte";
-	import { ForestGenerator, type Species } from "$lib/forest_generator";
+	import { ForestGenerator, type PlantingPlan } from "$lib/forest_generator";
 	import { onMount } from "svelte";
 
 	let map_view_active = true;
@@ -38,6 +39,12 @@
 		}
 
 		// savePlan();
+		publishPlanToRos();
+	}
+
+	function publishPlanToRos() {
+		let plan_obj: PlantingPlan = generator.toRos();
+		complete_plan.set(plan_obj);
 	}
 
 	let osmMap;

@@ -1,11 +1,20 @@
 <script lang="ts">
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
-	import { rosbridge_ip, rosbridge_port, addToast } from "$lib/stores";
+	import {
+		rosbridge_ip,
+		rosbridge_port,
+		addToast,
+		complete_plan,
+	} from "$lib/stores";
 	import { Button, Checkbox, ScrollArea, Tabs, Popover } from "bits-ui";
 	import Cookies from "js-cookie";
 	import Icon from "$lib/misc/Icon.svelte";
-	import { ForestGenerator, type Species } from "$lib/forest_generator";
+	import {
+		ForestGenerator,
+		type PlantingPlan,
+		type Species,
+	} from "$lib/forest_generator";
 	import { onMount } from "svelte";
 	import { base } from "$app/paths";
 	import Pagination from "$lib/navigation/Pagination.svelte";
@@ -22,12 +31,18 @@
 		}
 
 		savePlan();
+		publishPlanToRos();
 	}
 
 	let generator = new ForestGenerator(onGeneratorChanged);
 	let species_options = generator.getSpeciesOptions();
 	let included_species_count: number = generator.getIncludedSpeciesCount();
 	let plan_name = "Schenley North";
+
+	function publishPlanToRos() {
+		let plan_obj: PlantingPlan = generator.toRos();
+		complete_plan.set(plan_obj);
+	}
 
 	function savePlan() {
 		let plan_string = generator.toString();
@@ -85,7 +100,7 @@
 		current_action = MapAction.DRAW;
 	}
 	function startErase() {
-		osmMap.startDraw();
+		osmMap.startErase();
 		current_action = MapAction.ERASE;
 	}
 	function startPan() {

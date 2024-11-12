@@ -6,8 +6,7 @@
     ego_lat,
     ego_lon,
     waypoints,
-    plan,
-    type Plan,
+    complete_plan,
     seedling_reached,
   } from "$lib/stores";
 
@@ -129,31 +128,31 @@
     icon.style.transform = `rotate(${css_rotation}rad)`;
   });
 
-  plan.subscribe((plan) => {
-    if (plan == undefined) return;
+  // plan.subscribe((plan) => {
+  //   if (plan == undefined) return;
 
-    console.log(
-      `Seedling markers contains ${seedlings_markers.length} seedlings`,
-    );
-    seedlings_markers.forEach((marker) => {
-      marker.remove();
-      console.log(`Removing ${marker} from map.`);
-    });
+  //   console.log(
+  //     `Seedling markers contains ${seedlings_markers.length} seedlings`,
+  //   );
+  //   seedlings_markers.forEach((marker) => {
+  //     marker.remove();
+  //     console.log(`Removing ${marker} from map.`);
+  //   });
 
-    seedlings_markers = [];
-    console.log(
-      `Seedling markers now contains ${seedlings_markers.length} seedlings`,
-    );
+  //   seedlings_markers = [];
+  //   console.log(
+  //     `Seedling markers now contains ${seedlings_markers.length} seedlings`,
+  //   );
 
-    plan.seedlings.forEach((seedling, idx) => {
-      if (seedling == undefined) {
-        console.log(`Seedling at ${idx} was ${seedling}`);
-      }
-      addSeedlingMarker(seedling);
-    });
+  //   plan.seedlings.forEach((seedling, idx) => {
+  //     if (seedling == undefined) {
+  //       console.log(`Seedling at ${idx} was ${seedling}`);
+  //     }
+  //     addSeedlingMarker(seedling);
+  //   });
 
-    if (paintpolygonControl) paintpolygonControl.setData(plan.bounds);
-  });
+  //   if (paintpolygonControl) paintpolygonControl.setData(plan.bounds);
+  // });
 
   export function setGeometry(geom) {
     console.log(`Setting to ${geom}`);

@@ -1,5 +1,6 @@
 import { writable, type Writable } from "svelte/store";
 import Cookies from "js-cookie";
+import type { PlantingPlan } from "./forest_generator";
 
 export enum SystemwideStatusLevel {
   HEALTHY = 0,
@@ -30,11 +31,6 @@ export enum BehaviorState {
 export type TeleopCommand = {
   x: number,
   y: number
-}
-
-export type Plan = {
-  bounds: object,
-  seedlings: object[]
 }
 
 export const node: Writable<any> = writable(undefined);
@@ -71,7 +67,7 @@ export const seedling_reached = writable<boolean>(false);
 
 export const cmd_path = writable<object>();
 
-export const plan = writable<Plan>();
+export const complete_plan = writable<PlantingPlan>();
 
 let cookie_port = Cookies.get("rosbridge/port")
 let cookie_ip = Cookies.get("rosbridge/ip")

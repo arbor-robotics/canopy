@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 
 import {
-    plan, type Plan
+    complete_plan
 } from "$lib/stores";
 import type OsmMap from "$lib/misc/OsmMap.svelte";
 
@@ -19,6 +19,17 @@ export type Species = {
     description: string,
     page: number,
     icon: string
+}
+
+export type Seedling = {
+    latitude: number,
+    longitude: number,
+    species_id: string
+}
+
+export type PlantingPlan = {
+    bounds_geojson: string,
+    seedlings: Seedling[]
 }
 
 function isMarkerInsidePolygon(x, y, polyPoints) {
@@ -91,6 +102,23 @@ export class ForestGenerator {
         }
 
         return JSON.stringify(obj)
+    }
+
+    public toRos() {
+
+        let seedlings: Seedling[] = []
+        for (let [latlon, species] of this.locations) {
+            console.log(latlon, species)
+            seedlings.push({ latitude: latlon[0], longitude: latlon[1], species_id: species.icon })
+        }
+
+        let msg: PlantingPlan = {
+            bounds_geojson: JSON.stringify(this.geojson),
+            seedlings: seedlings
+        }
+
+        return msg;
+
     }
 
     public getSpeciesOptions() {
@@ -208,11 +236,6 @@ export class ForestGenerator {
     }
 
 }
-
-plan.subscribe((val) => {
-    if (val == undefined) return;
-    seedlings = val.seedlings;
-})
 
 function randomFromInterval(min: number, max: number) { // min and max included 
     return Math.random() * (max - min) + min;
