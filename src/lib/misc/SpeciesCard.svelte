@@ -25,7 +25,7 @@
     alt=""
     class="w-12 h-12 p-2"
   />
-  <div class="flex flex-col">
+  <div class="flex flex-col items-start">
     <p class="text-lg font-medium">
       {species.common}
     </p>

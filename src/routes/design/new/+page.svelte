@@ -49,8 +49,16 @@
 		setTimeout(loadPlan, 500);
 	});
 
+	enum MapAction {
+		DRAW,
+		PAN,
+		CLEAR,
+		ERASE,
+	}
+
 	let current_step = 2;
 	let osmMap: OsmMap;
+	let current_action = MapAction.PAN;
 
 	let selected_species_ids: Writable<Array<boolean>> = writable<
 		Array<boolean>
@@ -70,6 +78,19 @@
 		console.log("REGEN");
 		console.log(osmMap.getGeoJSON());
 		generator.setGeoJSON(osmMap.getGeoJSON());
+	}
+
+	function startDraw() {
+		osmMap.startDraw();
+		current_action = MapAction.DRAW;
+	}
+	function startErase() {
+		osmMap.startDraw();
+		current_action = MapAction.ERASE;
+	}
+	function startPan() {
+		osmMap.startPan();
+		current_action = MapAction.PAN;
 	}
 </script>
 
@@ -99,9 +120,9 @@
 			/>
 		</div>
 		<div class="inline-flex rounded-lg shadow-md m-4">
-			<Popover.Root open>
+			<Popover.Root>
 				<Popover.Trigger
-					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
 				>
 					<Icon id="palette" size="1.25rem" color="" fill="0"></Icon>
 
@@ -172,30 +193,45 @@
 				</Popover.Content>
 			</Popover.Root>
 			<Button.Root
-				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-				on:click={osmMap.startDraw}
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				on:click={startDraw}
 				disabled={included_species_count < 1}
 			>
-				<Icon id="brush" size="1.25rem" color="" fill="0"></Icon>
+				<Icon
+					id="brush"
+					size="1.25rem"
+					color=""
+					fill={current_action == MapAction.DRAW ? "1" : "0"}
+				></Icon>
 				Paint Forest
 			</Button.Root>
 			<Button.Root
-				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-				on:click={osmMap.startErase}
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				on:click={startErase}
 			>
-				<Icon id="ink_eraser" size="1.25rem" color="" fill="0"></Icon>
+				<Icon
+					id="ink_eraser"
+					size="1.25rem"
+					color=""
+					fill={current_action == MapAction.ERASE ? "1" : "0"}
+				></Icon>
 				Erase
 			</Button.Root>
 			<Button.Root
-				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-				on:click={osmMap.startPan}
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				on:click={startPan}
 			>
-				<Icon id="pan_tool" size="1.25rem" color="" fill="0"></Icon>
+				<Icon
+					id="pan_tool"
+					size={"1.25rem"}
+					color=""
+					fill={current_action == MapAction.PAN ? "1" : "0"}
+				></Icon>
 
 				Move
 			</Button.Root>
 			<Button.Root
-				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-red-500 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
 				on:click={osmMap.clear}
 			>
 				<Icon id="delete" size="1.25rem" color="" fill="0"></Icon>
@@ -204,9 +240,11 @@
 			</Button.Root>
 		</div>
 		<div
-			class="flex flex-row items-center rounded-lg shadow-md m-4 bg-white h-12 px-2"
+			class="flex flex-row items-center rounded-lg shadow-lg m-4 px-4 bg-white h-12"
 		>
-			<p class="font-medium">{included_species_count} species</p>
+			<p class="font-semibold text-lg">
+				{included_species_count} species
+			</p>
 		</div>
 	</div>
 </div>

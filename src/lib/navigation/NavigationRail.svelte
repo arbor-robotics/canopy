@@ -23,7 +23,7 @@
     <NavigationRailButton
       icon="palette"
       label="Design"
-      url="{base}/design"
+      url="{base}/design/new"
       enabled={true}
     ></NavigationRailButton>
     <NavigationRailButton
@@ -33,20 +33,20 @@
       enabled={true}
     ></NavigationRailButton>
 
-    <NavigationRailButton icon="settings" label="Settings" url="{base}/settings"
-    ></NavigationRailButton>
-
+    <!-- <NavigationRailButton icon="settings" label="Settings" url="{base}/settings"
+    ></NavigationRailButton> -->
+    <!-- 
     <NavigationRailButton
       icon="stethoscope"
       label="Diagnostics"
       url="{base}/diagnostics"
-    ></NavigationRailButton>
+    ></NavigationRailButton> -->
 
-    <NavigationRailButton
+    <!-- <NavigationRailButton
       icon="query_stats"
       label="Statistics"
       url="{base}/statistics"
-    ></NavigationRailButton>
+    ></NavigationRailButton> -->
     <!-- <NavigationRailButton icon="monitoring" label="Stats" url="/" enabled={true}
     ></NavigationRailButton>
     <NavigationRailButton

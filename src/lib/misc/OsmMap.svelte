@@ -58,7 +58,7 @@
     ERASE,
   }
 
-  let selected_action = MapAction.PAN;
+  export let selected_action = MapAction.PAN;
 
   export function listenForWaypoint() {
     listening_for_waypoint = true;
