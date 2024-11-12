@@ -2,7 +2,7 @@
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
 	import { rosbridge_ip, rosbridge_port, addToast } from "$lib/stores";
-	import { Button, Checkbox, ScrollArea, Tooltip } from "bits-ui";
+	import { Button, Checkbox, ScrollArea, Tabs, Popover } from "bits-ui";
 	import Cookies from "js-cookie";
 	import Icon from "$lib/misc/Icon.svelte";
 	import { ForestGenerator, type Species } from "$lib/forest_generator";
@@ -11,41 +11,38 @@
 	import Pagination from "$lib/navigation/Pagination.svelte";
 	import { fly } from "svelte/transition";
 	import OsmMap from "$lib/misc/OsmMap.svelte";
+	import SpeciesCard from "$lib/misc/SpeciesCard.svelte";
 
 	let generator = new ForestGenerator();
 	let species_options = generator.getSpeciesOptions();
+	let included_species_count: number = generator.getIncludedSpeciesCount();
+
+	onMount(() => {
+		species_options.forEach((val) => {
+			console.log(val);
+		});
+	});
 
 	let current_step = 2;
 	let osmMap: OsmMap;
 
-	let selected_species_indices: Array<boolean> = [];
+	let selected_species_ids: Writable<Array<boolean>> = writable<
+		Array<boolean>
+	>([]);
 	let num_species_included: number = 0;
 	species_options.forEach((species) => {
-		selected_species_indices.push(species.included);
+		$selected_species_ids.push(species.included);
 		if (species.included) num_species_included++;
 	});
 
-	onMount(() => {});
-
-	function confirmSpeciesMix() {
-		current_step = 2;
+	function onSpeciesCardClicked(species: Species) {
+		generator.markIncluded(species.page, !species.included);
+		included_species_count = generator.getIncludedSpeciesCount();
 	}
 
-	let plans = [
-		{ name: "Flagstaff North", co2: "2300 tonnes/year", species_count: 12 },
-		{ name: "CFA Lawn", co2: "700 tonnes/year", species_count: 5 },
-		{ name: "Frick Park East", co2: "3100 tonnes/year", species_count: 14 },
-		{ name: "Panther Hollow", co2: "300 tonnes/year", species_count: 9 },
-	];
-
-	let values: Array<string>;
-
-	function speciesOptionClicked(species, index: number) {
-		species.included = !species.included;
-		selected_species_indices[index] = !selected_species_indices[index];
-		if (species.included) num_species_included++;
-		else num_species_included--;
-		// console.log(selected_species_indices[index]);
+	function onMapGeomChanged() {
+		console.log("REGEN");
+		generator.setGeometry(osmMap.getGeoJSON().geometry);
 	}
 </script>
 
@@ -54,123 +51,135 @@
 	<meta name="description" content="Control and observe the robot" />
 </svelte:head>
 
-<div class="flex flex-col h-full w-full max-w-2xl mx-auto p-8">
-	<p class="text-4xl my-4">Let's plan your forest.</p>
+<div class="size-full overflow-hidden">
+	<OsmMap
+		useCurrentPos={false}
+		bind:this={osmMap}
+		on:geomchanged={onMapGeomChanged}
+	/>
 
-	{#if current_step == 1}
-		<div>
-			<div class="flex">
-				<Icon id="counter_1" size="1.5rem" color="" fill="1"></Icon>
-				<p class="text-xl pl-2 font-medium">
-					What would you like to plant?
-				</p>
-			</div>
-			<p class="text-md">
-				Here are good options for <strong>Pittsburgh, PA</strong>. Check
-				the boxes next to the seedlings you'd like to include.
-			</p>
+	<div
+		class="flex flex-row w-full items-center justify-between relative top-[-100vh]"
+	>
+		<div
+			class="flex flex-row items-center rounded-lg shadow-md m-4 bg-white h-12"
+		>
+			<input
+				type="text"
+				class="px-4 block w-full font-semibold border-gray-200 rounded-lg text-lg focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
+				placeholder="Plan Name"
+				value="Schenley North"
+			/>
+		</div>
+		<div class="inline-flex rounded-lg shadow-md m-4">
+			<Popover.Root open>
+				<Popover.Trigger
+					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				>
+					<Icon id="palette" size="1.25rem" color="" fill="0"></Icon>
 
-			<div class="flex flex-row flex-wrap">
-				{#each species_options as species, i}
-					<button
-						on:click={() => {
-							speciesOptionClicked(species, i);
-						}}
-						class="flex flex-col border rounded-lg m-2 size-32 items-center justify-center transition-all"
-						class:bg-lime-200={selected_species_indices[i]}
+					Species Palette
+				</Popover.Trigger>
+				<Popover.Content
+					class="z-30 w-full max-w-96 max-h-[36rem] rounded-[12px] border border-dark-10 bg-white p-4 shadow-md overflow-y-auto"
+					transition={fly}
+					sideOffset={8}
+				>
+					<Tabs.Root
+						value="understory"
+						class=" bg-background-alt shadow-card"
 					>
-						<img
-							src="{base}/res/leaves/{species.icon}.svg"
-							alt=""
-							class="w-12 h-12"
-						/>
-						<p class="text-sm text-center font-medium">
-							{species.common_name}
-						</p>
-						<p class="text-xs text-center italic">
-							{species.scientific_name}
-						</p>
-					</button>
-				{/each}
-			</div>
+						<Tabs.List
+							class="grid w-full grid-cols-3 gap-1 rounded-lg bg-neutral-200 p-1 text-sm font-semibold leading-[0.01em] shadow-mini-inset dark:border dark:border-neutral-600/30 dark:bg-background"
+						>
+							<Tabs.Trigger
+								value="understory"
+								class="h-8 rounded-[7px] bg-transparent py-2 data-[state=active]:bg-white data-[state=active]:shadow-mini dark:data-[state=active]:bg-neutral-500"
+								>Understory</Tabs.Trigger
+							>
+							<Tabs.Trigger
+								value="overstory"
+								class="h-8 rounded-[7px] bg-transparent py-2 data-[state=active]:bg-white data-[state=active]:shadow-mini dark:data-[state=active]:bg-muted"
+								>Overstory</Tabs.Trigger
+							>
+							<Tabs.Trigger
+								value="emergent"
+								class="h-8 rounded-[7px] bg-transparent py-2 data-[state=active]:bg-white data-[state=active]:shadow-mini dark:data-[state=active]:bg-muted"
+								>Emergent</Tabs.Trigger
+							>
+						</Tabs.List>
+						<Tabs.Content value="understory" class="pt-3">
+							{#each species_options as [id, species], i}
+								{#if species.height_ft <= 40}
+									<SpeciesCard
+										{species}
+										on:toggled={() =>
+											onSpeciesCardClicked(species)}
+									/>
+								{/if}
+							{/each}
+						</Tabs.Content>
+						<Tabs.Content value="overstory" class="pt-3">
+							{#each species_options as [id, species]}
+								{#if species.height_ft > 40 && species.height_ft < 100}
+									<SpeciesCard
+										{species}
+										on:toggled={() =>
+											onSpeciesCardClicked(species)}
+									/>
+								{/if}
+							{/each}
+						</Tabs.Content>
+						<Tabs.Content value="emergent" class="pt-3">
+							{#each species_options as [id, species]}
+								{#if species.height_ft >= 100}
+									<SpeciesCard
+										{species}
+										on:toggled={() =>
+											onSpeciesCardClicked(species)}
+									/>
+								{/if}
+							{/each}
+						</Tabs.Content>
+					</Tabs.Root>
+				</Popover.Content>
+			</Popover.Root>
+			<Button.Root
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				on:click={osmMap.startDraw}
+				disabled={included_species_count < 1}
+			>
+				<Icon id="brush" size="1.25rem" color="" fill="0"></Icon>
+				Paint Forest
+			</Button.Root>
+			<Button.Root
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				on:click={osmMap.startErase}
+			>
+				<Icon id="ink_eraser" size="1.25rem" color="" fill="0"></Icon>
+				Erase
+			</Button.Root>
+			<Button.Root
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				on:click={osmMap.startPan}
+			>
+				<Icon id="pan_tool" size="1.25rem" color="" fill="0"></Icon>
 
-			<div class="flex flex-row justify-between mt-4">
-				<p>{num_species_included} seedlings selected.</p>
-				<Button.Root
-					class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-forest-600 text-white hover:bg-forest-700 focus:outline-none focus:ring-2 ring-forest-700 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
-					on:click={confirmSpeciesMix}
-				>
-					Next
-				</Button.Root>
-			</div>
-		</div>
-	{:else}
-		<div class="flex">
-			<Icon id="counter_1" size="1.5rem" color="" fill="0"></Icon>
-			<p class="text-xl pl-2">What would you like to plant?</p>
-		</div>
-	{/if}
-	{#if current_step == 2}
-		<div class="overflow-y-auto">
-			<div class="flex">
-				<Icon id="counter_2" size="1.5rem" color="" fill="1"></Icon>
-				<p class="text-xl pl-2 font-medium">
-					Where would you like to plant?
-				</p>
-			</div>
-			<div class="inline-flex rounded-lg shadow-sm m-4">
-				<Button.Root
-					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-					on:click={osmMap.startDraw}
-				>
-					<Icon id="brush" size="1.25rem" color="" fill="0"
-					></Icon>
-					Paint Forest
-				</Button.Root>
-				<Button.Root
-					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-					on:click={osmMap.startErase}
-				>
-					<Icon id="ink_eraser" size="1.25rem" color="" fill="0"
-					></Icon>
-					Erase
-				</Button.Root>
-				<Button.Root
-					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-					on:click={osmMap.startPan}
-				>
-					<Icon id="pan_tool" size="1.25rem" color="" fill="0"
-					></Icon>
+				Move
+			</Button.Root>
+			<Button.Root
+				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+				on:click={osmMap.clear}
+			>
+				<Icon id="delete" size="1.25rem" color="" fill="0"></Icon>
 
-					Move
-				</Button.Root>
-				<Button.Root
-					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-100 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
-					on:click={osmMap.clear}
-				>
-					<Icon id="delete" size="1.25rem" color="" fill="0"
-					></Icon>
-
-					Clear
-				</Button.Root>
-			</div>
-			<div class="w-full h-96 relative">
-
-				<OsmMap bind:this={osmMap} />
-			</div>
+				Clear
+			</Button.Root>
 		</div>
-	{:else}
-		<div class="flex">
-			<Icon id="counter_2" size="1.5rem" color="" fill="0"></Icon>
-			<p class="text-xl pl-2">Where would you like to plant?</p>
+		<div
+			class="flex flex-row items-center rounded-lg shadow-md m-4 bg-white h-12 px-2"
+		>
+			<p class="font-medium">{included_species_count} species</p>
 		</div>
-	{/if}
-	<div class="flex">
-		<Icon id="counter_3" size="1.5rem" color="" fill="0"></Icon>
-		<p class="text-xl pl-2">Name and save your plan.</p>
-	</div>
-	<div class="flex">
-		<Icon id="counter_4" size="1.5rem" color="" fill="0"></Icon>
-		<p class="text-xl pl-2">Send to Steward.</p>
 	</div>
 </div>

@@ -13,11 +13,16 @@
 
   import { getRandomPoint, generateSeedlings } from "$lib/forest_generator";
 
+  import { createEventDispatcher } from "svelte";
+  const dispatch = createEventDispatcher();
+
   // We need to wrap Leaflet in this onMount hook,
   // since it requires access to the window object.
   // No SSR!
 
   let paintpolygonControl;
+
+  export let useCurrentPos = false;
 
   let map,
     flagIcon,
@@ -191,16 +196,21 @@
   function onMouseup(e) {
     // alert("You clicked the map at " + e.latlng);
 
-    if (selected_action == MapAction.DRAW) {
-      console.log("Making forest");
-      generateSeedlings(
-        getGeoJSON(),
-        clearSeedlingMarkers,
-        addSeedlingMarker,
-        10,
-      ).then((new_seedlings) => {
-        seedlings = new_seedlings;
-      });
+    if (
+      selected_action == MapAction.DRAW ||
+      selected_action == MapAction.ERASE
+    ) {
+      // console.log("Making forest");
+      // generateSeedlings(
+      //   getGeoJSON(),
+      //   clearSeedlingMarkers,
+      //   addSeedlingMarker,
+      //   10,
+      // ).then((new_seedlings) => {
+      //   seedlings = new_seedlings;
+      // });
+
+      dispatch("geomchanged");
     } else {
     }
   }
@@ -227,7 +237,16 @@
     await import("leaflet-draw");
     await import("leaflet-paintpolygon");
 
-    map = L.map("map").setView([40.44002092, -79.9409749], 19);
+    if (useCurrentPos)
+      map = L.map("map", { zoomControl: false }).locate({
+        setView: true,
+        maxZoom: 19,
+      });
+    else
+      map = L.map("map", { zoomControl: false }).setView(
+        [40.44002092, -79.9409749],
+        19,
+      );
     popup = L.popup();
 
     flagIcon = L.divIcon({
@@ -289,7 +308,7 @@ flag
     map.on("click", onMapClick);
     map.on("mouseup", onMouseup);
 
-    loadPlanFromStorage();
+    // loadPlanFromStorage();
   });
 
   export function getGeoJSON() {

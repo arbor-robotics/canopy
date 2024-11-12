@@ -111,7 +111,7 @@
       console.log("Connection to websocket server closed.");
       connection_status.set(ConnectionStatus.DISCONNECTED);
 
-      setTimeout(node.connect("ws://localhost:9090"));
+      // setTimeout(node.connect("ws://localhost:9090"));
     });
 
     let current_behavior_state_topic = new ROSLIB.Topic({
