@@ -20,17 +20,22 @@
 		for (let [latlon, seedling] of generator.locations) {
 			osmMap.addSeedlingMarker(latlon, seedling);
 		}
+
+		save_plan();
 	}
 
 	let generator = new ForestGenerator(onGeneratorChanged);
 	let species_options = generator.getSpeciesOptions();
 	let included_species_count: number = generator.getIncludedSpeciesCount();
+	let plan_name = "Schenley North";
 
-	onMount(() => {
-		species_options.forEach((val) => {
-			console.log(val);
-		});
-	});
+	function save_plan() {
+		let plan_string = generator.toString();
+		localStorage.setItem(`${plan_name}`, JSON.stringify(plan_string));
+		console.log(`Autosaved: ${plan_string.slice(0, 100)}...`);
+	}
+
+	onMount(() => {});
 
 	let current_step = 2;
 	let osmMap: OsmMap;
@@ -77,7 +82,7 @@
 				type="text"
 				class="px-4 block w-full font-semibold border-gray-200 rounded-lg text-lg focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-neutral-400 dark:placeholder-neutral-500 dark:focus:ring-neutral-600"
 				placeholder="Plan Name"
-				value="Schenley North"
+				value={plan_name}
 			/>
 		</div>
 		<div class="inline-flex rounded-lg shadow-md m-4">

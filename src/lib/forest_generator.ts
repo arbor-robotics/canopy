@@ -49,8 +49,30 @@ export class ForestGenerator {
         this.bbox = [-1, -1, -1, -1];
         this.geom = undefined;
         species_json.forEach((species) => {
+
             this.species.set(species.page, species)
         });
+        console.log(this.species)
+    }
+
+    public toString() {
+        let locations_obj = [];
+
+        for (let [latlon, seedling] of this.locations) {
+            // console.log(seedling)
+            locations_obj.push({
+                lat: latlon[0],
+                lon: latlon[1],
+                species: seedling.page
+            })
+        }
+
+        let obj = {
+            locations: locations_obj,
+            geom: this.geom
+        }
+
+        return JSON.stringify(obj)
     }
 
     public getSpeciesOptions() {
@@ -78,6 +100,7 @@ export class ForestGenerator {
         // console.log(point)
         // this.locations.set(point, this.species.get(1)!)
         this.generateSeedlings()
+        console.log(this.locations)
         this.changeCb()
     }
 
@@ -89,10 +112,11 @@ export class ForestGenerator {
         this.regeneratePoints()
     }
 
-    public async generateSeedlings(max_failures = 100) {
+    public async generateSeedlings(max_failures = 100, min_dist = 5.0) {
         let num_failures = 0
 
         this.locations.clear()
+
 
         if (L == undefined)
             L = await import("leaflet");
@@ -101,22 +125,20 @@ export class ForestGenerator {
             let coord = this.getRandomPoint()
 
             let minDist = 99999;
-            // seedlings.forEach((seedling) => {
-            //     // let dist = d3.geoDistance(coord, [seedling.lat, seedling.lon])
-            //     let latLngA = L.latLng(coord[0], coord[1])
-            //     let latLngB = L.latLng(seedling.lat, seedling.lon)
-            //     let dist = latLngA.distanceTo(latLngB)
-            //     if (dist < minDist) minDist = dist;
-            // })
-            // if (minDist < min_dist) {
-            //     console.log(`Too close! Dist was ${minDist}`)
-            //     num_failures++;
-            //     continue;
-            // }
-            num_failures++;
-            let seedling = { lat: coord[0], lon: coord[1] }
-            // seedlings.push(seedling)
-            this.locations.set(coord, this.species.get(0))
+            for (let [latlon, seedling] of this.locations) {
+                // let dist = d3.geoDistance(coord, [seedling.lat, seedling.lon])
+                let latLngA = L.latLng(coord[0], coord[1])
+                let latLngB = L.latLng(latlon)
+                let dist = latLngA.distanceTo(latLngB)
+                if (dist < minDist) minDist = dist;
+            }
+            if (minDist < min_dist) {
+                console.log(`Too close! Dist was ${minDist}`)
+                num_failures++;
+                continue;
+            }
+
+            this.locations.set(coord, this.species.get(1))
         }
     }
 
@@ -144,10 +166,13 @@ export class ForestGenerator {
             let rand_lat = randomFromInterval(min_lat, max_lat);
 
             this.geom.coordinates.forEach((shape) => {
-
+                if (shape.length == 1) {
+                    shape = shape[0]
+                }
+                // console.log(shape)
                 if (result_found) return result;
-                if (isMarkerInsidePolygon(rand_lat, rand_lon, shape[0])) {
-                    console.log(`${rand_lat} ${rand_lon} FALLS WITHIN!`);
+                if (isMarkerInsidePolygon(rand_lat, rand_lon, shape)) {
+                    // console.log(`${rand_lat} ${rand_lon} FALLS WITHIN!`);
                     result = [rand_lat, rand_lon]
                     result_found = true;
                 }
@@ -182,8 +207,10 @@ function getBoundingBox(geom: any) {
     console.log(shapes)
 
     shapes.forEach((shape_coords) => {
-
-        shape_coords[0].forEach((coord) => {
+        if (shape_coords.length == 1) {
+            shape_coords = shape_coords[0]
+        }
+        shape_coords.forEach((coord) => {
             // console.log(coord)
             let lon = coord[0];
             let lat = coord[1];

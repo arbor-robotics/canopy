@@ -73,7 +73,7 @@
 
   export async function addSeedlingMarker(latlon: number[], seedling: Species) {
     var pointMarker = L.marker([latlon[0], latlon[1]], {
-      icon: seedlingIcon,
+      // icon: seedlingIcon,
     }).addTo(map);
     seedlings_markers.push(pointMarker);
   }
