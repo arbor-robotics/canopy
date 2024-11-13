@@ -14,6 +14,7 @@
 		ForestGenerator,
 		type PlantingPlan,
 		type Species,
+		ForestLayer,
 	} from "$lib/forest_generator";
 	import { onMount } from "svelte";
 	import { base } from "$app/paths";
@@ -141,7 +142,26 @@
 				>
 					<Icon id="palette" size="1.25rem" color="" fill="0"></Icon>
 
-					<p class="hidden md:inline">Species Palette</p>
+					<p class="hidden lg:inline">Species Palette</p>
+					{#if included_species_count > 3}
+						<span
+							class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-lime-500 text-white"
+							class:bg-lime-400={included_species_count > 3}
+							>{included_species_count}</span
+						>
+					{:else if included_species_count > 1}
+						<span
+							class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-sand-400 text-white"
+							class:bg-lime-400={included_species_count > 3}
+							>{included_species_count}</span
+						>
+					{:else}
+						<span
+							class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-red-400 text-white"
+							class:bg-lime-400={included_species_count > 3}
+							>{included_species_count}</span
+						>
+					{/if}
 				</Popover.Trigger>
 				<Popover.Content
 					class="z-30 w-full max-w-96 max-h-[36rem] rounded-[12px] border border-dark-10 bg-white p-4 shadow-md overflow-y-auto"
@@ -173,7 +193,7 @@
 						</Tabs.List>
 						<Tabs.Content value="understory" class="pt-3">
 							{#each species_options as [id, species], i}
-								{#if species.height_ft <= 40}
+								{#if species.layer == ForestLayer.UNDERSTORY}
 									<SpeciesCard
 										{species}
 										on:toggled={() =>
@@ -184,7 +204,7 @@
 						</Tabs.Content>
 						<Tabs.Content value="overstory" class="pt-3">
 							{#each species_options as [id, species]}
-								{#if species.height_ft > 40 && species.height_ft < 100}
+								{#if species.layer == ForestLayer.OVERSTORY}
 									<SpeciesCard
 										{species}
 										on:toggled={() =>
@@ -195,7 +215,7 @@
 						</Tabs.Content>
 						<Tabs.Content value="emergent" class="pt-3">
 							{#each species_options as [id, species]}
-								{#if species.height_ft >= 100}
+								{#if (species.layer = ForestLayer.EMERGENT)}
 									<SpeciesCard
 										{species}
 										on:toggled={() =>
@@ -218,7 +238,7 @@
 					color=""
 					fill={current_action == MapAction.DRAW ? "1" : "0"}
 				></Icon>
-				<p class="hidden md:inline">Paint Forest</p>
+				<p class="hidden lg:inline">Paint Forest</p>
 			</Button.Root>
 			<Button.Root
 				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
@@ -230,7 +250,7 @@
 					color=""
 					fill={current_action == MapAction.ERASE ? "1" : "0"}
 				></Icon>
-				<p class="hidden md:inline">Erase</p>
+				<p class="hidden lg:inline">Erase</p>
 			</Button.Root>
 			<Button.Root
 				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
@@ -243,14 +263,14 @@
 					fill={current_action == MapAction.PAN ? "1" : "0"}
 				></Icon>
 
-				<p class="hidden md:inline">Move</p>
+				<p class="hidden lg:inline">Move</p>
 			</Button.Root>
 			<Button.Root
 				class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-red-500 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
 				on:click={osmMap.clear}
 			>
 				<Icon id="delete" size="1.25rem" color="" fill="0"></Icon>
-				<p class="hidden md:inline">Clear</p>
+				<p class="hidden lg:inline">Clear</p>
 			</Button.Root>
 		</div>
 		<div

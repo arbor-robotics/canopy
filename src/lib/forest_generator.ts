@@ -11,6 +11,12 @@ let seedlings: object[] = [];
 
 let L;
 
+export enum ForestLayer {
+    OVERSTORY = "Overstory",
+    UNDERSTORY = "Understory",
+    EMERGENT = "Emergent",
+}
+
 export type Species = {
     common: string,
     scientific: string,
@@ -18,7 +24,8 @@ export type Species = {
     included: boolean,
     description: string,
     page: number,
-    icon: string
+    icon: string,
+    layer: ForestLayer
 }
 
 export type Seedling = {
@@ -158,7 +165,7 @@ export class ForestGenerator {
         this.regeneratePoints()
     }
 
-    public async generateSeedlings(max_failures = 100, min_dist = 5.0) {
+    public async generateSeedlings(max_failures = 300, min_dist = 5.0) {
         let num_failures = 0
 
         this.locations.clear()
