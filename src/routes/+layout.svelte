@@ -11,6 +11,12 @@
   import { connection_status, ConnectionStatus } from "$lib/stores";
   import RosListener from "$lib/ros/RosListener.svelte";
   import { onNavigate } from "$app/navigation";
+  import BottomAppBar from "$lib/navigation/BottomAppBar.svelte";
+
+  let innerWidth = 0;
+  let innerHeight = 0;
+
+  $: condition = innerWidth * 1.33 >= innerHeight;
 
   onNavigate((navigation) => {
     if (!document.startViewTransition) return;
@@ -24,18 +30,34 @@
   });
 </script>
 
-<div class="app overflow-hidden">
+<svelte:window bind:innerWidth bind:innerHeight />
+
+<div
+  class="app overflow-hidden"
+  class:mobile-app={!condition}
+  class:app={condition}
+>
   <RosListener />
 
   <Toasts />
 
-  <NavigationRail></NavigationRail>
+  {#if condition}
+    <NavigationRail></NavigationRail>
+  {:else}
+    <BottomAppBar />
+  {/if}
   <main class="p-0 overflow-hidden">
     <slot />
   </main>
 </div>
 
 <style lang="scss">
+  .mobile-app {
+    display: flex;
+    flex-direction: column-reverse;
+    width: 100vw;
+    height: 100vh;
+  }
   .app {
     display: flex;
     flex-direction: row;
