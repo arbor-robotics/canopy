@@ -38,7 +38,8 @@
     current_mode,
     trajectory_candidates,
     seedling_reached,
-    behavior_message
+    behavior_message,
+    distance_to_seedling,
   } from "$lib/stores";
   import type { PlantingPlan } from "$lib/forest_generator";
 
@@ -145,6 +146,17 @@
     current_mode_topic.subscribe(function (msg) {
       // console.log(`Current mode: ${msg.level}`);
       current_mode.set(msg.level);
+    });
+
+    let distance_to_seedling_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/distance_to_seedling",
+      messageType: "std_msgs/Float32",
+    });
+
+    distance_to_seedling_topic.subscribe(function (msg) {
+      // console.log(`${msg.data} m away`);
+      distance_to_seedling.set(msg.data);
     });
 
     let requested_mode_topic = new ROSLIB.Topic({
@@ -395,7 +407,7 @@
       if (msg == undefined) return;
 
       if (msg.name == "trajectory_planner") {
-        behavior_message.set(msg.message)
+        behavior_message.set(msg.message);
       }
     });
 

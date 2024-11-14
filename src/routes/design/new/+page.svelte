@@ -7,7 +7,14 @@
 		addToast,
 		complete_plan,
 	} from "$lib/stores";
-	import { Button, Checkbox, ScrollArea, Tabs, Popover } from "bits-ui";
+	import {
+		Button,
+		Checkbox,
+		ScrollArea,
+		Tabs,
+		Popover,
+		Slider,
+	} from "bits-ui";
 	import Cookies from "js-cookie";
 	import Icon from "$lib/misc/Icon.svelte";
 	import {
@@ -38,6 +45,15 @@
 	let generator = new ForestGenerator(onGeneratorChanged);
 	let species_options = generator.getSpeciesOptions();
 	let included_species_count: number = generator.getIncludedSpeciesCount();
+	let included_overstory_count: number = generator.getIncludedSpeciesCount(
+		ForestLayer.OVERSTORY,
+	);
+	let included_understory_count: number = generator.getIncludedSpeciesCount(
+		ForestLayer.UNDERSTORY,
+	);
+	let included_emergent_count: number = generator.getIncludedSpeciesCount(
+		ForestLayer.EMERGENT,
+	);
 	let plan_name = "Schenley North";
 
 	function publishPlanToRos() {
@@ -88,6 +104,15 @@
 	function onSpeciesCardClicked(species: Species) {
 		generator.markIncluded(species.page, !species.included);
 		included_species_count = generator.getIncludedSpeciesCount();
+		included_overstory_count = generator.getIncludedSpeciesCount(
+			ForestLayer.OVERSTORY,
+		);
+		included_understory_count = generator.getIncludedSpeciesCount(
+			ForestLayer.UNDERSTORY,
+		);
+		included_emergent_count = generator.getIncludedSpeciesCount(
+			ForestLayer.EMERGENT,
+		);
 	}
 
 	function onMapGeomChanged() {
@@ -108,6 +133,8 @@
 		osmMap.startPan();
 		current_action = MapAction.PAN;
 	}
+
+	let planting_density_slider_val: number[] = [0.6];
 </script>
 
 <svelte:head>
@@ -136,7 +163,7 @@
 			/>
 		</div>
 		<div class="inline-flex rounded-lg shadow-md m-4">
-			<Popover.Root>
+			<Popover.Root open>
 				<Popover.Trigger
 					class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
 				>
@@ -164,10 +191,40 @@
 					{/if}
 				</Popover.Trigger>
 				<Popover.Content
-					class="z-30 w-full max-w-96 max-h-[36rem] rounded-[12px] border border-dark-10 bg-white p-4 shadow-md overflow-y-auto"
+					class="z-30 w-full max-w-96 rounded-[12px] border border-dark-10 bg-white p-4 shadow-md"
 					transition={fly}
 					sideOffset={8}
 				>
+					<div class="flex flex-row w-full items-center gap-2">
+						Sparse
+
+						<div class="px-3 py-4 pb-3 w-full">
+							<Slider.Root
+								bind:value={planting_density_slider_val}
+								min={0}
+								max={1}
+								step={0.2}
+								let:thumbs
+								class="relative flex w-full touch-none select-none items-center"
+							>
+								<span
+									class="relative h-2 w-full grow overflow-hidden rounded-full bg-neutral-200"
+								>
+									<Slider.Range
+										class="absolute h-full bg-neutral-700"
+									/>
+								</span>
+								{#each thumbs as thumb}
+									<Slider.Thumb
+										{thumb}
+										class="block size-[25px] cursor-pointer rounded-full border border-border-input bg-white shadow  transition-colors hover:border-dark-40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground focus-visible:ring-offset-2 active:scale-98 disabled:pointer-events-none disabled:opacity-50 dark:bg-foreground dark:shadow-card"
+									/>
+								{/each}
+							</Slider.Root>
+						</div>
+						Dense
+					</div>
+					<hr class="mt-3 mb-3" />
 					<Tabs.Root
 						value="understory"
 						class=" bg-background-alt shadow-card"
@@ -178,20 +235,35 @@
 							<Tabs.Trigger
 								value="understory"
 								class="h-8 rounded-[7px] bg-transparent py-2 data-[state=active]:bg-white data-[state=active]:shadow-mini dark:data-[state=active]:bg-neutral-500"
-								>Understory</Tabs.Trigger
+								>Understory
+								<span
+									class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-neutral-400 text-white"
+									>{included_understory_count}</span
+								></Tabs.Trigger
 							>
 							<Tabs.Trigger
 								value="overstory"
 								class="h-8 rounded-[7px] bg-transparent py-2 data-[state=active]:bg-white data-[state=active]:shadow-mini dark:data-[state=active]:bg-muted"
-								>Overstory</Tabs.Trigger
+								>Overstory
+								<span
+									class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-neutral-400 text-white"
+									>{included_overstory_count}</span
+								></Tabs.Trigger
 							>
 							<Tabs.Trigger
 								value="emergent"
 								class="h-8 rounded-[7px] bg-transparent py-2 data-[state=active]:bg-white data-[state=active]:shadow-mini dark:data-[state=active]:bg-muted"
-								>Emergent</Tabs.Trigger
+								>Emergent
+								<span
+									class="inline-flex items-center py-0.5 px-1.5 rounded-full text-xs font-medium bg-neutral-400 text-white"
+									>{included_emergent_count}</span
+								></Tabs.Trigger
 							>
 						</Tabs.List>
-						<Tabs.Content value="understory" class="pt-3">
+						<Tabs.Content
+							value="understory"
+							class="mt-3 overflow-y-auto max-h-96"
+						>
 							{#each species_options as [id, species], i}
 								{#if species.layer == ForestLayer.UNDERSTORY}
 									<SpeciesCard
@@ -202,7 +274,10 @@
 								{/if}
 							{/each}
 						</Tabs.Content>
-						<Tabs.Content value="overstory" class="pt-3">
+						<Tabs.Content
+							value="overstory"
+							class="mt-3 overflow-y-auto max-h-96"
+						>
 							{#each species_options as [id, species]}
 								{#if species.layer == ForestLayer.OVERSTORY}
 									<SpeciesCard
@@ -213,9 +288,12 @@
 								{/if}
 							{/each}
 						</Tabs.Content>
-						<Tabs.Content value="emergent" class="pt-3">
+						<Tabs.Content
+							value="emergent"
+							class="mt-3 overflow-y-auto max-h-96"
+						>
 							{#each species_options as [id, species]}
-								{#if (species.layer = ForestLayer.EMERGENT)}
+								{#if species.layer == ForestLayer.EMERGENT}
 									<SpeciesCard
 										{species}
 										on:toggled={() =>

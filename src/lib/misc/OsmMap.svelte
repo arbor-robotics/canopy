@@ -40,6 +40,8 @@
     seedlingIcon,
     reachedSeedlingIcon;
 
+  let mounted = false; // tracks whether or not we're running in a browser (no SSR!)
+
   export let seedlings: object[] = [];
 
   let listening_for_waypoint = false;
@@ -78,6 +80,13 @@
         iconUrl: `${base}/res/leaves/${seedling.icon}.svg`,
       }),
     }).addTo(map);
+
+    if (mounted) {
+      pointMarker.bindPopup(
+        `<strong>${seedling.common}</strong><br/><i>${seedling.scientific}</i>`,
+      );
+    }
+
     seedlings_markers.push(pointMarker);
   }
 
@@ -232,6 +241,19 @@
     await import("leaflet-draw");
     await import("leaflet-paintpolygon");
 
+    mounted = true;
+
+    seedlingIcon = L.Icon.extend({
+      options: {
+        iconUrl: `${base}/res/leaves/silver_maple.svg`,
+        iconSize: [24, 24], // size of the icon
+        iconAnchor: [12, 12], // point of the icon which will correspond to marker's location
+        shadowSize: [50, 64],
+        shadowAnchor: [4, 62],
+        popupAnchor: [0, 0],
+      },
+    });
+
     if (useCurrentPos)
       map = L.map("map", { zoomControl: false }).locate({
         setView: true,
@@ -261,17 +283,6 @@ flag
   </span>
 </div>`,
       className: "div-icon",
-    });
-
-    seedlingIcon = L.Icon.extend({
-      options: {
-        iconUrl: `${base}/res/leaves/silver_maple.svg`,
-        iconSize: [24, 24], // size of the icon
-        iconAnchor: [12, 24], // point of the icon which will correspond to marker's location
-        shadowSize: [50, 64],
-        shadowAnchor: [4, 62],
-        popupAnchor: [-3, -76],
-      },
     });
 
     reachedSeedlingIcon = L.divIcon({

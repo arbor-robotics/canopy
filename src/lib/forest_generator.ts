@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 
 import {
-    complete_plan
+    // planting_density
 } from "$lib/stores";
 import type OsmMap from "$lib/misc/OsmMap.svelte";
 
@@ -15,6 +15,7 @@ export enum ForestLayer {
     OVERSTORY = "Overstory",
     UNDERSTORY = "Understory",
     EMERGENT = "Emergent",
+    ALL = "All"
 }
 
 export type Species = {
@@ -144,8 +145,26 @@ export class ForestGenerator {
         return included_species;
     }
 
-    public getIncludedSpeciesCount() {
-        return this.getIncludedSpecies().length
+    public getIncludedSpeciesCount(layer: ForestLayer = ForestLayer.ALL) {
+        let count = 0;
+
+        for (let [id, species] of this.species) {
+            if (species.included) {
+                if (layer == ForestLayer.ALL) {
+                    count++;
+                }
+                else if (species.layer == layer) {
+                    count++;
+                    console.log(`${species.layer} == ${layer}`)
+
+                }
+                else {
+                    console.log(`${species.layer} != ${layer}`)
+                }
+            }
+        }
+
+        return count;
     }
 
     public regeneratePoints() {
@@ -153,7 +172,6 @@ export class ForestGenerator {
         // console.log(point)
         // this.locations.set(point, this.species.get(1)!)
         this.generateSeedlings()
-        console.log(this.locations)
         this.changeCb()
     }
 
@@ -165,7 +183,14 @@ export class ForestGenerator {
         this.regeneratePoints()
     }
 
-    public async generateSeedlings(max_failures = 300, min_dist = 5.0) {
+    public async generateSeedlings(max_failures = 300, min_dist = 2.0) {
+        /**
+         * This is the main function.
+         * 
+         * 1. Start with emergent trees.
+         * 2. Move to overstory trees
+         * 3. Move to understory trees
+         */
         let num_failures = 0
 
         this.locations.clear()

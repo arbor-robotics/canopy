@@ -14,6 +14,7 @@
 		complete_plan,
 		Mode,
 		behavior_message,
+		distance_to_seedling,
 	} from "$lib/stores";
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
@@ -341,9 +342,13 @@
 	class="relative top-[-100vh] right-0 p-4 flex flex-row w-full justify-between"
 >
 	<div
-		class="flex flex-row items-center opacity-80 rounded-lg shadow-lg m-4 px-4 bg-white h-12"
+		class="flex flex-col items-start opacity-80 rounded-lg shadow-lg m-4 px-4 bg-white h-12"
 	>
 		<p class="font-semibold text-lg">{$behavior_message}</p>
+
+		{#if $distance_to_seedling}
+			<p class="text-sm">{$distance_to_seedling.toFixed(1)} m away</p>
+		{/if}
 	</div>
 	<!-- <Button.Root
 		class="py-3 px-4 mx-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-slate-50 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
