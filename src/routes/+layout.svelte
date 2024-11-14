@@ -43,12 +43,13 @@
 
   {#if condition}
     <NavigationRail></NavigationRail>
-  {:else}
-    <BottomAppBar />
   {/if}
   <main class="p-0 overflow-hidden">
     <slot />
   </main>
+  {#if !condition}
+    <BottomAppBar />
+  {/if}
 </div>
 
 <style lang="scss">

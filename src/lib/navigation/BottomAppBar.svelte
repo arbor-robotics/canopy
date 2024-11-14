@@ -14,7 +14,7 @@
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
-<div id="rail" class="bg-white border-r-2 shadow-xl h-16">
+<div id="rail" class="bg-white border-r-2 shadow-xl h-16 fixed bottom-0 w-full">
   <div class="flex flex-row justify-around items-center">
     <div class="max-w-[30vw]">
       <NavigationRailButton
