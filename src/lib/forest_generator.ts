@@ -199,11 +199,13 @@ export class ForestGenerator {
         if (L == undefined)
             L = await import("leaflet");
 
+        let included_species = this.getIncludedSpecies();
+
         while (num_failures < max_failures) {
             let coord = this.getRandomPoint()
 
-            let species_id = Math.floor(randomFromInterval(1, 59))
-            let species = this.species.get(species_id)
+            let random_index = Math.floor(randomFromInterval(0, included_species.length))
+            let species = included_species[random_index]
 
             let minDist = 99999;
             for (let [latlon, seedling] of this.locations) {

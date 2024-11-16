@@ -244,6 +244,7 @@
   let cmd_path_meshline: MeshLine;
   let candidate_meshes: Array<THREE.Mesh> = [];
   let candidate_meshlines: Array<MeshLine> = [];
+  let previous_candidates_msg_string = "";
 
   function resizeCanvasToDisplaySize() {
     const canvas = renderer.domElement;
@@ -352,9 +353,15 @@
   });
 
   trajectory_candidates.subscribe((candidates_msg) => {
-    return;
     if (candidates_msg == undefined) return;
     if (scene == undefined) return;
+
+    if (JSON.stringify(candidates_msg) == previous_candidates_msg_string) {
+      console.warn("Got duplicate candidates. Skipping rendering.");
+      return;
+    } else {
+      previous_candidates_msg_string = JSON.stringify(candidates_msg);
+    }
 
     // Clear any meshlines added to the scene
     candidate_meshes.forEach((mesh) => {
@@ -374,7 +381,7 @@
       }
     });
 
-    // console.log(`Low: ${lowest_cost}, Hi: ${highest_cost}`);
+    console.log(`Low: ${lowest_cost}, Hi: ${highest_cost}`);
 
     candidates_msg.candidates.forEach((candidate) => {
       const points = [];
@@ -388,7 +395,7 @@
       const material = new MeshLineMaterial({
         lineWidth: 0.1,
         color: candidate_color,
-        opacity: 1 - relative_cost,
+        opacity: 1,
         transparent: true,
       });
       let candidate_mesh = new THREE.Mesh(candidate_meshline, material);
@@ -401,6 +408,7 @@
       candidate_meshline.setPoints(points);
       candidate_meshes.push(candidate_mesh);
       scene.add(candidate_mesh);
+      // console.log(`Added candidate mesh with points ${points}!`);
     });
   });
 
@@ -486,8 +494,8 @@
     controls.enableDamping = true;
 
     // Helpers
-    const axesHelper = new THREE.AxesHelper(100);
-    scene.add(axesHelper);
+    // const axesHelper = new THREE.AxesHelper(100);
+    // scene.add(axesHelper);
 
     // Warthog
     const loader = new GLTFLoader();

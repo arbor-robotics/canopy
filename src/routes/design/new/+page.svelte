@@ -113,6 +113,8 @@
 		included_emergent_count = generator.getIncludedSpeciesCount(
 			ForestLayer.EMERGENT,
 		);
+
+		generator.regeneratePoints()
 	}
 
 	function onMapGeomChanged() {
@@ -283,6 +285,7 @@
 									{#if species.layer == ForestLayer.UNDERSTORY}
 										<SpeciesCard
 											{species}
+											selected={species.included}
 											on:toggled={() =>
 												onSpeciesCardClicked(species)}
 										/>
@@ -297,6 +300,7 @@
 									{#if species.layer == ForestLayer.OVERSTORY}
 										<SpeciesCard
 											{species}
+											selected={species.included}
 											on:toggled={() =>
 												onSpeciesCardClicked(species)}
 										/>
@@ -311,6 +315,7 @@
 									{#if species.layer == ForestLayer.EMERGENT}
 										<SpeciesCard
 											{species}
+											selected={species.included}
 											on:toggled={() =>
 												onSpeciesCardClicked(species)}
 										/>

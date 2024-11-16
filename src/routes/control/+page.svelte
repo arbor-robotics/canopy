@@ -1,6 +1,10 @@
 <script lang="ts">
 	import Joystick from "$lib/misc/Joystick.svelte";
-	import { camera_image, type TeleopCommand } from "$lib/stores";
+	import {
+		camera_image,
+		remaining_plan,
+		type TeleopCommand,
+	} from "$lib/stores";
 	import {
 		teleop_value,
 		wh_battery_voltage,
@@ -322,13 +326,13 @@
 	</div>
 
 	{#if camera_data == ""}
-		<div
+		<!-- <div
 			class="w-[18rem] h-[12rem] absolute bottom-0 m-4 rounded-lg flex items-center justify-center border-2"
 		>
 			<span class="material-symbols-outlined text-4xl">
 				videocam_off
 			</span>
-		</div>
+		</div> -->
 	{:else}
 		<img
 			src={camera_data}
@@ -341,15 +345,30 @@
 <div
 	class="relative top-[-100vh] right-0 p-4 flex flex-row w-full justify-between"
 >
-	<div
-		class="flex flex-col items-start opacity-80 rounded-lg shadow-lg m-4 px-4 bg-white h-12"
-	>
-		<p class="font-semibold text-lg">{$behavior_message}</p>
+	{#if $behavior_message}
+		<div
+			class="flex flex-col items-start justify-center opacity-80 rounded-lg shadow-lg m-4 px-4 bg-white h-16"
+		>
+			<p class="font-semibold text-lg">{$behavior_message}</p>
 
-		{#if $distance_to_seedling}
-			<p class="text-sm">{$distance_to_seedling.toFixed(1)} m away</p>
-		{/if}
-	</div>
+			<div class="flex flex-row">
+				{#if $distance_to_seedling}
+					<Icon id="straighten" size="1rem" color="" fill="0"></Icon>
+
+					<p class="text-md pl-1 pr-2">
+						{$distance_to_seedling.toFixed(0)} m
+					</p>
+				{/if}
+				{#if $remaining_plan}
+					<Icon id="psychiatry" size="1rem" color="" fill="0"></Icon>
+
+					<p class="text-md">
+						{$remaining_plan.seedlings.length} seedlings
+					</p>
+				{/if}
+			</div>
+		</div>
+	{/if}
 	<!-- <Button.Root
 		class="py-3 px-4 mx-2 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-slate-50 text-gray-800 hover:bg-gray-300 focus:outline-none focus:ring-2 ring-meadow-600 ring-offset-2 disabled:opacity-50 disabled:pointer-events-none"
 		on:click={listenForWaypoint}

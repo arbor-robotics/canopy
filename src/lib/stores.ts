@@ -71,6 +71,7 @@ export const complete_plan = writable<PlantingPlan>();
 export const behavior_message = writable<string>();
 export const distance_to_seedling = writable<number>();
 export const planting_density = writable<number>(2.0);
+export const remaining_plan = writable<object>();
 
 let cookie_port = Cookies.get("rosbridge/port")
 let cookie_ip = Cookies.get("rosbridge/ip")

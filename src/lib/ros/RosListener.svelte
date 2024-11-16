@@ -40,6 +40,7 @@
     seedling_reached,
     behavior_message,
     distance_to_seedling,
+    remaining_plan,
   } from "$lib/stores";
   import type { PlantingPlan } from "$lib/forest_generator";
 
@@ -347,7 +348,7 @@
       name: "/planning/candidates",
       messageType: "steward_msgs/TrajectoryCandidates",
       queue_size: 1,
-      throttle_rate: 100,
+      throttle_rate: 1000,
     });
 
     trajectory_candidates_topic.subscribe(function (msg) {
@@ -355,6 +356,20 @@
 
       // console.log(msg);
       trajectory_candidates.set(msg);
+    });
+
+    let remaining_plan_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/planning/remaining_plan",
+      messageType: "steward_msgs/PlantingPlan",
+      queue_size: 1,
+    });
+
+    remaining_plan_topic.subscribe(function (msg) {
+      if (msg == undefined) return;
+
+      console.log(msg);
+      remaining_plan.set(msg);
     });
 
     let on_seedling_reached_topic = new ROSLIB.Topic({

@@ -12,6 +12,7 @@
   } from "$lib/stores";
   import { Popover, Separator, Toggle } from "bits-ui";
   import { fly } from "svelte/transition";
+  import { fail } from "@sveltejs/kit";
 
   let state_label: string = "?";
   // current_behavior_state.subscribe((value) => {
@@ -24,14 +25,18 @@
 
 <Popover.Root>
   <Popover.Trigger
-    class="flex flex-col h-20
+    class="flex flex-col h-32
 	items-center justify-center whitespace-nowrap rounded-input bg-dark px-[21px] text-[15px] font-medium text-background shadow-mini transition-all hover:cursor-pointer hover:bg-dark/95 active:scale-98"
   >
     {#each $failed_checks as check}
       {#if check.code == "BRIDGE_FAILURE"}
-        <Icon id="flyover" color="#cc0000" size="2rem" />
+        <Icon id="link" color="#cc0000" size="2rem" />
       {:else if check.code == "LOCALIZATION_UNAVAILABLE"}
         <Icon id="my_location" color="#fc8913" size="2rem" />
+      {:else if check.code == "TRAJECTORY_PLANNING_FAILURE"}
+        <Icon id="alt_route" color="#cc0000" size="2rem" />
+      {:else if check.code == "BEHAVIOR_FAILURE"}
+        <Icon id="cognition" color="#cc0000" size="2rem" />
       {:else if check.trigger_status.level == 3}
         🔴
       {:else if check.trigger_status.level == 2}
@@ -53,19 +58,39 @@
     </div>
   </Popover.Trigger>
   <Popover.Content
-    class="z-30 w-full max-w-[328px] rounded-[12px] border border-dark-10 bg-white p-4 shadow-popover"
+    class="z-30 w-full max-w-[328px] rounded-[12px] border border-dark-10 bg-white shadow-popover"
     transition={fly}
     transitionConfig={{ duration: 100 }}
     sideOffset={8}
     side="right"
   >
     <div class="flex flex-col">
-      {#each $failed_checks as check}
-        <div class="flex flex-row">
+      {#if $failed_checks.length == 0}
+        <div class="flex flex-row bg-neutral-200 px-2 gap-4 rounded-t-lg">
+          <Icon id="check" color="green" size="1.5rem" fill="0" />
+          <p class="text-sm p-2">
+            Steward's Health Monitor has detected no issues.
+          </p>
+        </div>
+      {:else}
+        <div class="flex flex-row bg-neutral-200 px-2 gap-4 rounded-t-lg">
+          <Icon id="warning" color="" size="1.5rem" fill="0" />
+          <p class="text-sm p-2">
+            Steward's Health Monitor has detected {$failed_checks.length}
+            {$failed_checks.length < 2 ? "issue" : "issues"}:
+          </p>
+        </div>
+      {/if}
+      {#each $failed_checks as check, i}
+        <div class="flex flex-row py-2 px-2">
           {#if check.code == "BRIDGE_FAILURE"}
-            <Icon id="flyover" color="#cc0000" size="2rem" />
+            <Icon id="link" color="#cc0000" size="2rem" />
           {:else if check.code == "LOCALIZATION_UNAVAILABLE"}
             <Icon id="my_location" color="#fc8913" size="2rem" />
+          {:else if check.code == "TRAJECTORY_PLANNING_FAILURE"}
+            <Icon id="alt_route" color="#cc0000" size="2rem" />
+          {:else if check.code == "BEHAVIOR_FAILURE"}
+            <Icon id="cognition" color="#cc0000" size="2rem" />
           {:else if check.trigger_status.level == 3}
             🔴
           {:else if check.trigger_status.level == 2}
@@ -73,17 +98,15 @@
           {:else}
             ?
           {/if}
-          {check.message}
+          <p class="italic ml-2">{check.message}</p>
         </div>
+        {#if i < $failed_checks.length - 1}
+          <Separator.Root
+            class="shrink-0 bg-neutral-300 data-[orientation=horizontal]:h-px data-[orientation=vertical]:h-full data-[orientation=horizontal]:w-full data-[orientation=vertical]:w-[1px]"
+          />
+        {/if}
       {/each}
-      {#if $failed_checks.length == 0}
-        <div class="flex flex-row">
-          <Icon id="check" color="#007c63" size="2rem" />
-          System OK.
-        </div>
-      {/if}
     </div>
-    <Separator.Root class="-mx-4 mb-6 mt-[17px] block h-px bg-dark-10" />
   </Popover.Content>
 </Popover.Root>
 
