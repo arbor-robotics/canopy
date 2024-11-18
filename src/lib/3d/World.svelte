@@ -357,7 +357,7 @@
     if (scene == undefined) return;
 
     if (JSON.stringify(candidates_msg) == previous_candidates_msg_string) {
-      console.warn("Got duplicate candidates. Skipping rendering.");
+      // console.warn("Got duplicate candidates. Skipping rendering.");
       return;
     } else {
       previous_candidates_msg_string = JSON.stringify(candidates_msg);

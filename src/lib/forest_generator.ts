@@ -6,6 +6,7 @@ import {
 import type OsmMap from "$lib/misc/OsmMap.svelte";
 
 import species_json from "$lib/species.json"
+import plan_b from "$lib/plan-b.json"
 
 let seedlings: object[] = [];
 
@@ -75,6 +76,19 @@ export class ForestGenerator {
         console.log(this.species)
     }
 
+    public loadPlanB() {
+        this.locations.clear();
+
+        plan_b.locations.forEach((location) => {
+            this.locations.set([location.lat, location.lon], this.species.get(location.species))
+        })
+
+        this.geojson = plan_b.geojson
+
+        this.changeCb()
+        return plan_b
+    }
+
     public loadFromString(plan_string: string) {
         let plan_obj = JSON.parse(JSON.parse(plan_string));
         console.log(plan_obj)
@@ -116,7 +130,7 @@ export class ForestGenerator {
 
         let seedlings: Seedling[] = []
         for (let [latlon, species] of this.locations) {
-            console.log(latlon, species)
+            // console.log(latlon, species)
             seedlings.push({ latitude: latlon[0], longitude: latlon[1], species_id: species.icon })
         }
 

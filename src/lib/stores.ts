@@ -64,6 +64,8 @@ export const ego_alt = writable<number>(-1);
 export const ego_yaw = writable<number>(-1);
 export const waypoints = writable<Array<Array<number>>>([]);
 export const seedling_reached = writable<boolean>(false);
+export const do_plant = writable<object>();
+export const do_plant_stop = writable<object>();
 
 export const cmd_path = writable<object>();
 

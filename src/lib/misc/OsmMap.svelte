@@ -113,7 +113,7 @@
   });
 
   ego_lon.subscribe((val) => {
-    console.log("Longitude updated!");
+    // console.log("Longitude updated!");
 
     egoLon = val;
 

@@ -19,6 +19,8 @@
 		Mode,
 		behavior_message,
 		distance_to_seedling,
+		do_plant,
+		do_plant_stop,
 	} from "$lib/stores";
 	import type { Writable } from "svelte/store";
 	import { writable } from "svelte/store";
@@ -61,6 +63,16 @@
 	let cached_teleop = undefined;
 
 	let joystick_released = true;
+
+	function sendPlant() {
+		console.log("Sending Plant command");
+		do_plant.set({ time: Date.now().toString });
+	}
+
+	function sendPlantStop() {
+		console.log("Sending Stop command");
+		do_plant_stop.set({ time: Date.now().toString });
+	}
 
 	joystick_value.subscribe((value: TeleopCommand) => {
 		// Scale twist messages here to make the joystick more/less sensitive
@@ -123,8 +135,16 @@
 		osmMap.setGeometry(plan_obj.geojson);
 	}
 
+	function loadPlanB() {
+		let plan_obj = generator.loadPlanB();
+		// let plan_obj = JSON.parse(JSON.parse(plan_string));
+
+		osmMap.setGeometry(plan_obj.geojson);
+	}
+
 	onMount(() => {
-		setTimeout(loadPlan, 500);
+		// setTimeout(loadPlan, 500);
+		setTimeout(loadPlanB, 500);
 	});
 </script>
 
@@ -159,10 +179,45 @@
 				</div>
 			{/if}
 			<div
-				class="w-48 h-8 px-4 overflow-hidden flex flex-col justify-center"
+				class="w-32 mx-auto h-16 px-4 overflow-hidden flex flex-row justify-center items-center rounded-lg"
 			>
-				<p class="text-sm pb-">Assistance Level</p>
-				<Slider.Root
+				{#if $current_mode == Mode.TELEOP}
+					<Button.Root
+						class="transition-all py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-200 focus:outline-none focus:bg-slate-300 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+						disabled={$systemwide_status_level > 2}
+						on:click={sendPlant}
+					>
+						<div class="flex flex-col">
+							<div class="flex flex-col">
+								<Icon
+									id="psychiatry"
+									size="1.5rem"
+									color="#008800"
+									fill="0"
+								></Icon>
+								<p class="text-xs">Plant</p>
+							</div>
+						</div>
+					</Button.Root>
+					<Button.Root
+						class="transition-all py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-slate-200 focus:outline-none focus:bg-slate-300 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
+						disabled={$systemwide_status_level > 2}
+						on:click={sendPlantStop}
+					>
+						<div class="flex flex-col">
+							<div class="flex flex-col">
+								<Icon
+									id="stop"
+									size="1.5rem"
+									color="#008800"
+									fill="0"
+								></Icon>
+								<p class="text-xs">Stop Plant</p>
+							</div>
+						</div>
+					</Button.Root>
+					<!-- <p class="text-sm pb-">Assistance Level</p> -->
+					<!-- <Slider.Root
 					bind:teleop_assistance_level
 					let:thumbs
 					min={0}
@@ -185,7 +240,8 @@
 					{#each ticks as tick}
 						<Slider.Tick {tick} />
 					{/each}
-				</Slider.Root>
+				</Slider.Root> -->
+				{/if}
 			</div>
 			<!-- <div class="inline-flex mx-6 justify-between">
 				<div class="inline-flex" id="battery">

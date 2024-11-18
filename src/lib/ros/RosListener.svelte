@@ -41,6 +41,8 @@
     behavior_message,
     distance_to_seedling,
     remaining_plan,
+    do_plant,
+    do_plant_stop,
   } from "$lib/stores";
   import type { PlantingPlan } from "$lib/forest_generator";
 
@@ -228,15 +230,34 @@
       planting_eta.set(msg.data);
     });
 
-    let test_topic = new ROSLIB.Topic({
+    let do_plant_topic = new ROSLIB.Topic({
       ros: node,
-      name: "/test",
+      name: "/behavior/do_plant",
       messageType: "std_msgs/Empty",
     });
 
-    test_topic.subscribe(function (msg) {
-      // planting_eta.set(msg.data);
-      console.log(msg);
+    do_plant.subscribe((value) => {
+      if (value != undefined) {
+        do_plant_topic.publish({});
+        console.log("Sent do_plant!");
+      } else {
+        console.warn(`Value was ${value}`);
+      }
+    });
+
+    let do_plant_stop_topic = new ROSLIB.Topic({
+      ros: node,
+      name: "/behavior/do_pause_plant",
+      messageType: "std_msgs/Empty",
+    });
+
+    do_plant_stop.subscribe((value) => {
+      if (value != undefined) {
+        do_plant_stop_topic.publish({});
+        console.log("Sent stop_plant!");
+      } else {
+        console.warn(`Value was ${value}`);
+      }
     });
 
     let num_planted_seedlings_topic = new ROSLIB.Topic({
@@ -368,7 +389,7 @@
     remaining_plan_topic.subscribe(function (msg) {
       if (msg == undefined) return;
 
-      console.log(msg);
+      // console.log(msg);
       remaining_plan.set(msg);
     });
 

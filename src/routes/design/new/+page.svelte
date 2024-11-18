@@ -77,6 +77,16 @@
 		osmMap.setGeometry(plan_obj.geojson);
 	}
 
+	function loadPlanB() {
+		let plan_string = localStorage.getItem(`plan-b`);
+		console.log(plan_string);
+
+		generator.loadFromString(plan_string);
+		let plan_obj = JSON.parse(JSON.parse(plan_string));
+
+		osmMap.setGeometry(plan_obj.geojson);
+	}
+
 	onMount(() => {
 		setTimeout(loadPlan, 500);
 	});
@@ -114,7 +124,7 @@
 			ForestLayer.EMERGENT,
 		);
 
-		generator.regeneratePoints()
+		generator.regeneratePoints();
 	}
 
 	function onMapGeomChanged() {
@@ -166,7 +176,7 @@
 		</div>
 		<div class="grow flex flex-row justify-center">
 			<div class="inline-flex rounded-lg shadow-md m-4">
-				<Popover.Root open>
+				<Popover.Root>
 					<Popover.Trigger
 						class="py-3 px-4 inline-flex items-center gap-x-2 -ms-px first:rounded-s-lg first:ms-0 last:rounded-e-lg text-sm font-medium focus:z-10 border border-gray-200 bg-white text-gray-800 shadow-md hover:bg-neutral-200 focus:outline-none focus:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-neutral-900 dark:border-neutral-700 dark:text-white dark:hover:bg-neutral-800 dark:focus:bg-neutral-800"
 					>
