@@ -16,6 +16,14 @@
 
 <div id="rail" class="bg-white border-r-2 shadow-xl h-16 fixed bottom-0 w-full">
   <div class="flex flex-row justify-around items-center">
+    <div class="max-w-[30vw] pt-2">
+      <NavigationRailButton
+        icon="school"
+        label="Demo"
+        url="{base}/demo"
+        enabled={true}
+      ></NavigationRailButton>
+    </div>
     <div class="max-w-[30vw]">
       <NavigationRailButton
         icon="palette"

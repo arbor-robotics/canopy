@@ -21,6 +21,12 @@
 
   <div class="link-container">
     <NavigationRailButton
+      icon="school"
+      label="Demo"
+      url="{base}/demo"
+      enabled={true}
+    ></NavigationRailButton>
+    <NavigationRailButton
       icon="palette"
       label="Design"
       url="{base}/design/new"

@@ -22,10 +22,11 @@
   >
     <Icon
       id={icon}
-      size="1.25rem"
+      size="1.75rem"
       color={$page.url.pathname == url
         ? "var(--md-sys-color-on-secondary-container)"
         : "var(--md-sys-color-on-surface-variant)"}
+      fill="0"
     ></Icon>
   </div>
   <div id="label" class="no-underline">{label}</div>
