@@ -14,7 +14,7 @@
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
-<div id="rail" class="bg-white border-r-2 shadow-xl">
+<div id="rail" class="bg-white border-r-2 shadow-xl hidden md:flex flex-col">
   <a id="logo" href="{base}/"
     ><img id="logo-img" src={logo} alt="Canopy logo" /></a
   >
@@ -72,10 +72,6 @@
 </div>
 
 <style>
-  #rail {
-    display: flex;
-    flex-direction: column;
-  }
   #logo {
     font-size: 2rem;
     font-family: "Bitter", serif;

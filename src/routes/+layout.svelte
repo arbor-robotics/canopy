@@ -41,15 +41,11 @@
 
   <Toasts />
 
-  {#if condition}
-    <NavigationRail></NavigationRail>
-  {/if}
+  <NavigationRail />
   <main class="p-0 overflow-hidden">
     <slot />
   </main>
-  {#if !condition}
-    <BottomAppBar />
-  {/if}
+  <BottomAppBar />
 </div>
 
 <style lang="scss">

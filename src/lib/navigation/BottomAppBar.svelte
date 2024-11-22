@@ -14,48 +14,43 @@
 
 <!-- https://m3.material.io/components/navigation-rail/overview -->
 
-<div id="rail" class="bg-white border-r-2 shadow-xl h-16 fixed bottom-0 w-full">
-  <div class="flex flex-row justify-around items-center">
-    <div class="max-w-[30vw] pt-2">
-      <NavigationRailButton
-        icon="school"
-        label="Demo"
-        url="{base}/demo"
-        enabled={true}
-      ></NavigationRailButton>
-    </div>
-    <div class="max-w-[30vw]">
-      <NavigationRailButton
-        icon="palette"
-        label="Design"
-        url="{base}/design/new"
-        enabled={true}
-      ></NavigationRailButton>
-    </div>
-    <div class="max-w-[30vw]">
-      <NavigationRailButton
-        icon="smart_toy"
-        label="Control"
-        url="{base}/control"
-        enabled={true}
-      ></NavigationRailButton>
-    </div>
+<div
+  class="bg-white border-r-2 shadow-xl h-16 fixed bottom-0 w-full flex flex-row justify-around md:hidden"
+>
+    <NavigationRailButton
+      icon="school"
+      label="Demo"
+      url="{base}/demo"
+      enabled={true}
+    ></NavigationRailButton>
+    <NavigationRailButton
+      icon="palette"
+      label="Design"
+      url="{base}/design/new"
+      enabled={true}
+    ></NavigationRailButton>
+    <NavigationRailButton
+      icon="smart_toy"
+      label="Control"
+      url="{base}/control"
+      enabled={true}
+    ></NavigationRailButton>
 
-    <!-- <NavigationRailButton icon="settings" label="Settings" url="{base}/settings"
+  <!-- <NavigationRailButton icon="settings" label="Settings" url="{base}/settings"
     ></NavigationRailButton> -->
-    <!-- 
+  <!-- 
     <NavigationRailButton
       icon="stethoscope"
       label="Diagnostics"
       url="{base}/diagnostics"
     ></NavigationRailButton> -->
 
-    <!-- <NavigationRailButton
+  <!-- <NavigationRailButton
       icon="query_stats"
       label="Statistics"
       url="{base}/statistics"
     ></NavigationRailButton> -->
-    <!-- <NavigationRailButton icon="monitoring" label="Stats" url="/" enabled={true}
+  <!-- <NavigationRailButton icon="monitoring" label="Stats" url="/" enabled={true}
     ></NavigationRailButton>
     <NavigationRailButton
       icon="settings"
@@ -63,22 +58,15 @@
       url="/"
       enabled={true}
     ></NavigationRailButton> -->
-    <div class="max-w-[30vw] h-full">
-      {#if $connection_status == ConnectionStatus.CONNECTED}
-        <!-- <BehaviorStateIndicator /> -->
-        <HealthCheckIndicator />
-      {:else}
-        <ConnectionIndicator mini />
-      {/if}
-    </div>
-  </div>
+    {#if $connection_status == ConnectionStatus.CONNECTED}
+      <!-- <BehaviorStateIndicator /> -->
+      <HealthCheckIndicator />
+    {:else}
+      <!-- <ConnectionIndicator mini /> -->
+    {/if}
 </div>
 
 <style>
-  #rail {
-    display: flex;
-    flex-direction: column;
-  }
   #logo {
     font-size: 2rem;
     font-family: "Bitter", serif;
