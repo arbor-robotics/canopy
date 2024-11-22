@@ -1,33 +1,33 @@
 <script lang="ts">
-	import type { Writable } from "svelte/store";
-	import { writable } from "svelte/store";
-	import { rosbridge_ip, rosbridge_port, addToast } from "$lib/stores";
-	import { Button, ScrollArea } from "bits-ui";
-	import Cookies from "js-cookie";
-	import { base } from "$app/paths";
-	import Icon from "$lib/misc/Icon.svelte";
-	import { ForestGenerator } from "$lib/forest_generator";
-	import { onMount } from "svelte";
+	// import type { Writable } from "svelte/store";
+	// import { writable } from "svelte/store";
+	// import { rosbridge_ip, rosbridge_port, addToast } from "$lib/stores";
+	// import { Button, ScrollArea } from "bits-ui";
+	// import Cookies from "js-cookie";
+	// import { base } from "$app/paths";
+	// import Icon from "$lib/misc/Icon.svelte";
+	// import { ForestGenerator } from "$lib/forest_generator";
+	// import { onMount } from "svelte";
 
-	function saveParameters() {
-		// Rosbridge
+	// function saveParameters() {
+	// 	// Rosbridge
 
-		let rosbridge_ip_new = document.getElementById("ros_ip_input").value;
-		let rosbridge_port_new =
-			document.getElementById("ros_port_input").value;
-		rosbridge_ip.set(rosbridge_ip_new);
-		rosbridge_port.set(rosbridge_port_new);
-		Cookies.set("rosbridge/ip", rosbridge_ip_new, { expires: 365 });
-		Cookies.set("rosbridge/port", rosbridge_port_new, { expires: 365 });
-		addToast({ message: "Changes saved", type: "success" });
-	}
+	// 	let rosbridge_ip_new = document.getElementById("ros_ip_input").value;
+	// 	let rosbridge_port_new =
+	// 		document.getElementById("ros_port_input").value;
+	// 	rosbridge_ip.set(rosbridge_ip_new);
+	// 	rosbridge_port.set(rosbridge_port_new);
+	// 	Cookies.set("rosbridge/ip", rosbridge_ip_new, { expires: 365 });
+	// 	Cookies.set("rosbridge/port", rosbridge_port_new, { expires: 365 });
+	// 	addToast({ message: "Changes saved", type: "success" });
+	// }
 
-	let plans = [
-		{ name: "Flagstaff North", co2: "2300 tonnes/year", species_count: 12 },
-		{ name: "CFA Lawn", co2: "700 tonnes/year", species_count: 5 },
-		{ name: "Frick Park East", co2: "3100 tonnes/year", species_count: 14 },
-		{ name: "Panther Hollow", co2: "300 tonnes/year", species_count: 9 },
-	];
+	// let plans = [
+	// 	{ name: "Flagstaff North", co2: "2300 tonnes/year", species_count: 12 },
+	// 	{ name: "CFA Lawn", co2: "700 tonnes/year", species_count: 5 },
+	// 	{ name: "Frick Park East", co2: "3100 tonnes/year", species_count: 14 },
+	// 	{ name: "Panther Hollow", co2: "300 tonnes/year", species_count: 9 },
+	// ];
 </script>
 
 <svelte:head>
@@ -35,7 +35,7 @@
 	<meta name="description" content="Control and observe the robot" />
 </svelte:head>
 
-<div class="flex flex-col h-full w-full overflow-hidden max-w-xl mx-auto p-8">
+<!-- <div class="flex flex-col h-full w-full overflow-hidden max-w-xl mx-auto p-8">
 	<div class="flex flex-row justify-center mt-4">
 		<a
 			href="{base}/design/new"
@@ -90,4 +90,4 @@
 			<ScrollArea.Corner />
 		</ScrollArea.Root>
 	</div>
-</div>
+</div> -->

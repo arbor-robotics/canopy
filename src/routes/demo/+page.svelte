@@ -159,7 +159,7 @@
 </svelte:head>
 
 <div class="size-full overflow-y-auto">
-	<div class="size-full max-w-[40rem] mx-auto">
+	<div class="size-full max-w-[40rem] mx-auto px-4">
 		<!-- <SpeechBubble text="I'm Druid." /> -->
 
 		<SpeechBubble
