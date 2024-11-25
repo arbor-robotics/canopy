@@ -1,159 +1,159 @@
 <script lang="ts">
-	// import type { Writable } from "svelte/store";
-	// import { writable } from "svelte/store";
-	// import {
-	// 	rosbridge_ip,
-	// 	rosbridge_port,
-	// 	addToast,
-	// 	complete_plan,
-	// } from "$lib/stores";
-	// import {
-	// 	Button,
-	// 	Checkbox,
-	// 	ScrollArea,
-	// 	Tabs,
-	// 	Popover,
-	// 	Slider,
-	// } from "bits-ui";
-	// import Cookies from "js-cookie";
-	// import Icon from "$lib/misc/Icon.svelte";
-	// import {
-	// 	ForestGenerator,
-	// 	type PlantingPlan,
-	// 	type Species,
-	// 	ForestLayer,
-	// } from "$lib/forest_generator";
-	// import { onMount } from "svelte";
-	// import { base } from "$app/paths";
-	// import Pagination from "$lib/navigation/Pagination.svelte";
-	// import { fly } from "svelte/transition";
-	// import OsmMap from "$lib/misc/OsmMap.svelte";
-	// import SpeciesCard from "$lib/misc/SpeciesCard.svelte";
+	import type { Writable } from "svelte/store";
+	import { writable } from "svelte/store";
+	import {
+		rosbridge_ip,
+		rosbridge_port,
+		addToast,
+		complete_plan,
+	} from "$lib/stores";
+	import {
+		Button,
+		Checkbox,
+		ScrollArea,
+		Tabs,
+		Popover,
+		Slider,
+	} from "bits-ui";
+	import Cookies from "js-cookie";
+	import Icon from "$lib/misc/Icon.svelte";
+	import {
+		ForestGenerator,
+		type PlantingPlan,
+		type Species,
+		ForestLayer,
+	} from "$lib/forest_generator";
+	import { onMount } from "svelte";
+	import { base } from "$app/paths";
+	import Pagination from "$lib/navigation/Pagination.svelte";
+	import { fly } from "svelte/transition";
+	import OsmMap from "$lib/misc/OsmMap.svelte";
+	import SpeciesCard from "$lib/misc/SpeciesCard.svelte";
 
-	// function onGeneratorChanged() {
-	// 	console.log(generator.locations);
+	function onGeneratorChanged() {
+		console.log(generator.locations);
 
-	// 	osmMap.clearSeedlingMarkers();
-	// 	for (let [latlon, seedling] of generator.locations) {
-	// 		osmMap.addSeedlingMarker(latlon, seedling);
-	// 	}
+		osmMap.clearSeedlingMarkers();
+		for (let [latlon, seedling] of generator.locations) {
+			osmMap.addSeedlingMarker(latlon, seedling);
+		}
 
-	// 	savePlan();
-	// 	publishPlanToRos();
-	// }
+		savePlan();
+		publishPlanToRos();
+	}
 
-	// let generator = new ForestGenerator(onGeneratorChanged);
-	// let species_options = generator.getSpeciesOptions();
-	// let included_species_count: number = generator.getIncludedSpeciesCount();
-	// let included_overstory_count: number = generator.getIncludedSpeciesCount(
-	// 	ForestLayer.OVERSTORY,
-	// );
-	// let included_understory_count: number = generator.getIncludedSpeciesCount(
-	// 	ForestLayer.UNDERSTORY,
-	// );
-	// let included_emergent_count: number = generator.getIncludedSpeciesCount(
-	// 	ForestLayer.EMERGENT,
-	// );
-	// let plan_name = "Schenley North";
+	let generator = new ForestGenerator(onGeneratorChanged);
+	let species_options = generator.getSpeciesOptions();
+	let included_species_count: number = generator.getIncludedSpeciesCount();
+	let included_overstory_count: number = generator.getIncludedSpeciesCount(
+		ForestLayer.OVERSTORY,
+	);
+	let included_understory_count: number = generator.getIncludedSpeciesCount(
+		ForestLayer.UNDERSTORY,
+	);
+	let included_emergent_count: number = generator.getIncludedSpeciesCount(
+		ForestLayer.EMERGENT,
+	);
+	let plan_name = "Schenley North";
 
-	// function publishPlanToRos() {
-	// 	let plan_obj: PlantingPlan = generator.toRos();
-	// 	complete_plan.set(plan_obj);
-	// }
+	function publishPlanToRos() {
+		let plan_obj: PlantingPlan = generator.toRos();
+		complete_plan.set(plan_obj);
+	}
 
-	// function savePlan() {
-	// 	let plan_string = generator.toString();
-	// 	localStorage.setItem(`plan`, JSON.stringify(plan_string));
-	// 	console.log(`Autosaved: ${plan_string.slice(0, 100)}...`);
-	// }
+	function savePlan() {
+		let plan_string = generator.toString();
+		localStorage.setItem(`plan`, JSON.stringify(plan_string));
+		console.log(`Autosaved: ${plan_string.slice(0, 100)}...`);
+	}
 
-	// function loadPlan() {
-	// 	let plan_string = localStorage.getItem(`plan`);
-	// 	console.log(plan_string);
+	function loadPlan() {
+		let plan_string = localStorage.getItem(`plan`);
+		console.log(plan_string);
 
-	// 	generator.loadFromString(plan_string);
-	// 	let plan_obj = JSON.parse(JSON.parse(plan_string));
+		generator.loadFromString(plan_string);
+		let plan_obj = JSON.parse(JSON.parse(plan_string));
 
-	// 	osmMap.setGeometry(plan_obj.geojson);
-	// }
+		osmMap.setGeometry(plan_obj.geojson);
+	}
 
-	// function loadPlanB() {
-	// 	let plan_string = localStorage.getItem(`plan-b`);
-	// 	console.log(plan_string);
+	function loadPlanB() {
+		let plan_string = localStorage.getItem(`plan-b`);
+		console.log(plan_string);
 
-	// 	generator.loadFromString(plan_string);
-	// 	let plan_obj = JSON.parse(JSON.parse(plan_string));
+		generator.loadFromString(plan_string);
+		let plan_obj = JSON.parse(JSON.parse(plan_string));
 
-	// 	osmMap.setGeometry(plan_obj.geojson);
-	// }
+		osmMap.setGeometry(plan_obj.geojson);
+	}
 
-	// onMount(() => {
-	// 	setTimeout(loadPlan, 500);
-	// });
+	onMount(() => {
+		setTimeout(loadPlan, 500);
+	});
 
-	// enum MapAction {
-	// 	DRAW,
-	// 	PAN,
-	// 	CLEAR,
-	// 	ERASE,
-	// }
+	enum MapAction {
+		DRAW,
+		PAN,
+		CLEAR,
+		ERASE,
+	}
 
-	// let current_step = 2;
-	// let osmMap: OsmMap;
-	// let current_action = MapAction.PAN;
+	let current_step = 2;
+	let osmMap: OsmMap;
+	let current_action = MapAction.PAN;
 
-	// let selected_species_ids: Writable<Array<boolean>> = writable<
-	// 	Array<boolean>
-	// >([]);
-	// let num_species_included: number = 0;
-	// species_options.forEach((species) => {
-	// 	$selected_species_ids.push(species.included);
-	// 	if (species.included) num_species_included++;
-	// });
+	let selected_species_ids: Writable<Array<boolean>> = writable<
+		Array<boolean>
+	>([]);
+	let num_species_included: number = 0;
+	species_options.forEach((species) => {
+		$selected_species_ids.push(species.included);
+		if (species.included) num_species_included++;
+	});
 
-	// function onSpeciesCardClicked(species: Species) {
-	// 	generator.markIncluded(species.page, !species.included);
-	// 	included_species_count = generator.getIncludedSpeciesCount();
-	// 	included_overstory_count = generator.getIncludedSpeciesCount(
-	// 		ForestLayer.OVERSTORY,
-	// 	);
-	// 	included_understory_count = generator.getIncludedSpeciesCount(
-	// 		ForestLayer.UNDERSTORY,
-	// 	);
-	// 	included_emergent_count = generator.getIncludedSpeciesCount(
-	// 		ForestLayer.EMERGENT,
-	// 	);
+	function onSpeciesCardClicked(species: Species) {
+		generator.markIncluded(species.page, !species.included);
+		included_species_count = generator.getIncludedSpeciesCount();
+		included_overstory_count = generator.getIncludedSpeciesCount(
+			ForestLayer.OVERSTORY,
+		);
+		included_understory_count = generator.getIncludedSpeciesCount(
+			ForestLayer.UNDERSTORY,
+		);
+		included_emergent_count = generator.getIncludedSpeciesCount(
+			ForestLayer.EMERGENT,
+		);
 
-	// 	generator.regeneratePoints();
-	// }
+		generator.regeneratePoints();
+	}
 
-	// function onMapGeomChanged() {
-	// 	console.log("REGEN");
-	// 	console.log(osmMap.getGeoJSON());
-	// 	generator.setGeoJSON(osmMap.getGeoJSON());
-	// }
+	function onMapGeomChanged() {
+		console.log("REGEN");
+		console.log(osmMap.getGeoJSON());
+		generator.setGeoJSON(osmMap.getGeoJSON());
+	}
 
-	// function startDraw() {
-	// 	osmMap.startDraw();
-	// 	current_action = MapAction.DRAW;
-	// }
-	// function startErase() {
-	// 	osmMap.startErase();
-	// 	current_action = MapAction.ERASE;
-	// }
-	// function startPan() {
-	// 	osmMap.startPan();
-	// 	current_action = MapAction.PAN;
-	// }
+	function startDraw() {
+		osmMap.startDraw();
+		current_action = MapAction.DRAW;
+	}
+	function startErase() {
+		osmMap.startErase();
+		current_action = MapAction.ERASE;
+	}
+	function startPan() {
+		osmMap.startPan();
+		current_action = MapAction.PAN;
+	}
 
-	// let planting_density_slider_val: number[] = [0.6];
+	let planting_density_slider_val: number[] = [0.6];
 </script>
 
 <svelte:head>
 	<title>Steward | Canopy</title>
 	<meta name="description" content="Control and observe the robot" />
 </svelte:head>
-<!-- 
+
 <div class="size-full overflow-hidden">
 	<OsmMap
 		useCurrentPos={false}
@@ -383,4 +383,4 @@
 			</div>
 		</div>
 	</div>
-</div> -->
+</div>

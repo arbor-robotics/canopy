@@ -27,7 +27,8 @@ export type Species = {
     description: string,
     page: number,
     icon: string,
-    layer: ForestLayer
+    layer: ForestLayer,
+    good_for_pittsburgh: boolean
 }
 
 export type Seedling = {
@@ -111,11 +112,16 @@ export class ForestGenerator {
 
         for (let [latlon, seedling] of this.locations) {
             // console.log(seedling)
-            locations_obj.push({
-                lat: latlon[0],
-                lon: latlon[1],
-                species: seedling.page
-            })
+            try {
+
+                locations_obj.push({
+                    lat: latlon[0],
+                    lon: latlon[1],
+                    species: seedling.page
+                })
+            } catch (e) {
+                console.error(e)
+            }
         }
 
         let obj = {
@@ -131,7 +137,12 @@ export class ForestGenerator {
         let seedlings: Seedling[] = []
         for (let [latlon, species] of this.locations) {
             // console.log(latlon, species)
-            seedlings.push({ latitude: latlon[0], longitude: latlon[1], species_id: species.icon })
+            try {
+
+                seedlings.push({ latitude: latlon[0], longitude: latlon[1], species_id: species.icon })
+            } catch (e) {
+                console.error(e)
+            }
         }
 
         let msg: PlantingPlan = {
@@ -145,6 +156,15 @@ export class ForestGenerator {
 
     public getSpeciesOptions() {
         return this.species;
+    }
+
+    public getRecommendedSpecies(on_slope: boolean, near_water: boolean) {
+        let recommended_species = new Map<number, Species>([]);
+
+        for (let [id, species] of this.species) {
+            if (species.good_for_pittsburgh) recommended_species.set(species.page, species)
+        }
+        return recommended_species;
     }
 
     public markIncluded(id: number, included = true) {
@@ -197,7 +217,7 @@ export class ForestGenerator {
         this.regeneratePoints()
     }
 
-    public async generateSeedlings(max_failures = 300, min_dist = 2.0) {
+    public async generateSeedlings(max_failures = 300, min_dist = 10.0) {
         /**
          * This is the main function.
          * 

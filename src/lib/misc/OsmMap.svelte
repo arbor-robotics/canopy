@@ -60,6 +60,8 @@
   }
 
   export let selected_action = MapAction.PAN;
+  export let draw: boolean = false;
+  export let hide_seedlings: boolean = false;
 
   export function listenForWaypoint() {
     listening_for_waypoint = true;
@@ -75,6 +77,10 @@
   }
 
   export async function addSeedlingMarker(latlon: number[], seedling: Species) {
+    if (hide_seedlings) {
+      console.log("Seedlings hidden");
+      return;
+    }
     var pointMarker = L.marker([latlon[0], latlon[1]], {
       icon: new seedlingIcon({
         iconUrl: `${base}/res/leaves/${seedling.icon}.svg`,
@@ -311,6 +317,10 @@ flag
 
     map.on("click", onMapClick);
     map.on("mouseup", onMouseup);
+
+    if (draw) {
+      startDraw();
+    }
 
     // loadPlanFromStorage();
   });
