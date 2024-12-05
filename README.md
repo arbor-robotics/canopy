@@ -1,5 +1,5 @@
 > [!NOTE]  
-> Canopy is no longer being developed by Arbor Robotics and has been archived.
+> Canopy is no longer being developed by Will Heitman for Arbor Robotics and it has been archived.
 
 # Canopy
 ![Screenshot of Canopy](screenshot.png)
