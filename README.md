@@ -1,6 +1,12 @@
-# Canopy
+> [!NOTE]  
+> Canopy is no longer being developed by Arbor Robotics and has been archived.
 
+# Canopy
 ![Screenshot of Canopy](screenshot.png)
+
+## Overview
+
+Canopy is a web interface used to plan forests and send plans to Steward, a reforestation robot. Canopy was written using SvelteKit, Tailwind, roslibjs, and Bits UI.
 
 ## Developing
 
